@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTROL DE BODEGA PT v0.9</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- === INICIO DE SCRIPTS DE FIREBASE (PEGA AQUÍ) === -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
+    <!-- === FIN DE SCRIPTS DE FIREBASE === -->
+
+<style>
+    :root {
+        --bg-body: #f4f7fc; --bg-card: #ffffff; --text-main: #333333;
+        --text-muted: #718096; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --radius: 12px; --primary: #2b6cb0; --success: #38a169; --danger: #e53e3e;
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); padding: 15px 30px; border-radius: var(--radius); color: white; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .header-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+    .btn-nav { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+    .btn-nav.active { background: white; color: var(--primary); font-weight: 700; }
+
+.top-grid { 
+    display: grid; 
+    /* El uso de 0min permite que las columnas se encojan al máximo */
+    grid-template-columns: repeat(4, minmax(0, 1fr)); 
+    gap: 10px; /* Espacio reducido entre tarjetas */
+    margin-bottom: 20px;
+    align-items: start; /* Alinea las tarjetas al tope */
+}
+
+.card-action {
+    background: var(--bg-card); 
+    padding: 12px; /* Reducido de 20px para ganar espacio */
+    border-radius: var(--radius); 
+    border: 1px solid var(--border-color);
+    min-width: 0; /* Crucial para que el grid pueda encoger la tarjeta */
+    overflow: hidden;
+}
+
+/* Ajuste específico para la tabla de stock cuando está arriba */
+.card-action table {
+    font-size: 11px; /* Letra más pequeña para que quepa en la columna */
+}
+
+.card-action h3 {
+    font-size: 14px; /* Títulos ligeramente más pequeños */
+    margin-top: 0;
+}
+    
+    .input-group { display: flex; gap: 8px; margin-bottom: 10px; }
+    .input-box { display: flex; border: 1px solid var(--border-color); border-radius: 8px; flex: 1; overflow: hidden; background: #fafafa; }
+    .input-box i { padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); }
+    input, select { border: none; padding: 10px; width: 100%; background: transparent; outline: none; }
+
+    .btn-action { width: 100%; border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+    .btn-ingreso { background: var(--success); }
+    .btn-salida { background: var(--danger); }
+
+    .stats-container { display: grid; grid-template-columns: repeat(3, 1fr) auto; background: var(--bg-card); padding: 20px; border-radius: var(--radius); gap: 20px; margin-bottom: 20px; align-items: center; }
+    .kpi-block { border-right: 1px solid var(--border-color); padding-right: 20px; }
+    .kpi-val { font-size: 22px; font-weight: bold; display: block; }
+    .pct-badge { background: #e6fffa; color: #333; padding: 4px 10px; border-radius: 12px; font-size: 14px; font-weight: bold; }
+
+    /* ESTILOS DE GRILLAS INDEPENDIENTES */
+    .grid-pasillos { 
+        display: grid; 
+        grid-template-columns: repeat(4, 1fr); /* Pasillos A y B siempre en 4 */
+        gap: 10px; 
+        margin-bottom: 20px;
+    }
+
+    .grid-sectores-d { 
+        display: grid; 
+        grid-template-columns: repeat(7, 1fr); /* Sector D siempre en 7 para una sola fila */
+        gap: 10px; 
+        margin-bottom: 20px;
+    }
+
+    .galpon-grid { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); /* Esto fuerza el 2x2: E1,E2 arriba / E3,E4 abajo */
+        gap: 15px; 
+        background: #f1f5f9; 
+        padding: 15px; 
+        border-radius: 12px; 
+        border: 2px solid #cbd5e0;
+    }	    
+
+
+	.patio-grid { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 15px; 
+        background: #e2e8f0; 
+        padding: 15px; 
+        border-radius: 12px; 
+    }
+    
+    .card-ubi { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
+    .ubi-green { border-top-color: var(--success); background: #f0fff4; }
+    .ubi-yellow { border-top-color: #d69e2e; background: #fffaf0; }
+    .ubi-red { border-top-color: var(--danger); background: #fff5f5; }
+
+    .bottom-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    .panel { background: white; border-radius: var(--radius); border: 1px solid var(--border-color); padding: 15px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; padding: 10px; border-bottom: 2px solid #f4f4f4; }
+    td { padding: 10px; border-bottom: 1px solid #f9f9f9; font-size: 13px; }
+/* Estilos para el filtro del mapa */
+    .ubi-off { opacity: 0.15; filter: grayscale(1); transition: all 0.3s ease; }
+    .ubi-highlight { 
+        border: 3px solid #2b6cb0 !important; 
+        transform: scale(1.08); 
+        z-index: 10; 
+        box-shadow: 0 0 20px rgba(43,108,176,0.6);
+        transition: all 0.3s ease;
+
+}
+.bultos-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.bulto-btn {
+    border: 1px solid #ccc;
+    background: #f7fafc;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.bulto-btn:hover {
+    background: #edf2f7;
+}
+
+.bulto-btn.active {
+    background: #2b6cb0;
+    color: white;
+    border-color: #2b6cb0;
+    font-weight: bold;
+}
+.btn-nav-small {
+    padding: 5px 10px;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.btn-nav-small:hover {
+    opacity: 1;
+}
+.menu-opciones {
+    position: relative;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    display: none;
+    min-width: 160px;
+    z-index: 1000;
+    overflow: hidden;
+
+    /* animación */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+/* estado visible */
+.menu-dropdown.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.menu-dropdown div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s ease;
+color: #1f2937;
+}
+
+.menu-dropdown div:hover {
+    background: #edf2f7;
+    color: #1a202c;
+}
+/* separador */
+.menu-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 4px 0;
+}
+</style>
+</head>
+<body>
+
+    <div class="header">
+<div style="font-size: 20px; font-weight: bold; display:flex; align-items:center; gap:10px;">
+    <img src="logo.png" style="width:55px; height:28px; object-fit:contain;">
+    CONTROL DE BODEGA PT.  v0.9
+</div>
+        <div class="header-nav">
+            <button class="btn-nav active" id="btnPrin" onclick="cambiarBodega('principal')">PRINCIPAL</button>
+            <button class="btn-nav" id="btnAdo" onclick="cambiarBodega('adoquines')">ADOQUINES</button>
+            
+<div class="menu-opciones">
+    <button class="btn-nav btn-nav-small" onclick="toggleMenu()">
+        ⚙
+    </button>
+
+    <div id="menuDropdown" class="menu-dropdown">
+        <div onclick="exportarExcel()"><span>📊</span> Exportar</div>
+        <div onclick="crearBackup()"><span>💾</span> Backup</div>
+<input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
+        <div onclick="document.getElementById('inputBackup').click()"><span>📥</span> Restaurar</div>
+    </div>
+</div>
+</div>
+</div>
+<!-- Contenedor principal configurado para 4 columnas -->
+<div class="top-grid">
+
+    <!-- Tarjeta 1: Ingreso -->
+    <div class="card-action">
+        <h3 style="color:var(--success)"><i class='bx bxs-plus-circle'></i> Ingreso</h3>
+        <div class="input-group">
+            <div class="input-box">
+                <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
+                <input id="pp_in" placeholder="00-00-00">
+            </div>
+            <div class="input-box"><i class='bx bx-weight'></i><input id="kg_in" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('ingreso')"></div>
+        </div>
+        <div id="bultos_ingreso" class="bultos-selector"></div>            
+        <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
+        <button class="btn-action btn-ingreso" onclick="accion('ingreso')">Ingresar</button>
+    </div>
+
+    <!-- Tarjeta 2: Salida -->
+    <div class="card-action">
+        <h3 style="color:var(--danger)"><i class='bx bxs-minus-circle'></i> Salida</h3>
+        <div class="input-group">
+            <div class="input-box">
+                <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
+                <input id="pp_out" placeholder="00-00-00">
+            </div>
+            <div class="input-box"><i class='bx bx-weight'></i><input id="kg_out" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('salida')"></div>
+        </div>
+        <div id="bultos_salida" class="bultos-selector"></div>         
+        <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
+        <button class="btn-action btn-salida" onclick="accion('salida')">Retirar</button>
+    </div>
+
+    <!-- Tarjeta 3: Buscar -->
+    <div class="card-action">
+        <h3>🔍 Buscar</h3>
+        <div class="input-box" style="margin-bottom: 10px;"><input id="busqueda" placeholder="Ingrese PP..." oninput="buscar()"></div>
+        <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
+    </div>
+
+    <!-- Tarjeta 4: Stock por PP (Nueva ubicación) -->
+    <div class="card-action">
+        <h3 style="margin-top:0;">📦 Stock por PP</h3>
+        <!-- El div siguiente permite que la tabla tenga su propio scroll si hay muchos datos -->
+        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 4px;">
+            <table id="tabla-stock" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="position: sticky; top: 0; background: white;">
+                        <th style="font-size: 10px; padding: 5px;">PP</th>
+                        <th style="font-size: 10px; padding: 5px;">KG TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+</div> <!-- CIERRE DEL CONTENEDOR TOP-GRID -->    <div class="stats-container">
+        <div class="kpi-block">
+            <small>OCUPACIÓN TOTAL</small>
+            <span class="kpi-val" id="kpi-total">0 / 0</span>
+            <span class="pct-badge" id="pct-total">0%</span>
+        </div>
+        <div class="kpi-block">
+            <small id="label-p">PASILLOS</small>
+            <span class="kpi-val" id="kpi-p">0 / 0</span>
+            <span class="pct-badge" id="pct-p">0%</span>
+        </div>
+        <div class="kpi-block">
+            <small id="label-ext">PATIO</small>
+            <span class="kpi-val" id="kpi-ext">0 / 0</span>
+            <span class="pct-badge" id="pct-ext">0%</span>
+        </div>
+<div id="mini-grafico" style="font-size:12px; line-height:1.8;"></div>
+    </div>
+
+    <div class="panel" style="margin-bottom: 20px;">
+        <h3 id="mapa-titulo">LAYOUT DE BODEGA</h3>
+        <div id="dibujo-bodega"></div>
+    </div>
+
+    <div class="bottom-grid">
+        <div class="panel">
+<div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4>📜 HISTORIAL</h4>
+        <button onclick="deshacer()" style="font-size:10px; cursor:pointer;">↩ Deshacer</button>
+    </div>
+    <div id="historial-lista" style="font-size: 12px; max-height: 300px; overflow-y: auto;"></div>
+</div>
+    <script>
+// ==========================================
+        // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbOwLETmyMK18eMewiQ3oy7AZA-P3zECU",
+            authDomain: "bodega-pt.firebaseapp.com",
+            databaseURL: "https://bodega-pt-default-rtdb.firebaseio.com",
+            projectId: "bodega-pt",
+            storageBucket: "bodega-pt.firebasestorage.app",
+            messagingSenderId: "758347970477",
+            appId: "1:758347970477:web:b7449710b36ad126499324",
+            measurementId: "G-CWEKBMBG1K"
+        };
+
+        // Inicializar la conexión con la nube
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('bodega_pt');
+
+        // Escuchar cambios para que los operadores vean tu layout
+        dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Sincronizamos las variables globales de tu bodega
+                db = data.inventario;
+                logs = data.historial;
+                
+                // Redibujamos todo el layout en la pantalla del operador
+                render(); 
+                verificarAcceso();
+            }
+        });
+
+        // Función para ocultar controles a los operadores (Solo Lectura)
+        function verificarAcceso() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('rol') === 'operador') {
+                const panelAcciones = document.querySelector('.top-grid');
+                if (panelAcciones) panelAcciones.style.display = 'none';
+                
+                document.querySelectorAll('.btn-nav, .menu-opciones').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                console.log("Acceso de Operador: Modo solo lectura activado.");
+            }
+        }
+        const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 875];
+let bultoSeleccionado = {
+    ingreso: null,
+    salida: null
+};
+    const layoutPrin = [
+    "PASILLO 1", 
+    ["A4", 160], ["A3", 160], ["A2", 155], ["A1", 91], // Fila superior (4)
+    ["A8", 115], ["A7", 115], ["A6", 155], ["A5", 140], // Fila inferior (4)
+    
+    "PASILLO 2", 
+    ["B4", 115], ["B3", 120], ["B2", 155], ["B1", 140], // Fila superior (4)
+    ["B7", 160], ["B6", 160], ["B5", 115],             // Fila inferior (3 - Sin B8)
+    
+"PATIO", 
+["C2", 350], ["C4", 350], ["C1", 350], ["C3", 350],
+
+"EXCEPCIÓN",
+["EX-01", 500]
+];
+        const layoutAdo = [
+    "SECTORES",
+    ["D1", 300], ["D2", 300], ["D3", 300], ["D4", 300], ["D5", 300], ["D6", 300], ["D7", 300],
+"GALPÓN",
+["E1", 100], ["E2", 100], ["E3", 200], ["E4", 200],
+
+"EXCEPCIÓN",
+["EX-02", 500]
+];
+
+        let bodegaActual = "principal";
+        let db = JSON.parse(localStorage.getItem('bodega_db')) || {};
+        let logs = JSON.parse(localStorage.getItem('bodega_logs')) || [];
+
+function cambiarBodega(tipo) {
+    bodegaActual = tipo;
+    document.getElementById('btnPrin').classList.toggle('active', tipo === 'principal');
+    document.getElementById('btnAdo').classList.toggle('active', tipo === 'adoquines');
+    
+    // --- MEJORA: Limpiar el buscador al cambiar de sección ---
+    document.getElementById('busqueda').value = ""; 
+buscar();
+
+    render();
+}
+
+function accion(tipo) {
+            let ppInput = document.getElementById(tipo === 'ingreso' ? 'pp_in' : 'pp_out');
+            let pp = ppInput.value.trim();
+            let kg = parseFloat(document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value);
+            let ubi = document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').value;
+
+            // 1. REGLA DE FORMATO PP
+            const formatoPP = /^\d{2}-\d{2}-\d{2}$/;
+            if (!formatoPP.test(pp)) {
+                notificar("Formato de PP incorrecto (00-00-00)", "error");
+                ppInput.focus();
+                return;
+            }
+
+            if (!pp || isNaN(kg) || kg <= 0) {
+    notificar("Datos incompletos", "error");
+    return;
+}
+
+            // 2. CÁLCULO DE BULTOS
+            let pesoBulto = bultoSeleccionado[tipo];
+
+if (!pesoBulto) {
+    notificar("Selecciona un tipo de bulto", "warning");
+    return;
+}
+
+let bultosNuevos = kg / pesoBulto;
+
+            // --- NUEVA MEJORA: RESTRICCIÓN DE CAPACIDAD MÁXIMA ---
+            if (tipo === 'ingreso') {
+                // Buscamos la capacidad máxima en el layout actual
+                let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+                let ubiData = layout.find(item => Array.isArray(item) && item[0] === ubi);
+                let capMax = ubiData ? ubiData[1] : 0;
+
+                // Calculamos cuántos bultos hay ya en esa ubicación
+                let bultosActuales = 0;
+                if (db[ubi]) {
+                    for (let p in db[ubi]) {
+                        bultosActuales += db[ubi][p].bultos;
+                    }
+                }
+
+                // Verificamos si hay espacio suficiente
+                if (bultosActuales + bultosNuevos > capMax) {
+                    alert(`¡ERROR! Espacio insuficiente en ${ubi}.\nCapacidad máxima: ${capMax}\nEspacio ocupado: ${Math.round(bultosActuales)}\nIntenta ingresar: ${Math.round(bultosNuevos)}`);
+                    return; // Bloquea el ingreso
+                }
+            }
+            // -------------------------------------------------------
+
+            // 3. PROCESAR MOVIMIENTO
+            if (tipo === 'ingreso') {
+                if (!db[ubi]) db[ubi] = {};
+                if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
+                db[ubi][pp].kg += kg;
+                db[ubi][pp].bultos += bultosNuevos;
+            } else {
+                if (!db[ubi] || !db[ubi][pp] || db[ubi][pp].kg < kg) {
+    notificar("No hay stock suficiente", "error");
+    return;
+}
+                let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
+                db[ubi][pp].kg -= kg;
+                db[ubi][pp].bultos -= (kg * ratio);
+                if (db[ubi][pp].kg <= 0) delete db[ubi][pp];
+            }
+
+            logs.unshift({ tipo, pp, kg, ubi, fecha: new Date().toLocaleString() });
+            localStorage.setItem('bodega_db', JSON.stringify(db));
+            localStorage.setItem('bodega_logs', JSON.stringify(logs.slice(0, 50)));
+ppInput.value = "";
+document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value = "";
+document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').selectedIndex = 0;
+ppInput.focus();
+
+notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg}kg en ${ubi}`, "success");
+
+autoBackup();
+
+// === PEGA ESTO AQUÍ: SINCRONIZACIÓN CON LA NUBE ===
+dbRef.set({
+    inventario: db,
+    historial: logs
+}).then(() => {
+    console.log("Sincronizado con los operadores exitosamente.");
+}).catch((error) => {
+    console.error("Error al sincronizar:", error);
+});
+// =================================================
+
+            render();
+        }
+function renderBultos() {
+    const pesos = pesosValidos;
+
+    ["ingreso", "salida"].forEach(tipo => {
+        const cont = document.getElementById(`bultos_${tipo}`);
+        if (!cont) return;
+
+        cont.innerHTML = "";
+
+        pesos.forEach(p => {
+            let btn = document.createElement("button");
+            btn.innerText = p;
+            btn.className = "bulto-btn";
+
+            btn.onclick = () => {
+                bultoSeleccionado[tipo] = p;
+
+                // quitar selección anterior
+                cont.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+
+                // marcar este
+                btn.classList.add("active");
+            };
+
+            cont.appendChild(btn);
+        });
+    });
+}
+function autoSeleccionarBulto(tipo) {
+    let kgInput = document.getElementById(tipo === "ingreso" ? "kg_in" : "kg_out");
+    let kg = parseFloat(kgInput.value);
+
+    if (!kg || kg <= 0) return;
+
+    let encontrado = null;
+
+    for (let p of pesosValidos) {
+        let division = kg / p;
+        if (Math.abs(division - Math.round(division)) < 0.01) {
+            encontrado = p;
+            break;
+        }
+    }
+
+    if (!encontrado) return;
+
+    bultoSeleccionado[tipo] = encontrado;
+
+    // marcar botón visualmente
+    let cont = document.getElementById(`bultos_${tipo}`);
+    if (!cont) return;
+
+    cont.querySelectorAll("button").forEach(btn => {
+        btn.classList.toggle("active", parseFloat(btn.innerText) === encontrado);
+    });
+}
+
+function render() {
+            let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+// 🔥 TÍTULO DINÁMICO
+let titulo = bodegaActual === "principal" 
+    ? "LAYOUT BODEGA PRINCIPAL" 
+    : "LAYOUT BODEGA ADOQUINES";
+
+document.getElementById("mapa-titulo").innerText = titulo;
+            let container = document.getElementById('dibujo-bodega');
+            let selIn = document.getElementById('ubi_in');
+            let selOut = document.getElementById('ubi_out');
+            container.innerHTML = ""; selIn.innerHTML = ""; selOut.innerHTML = "";
+
+// --- NUEVO: ORDENAR UBICACIONES ALFABÉTICAMENTE PARA LOS SELECTORES ---
+            let todasLasUbis = [];
+            layout.forEach(item => {
+                if (Array.isArray(item)) todasLasUbis.push(item[0]);
+            });
+            todasLasUbis.sort().forEach(id => {
+                selIn.add(new Option(id, id));
+                selOut.add(new Option(id, id));
+            });
+            // ----------------------------------------------------------------------
+
+            let tB = 0, tC = 0, pB = 0, pC = 0, eB = 0, eC = 0;
+            let globalStock = {};
+            let currentGrid = null;
+            let currentSectionName = "";
+
+            layout.forEach(item => {
+                if (typeof item === 'string') {
+                    currentSectionName = item;
+                    let h = document.createElement('h5'); 
+                    h.style.margin = "15px 0 5px 0";
+                    h.innerText = item; 
+                    container.appendChild(h);
+                    currentGrid = document.createElement('div');
+                    
+                    // ASIGNACIÓN DE GRIDS
+                    if (item === 'GALPÓN') {
+                        currentGrid.className = 'galpon-grid';
+                    } else if (item === 'PATIO') {
+                        currentGrid.className = 'patio-grid';
+                    } else if (item === 'SECTORES') {
+                        currentGrid.className = 'grid-sectores-d';
+                    } else {
+                        currentGrid.className = 'grid-pasillos';
+                    }
+                    container.appendChild(currentGrid);
+                } else {
+                    let [id, cap] = item;
+                    
+                    
+                    let usados = 0;
+                    let detallePP = ""; 
+
+                    if (db[id]) {
+                        for (let pp in db[id]) {
+                            usados += db[id][pp].bultos;
+                            globalStock[pp] = (globalStock[pp] || 0) + db[id][pp].kg;
+                            detallePP += `<div style="border-top: 1px dotted #ccc; margin-top: 2px; padding-top: 2px;">
+                                            ${pp}: <b>${fmt(db[id][pp].kg)}kg</b>
+                                          </div>`;
+                        }
+                    }
+
+                    tB += usados; tC += cap;
+if (bodegaActual === "principal") {
+
+    // 🔵 BODEGA PRINCIPAL
+    if (
+        id.startsWith('C') || 
+        id.startsWith('EX')   // EX cuenta como patio aquí
+    ) { 
+        eB += usados; 
+        eC += cap; 
+    } else { 
+        pB += usados; 
+        pC += cap; 
+    }
+
+} else {
+
+    // 🟢 ADOQUINES
+    if (
+        id.startsWith('E') && !id.startsWith('EX') // solo galpón es externo
+    ) { 
+        eB += usados; 
+        eC += cap; 
+    } else { 
+        // 🔥 EX queda aquí (sectores)
+        pB += usados; 
+        pC += cap; 
+    }
+
+}
+
+                    let pct = cap > 0 ? Math.round((usados / cap) * 100) : 0;
+                    let disponible = cap - usados;
+                    let color = pct > 90 ? 'ubi-red' : (pct > 70 ? 'ubi-yellow' : 'ubi-green');
+                    
+                    let card = document.createElement('div');
+                    card.className = `card-ubi ${color}`;
+                    card.dataset.id = id;
+if (id.startsWith('EX')) {
+    card.style.border = "2px dashed #555";
+    card.style.background = "#fffbea";
+}
+                    
+                    if (currentSectionName === 'GALPÓN') {
+                        card.classList.add('card-galpon');
+                        if(id === 'E1' || id === 'E3') card.classList.add('galpon-izq');
+                        if(id === 'E2' || id === 'E4') card.classList.add('galpon-der');
+                    }
+
+                    // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO
+                    card.innerHTML = `
+                        <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${id}</div>
+                        <div style="font-size: 12px; line-height: 1.2;">
+                            <div>${Math.round(usados)}/${cap} bultos</div>
+                            <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
+                            <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
+                            <div style="background: rgba(255,255,255,0.6); border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
+                                ${detallePP || "Vacío"}
+                            </div>
+                        </div>`;
+                    
+                    currentGrid.appendChild(card);
+                }
+            });
+
+// --- FUNCIÓN INTERNA PARA SEMÁFORO ---
+            const getSemaforo = (p) => {
+                if (p > 90) return '🔴';
+                if (p > 70) return '🟡';
+                return '🟢';
+            };
+
+            // ACTUALIZACIÓN DE INDICADORES (KPIs) CON SEMÁFORO
+            let pctTotalVal = tC > 0 ? Math.round((tB/tC)*100) : 0;
+            let pctPVal = pC > 0 ? Math.round((pB/pC)*100) : 0;
+            let pctExtVal = eC > 0 ? Math.round((eB/eC)*100) : 0;
+function barra(pct) {
+    let color = pct > 90 ? "#e53e3e" : (pct > 70 ? "#d69e2e" : "#38a169");
+
+    return `
+        <div style="display:flex; align-items:center; gap:8px; width:140px;">
+            
+            <div style="
+                flex:1;
+                height:10px;
+                background:#e2e8f0;
+                border-radius:6px;
+                overflow:hidden;
+            ">
+                <div style="
+                    height:100%;
+                    width:0%;
+                    background:${color};
+                    transition: width 0.6s ease;
+                " class="barra-fill" data-pct="${pct}"></div>
+            </div>
+
+            <span style="font-size:11px; width:35px; text-align:right;">
+                ${pct}%
+            </span>
+        </div>
+    `;
+}
+
+// Nombres dinámicos
+let nombre1 = bodegaActual === "principal" ? "PASILLOS" : "SECTORES";
+let nombre2 = bodegaActual === "principal" ? "PATIO" : "GALPÓN";
+
+// Dibujar gráfico
+document.getElementById('mini-grafico').innerHTML = `
+    <div style="display:flex; justify-content:space-between;">
+        <span>${nombre1}</span>
+        <span>${barra(pctPVal)}</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between;">
+        <span>${nombre2}</span>
+        <span>${barra(pctExtVal)}</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+        <span>TOTAL</span>
+        <span>${barra(pctTotalVal)}</span>
+    </div>
+`;
+setTimeout(() => {
+    document.querySelectorAll('.barra-fill').forEach(el => {
+        el.style.width = el.dataset.pct + "%";
+    });
+}, 50);
+            document.getElementById('kpi-total').innerText = `${Math.round(tB)} / ${tC}`;
+            document.getElementById('pct-total').innerText = `${pctTotalVal}% ${getSemaforo(pctTotalVal)}`;
+            
+            // Cambio dinámico de etiquetas y semáforos
+            if (bodegaActual === "principal") {
+                document.getElementById('label-p').innerText = "PASILLOS";
+                document.getElementById('label-ext').innerText = "PATIO";
+            } else {
+                document.getElementById('label-p').innerText = "SECTORES";
+                document.getElementById('label-ext').innerText = "GALPÓN";
+            }
+
+            document.getElementById('kpi-p').innerText = `${Math.round(pB)} / ${pC}`;
+            document.getElementById('pct-p').innerText = `${pctPVal}% ${getSemaforo(pctPVal)}`;
+            
+            document.getElementById('kpi-ext').innerText = `${Math.round(eB)} / ${eC}`;
+            document.getElementById('pct-ext').innerText = `${pctExtVal}% ${getSemaforo(pctExtVal)}`;
+
+// --- MEJORA: TABLA DE STOCK CON TOTAL GENERAL ---
+            let tbody = document.querySelector('#tabla-stock tbody'); 
+            tbody.innerHTML = "";
+            let sumaTotalKg = 0; 
+
+            for (let pp in globalStock) {
+                let kilosPP = globalStock[pp];
+                sumaTotalKg += kilosPP; 
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span style="background:#eee;padding:2px 5px;border-radius:4px;">${pp}</span></td>
+                        <td>${fmt(kilosPP)} kg</td>
+                    </tr>`;
+            }
+
+            if (Object.keys(globalStock).length > 0) {
+                tbody.innerHTML += `
+                    <tr style="font-weight: bold; background-color: #f8f9fa; border-top: 2px solid #333;">
+                        <td style="padding: 8px;">TOTAL:</td>
+                        <td style="padding: 8px; color: #d32f2f;">${fmt(sumaTotalKg)} kg</td>
+                    </tr>`;
+            } else {
+                tbody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Sin stock</td></tr>";
+            }
+
+// MANTENER EL HISTORIAL DE LOGS CON ICONOS BOXICONS
+document.getElementById('historial-lista').innerHTML = logs.map(l => {
+    const iconClass = l.tipo === 'ingreso' ? 'bxs-plus-circle' : 'bxs-minus-circle';
+    const iconColor = l.tipo === 'ingreso' ? 'var(--success)' : 'var(--danger)';
+    
+    return `<div style="border-bottom:1px solid #eee; padding:8px 5px; display: flex; align-items: center;">
+                <i class='bx ${iconClass}' style='color:${iconColor}; font-size: 24px; margin-right: 10px;'></i>
+                <div style="flex-grow: 1;">
+                    <b>${l.pp}</b> - ${l.kg}kg en <b>${l.ubi}</b> 
+                    <small style="display: block; color: #777;">${l.fecha}</small>
+                </div>
+            </div>`;
+}).join('');
+renderBultos();
+        } // <--- Asegúrate de que esta llave cierre la función render
+
+        function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
+
+// 👇 PEGA ESTO AQUÍ
+function notificar(msg, tipo = "info") {
+    const colores = {
+        success: "#38a169",
+        error: "#e53e3e",
+        warning: "#d69e2e",
+        info: "#2b6cb0"
+    };
+
+    let n = document.createElement("div");
+    n.innerText = msg;
+
+    n.style = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${colores[tipo] || colores.info};
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+    `;
+
+    document.body.appendChild(n);
+
+    setTimeout(() => {
+        n.style.opacity = "1";
+        n.style.transform = "translateY(0)";
+    }, 10);
+
+    setTimeout(() => {
+        n.style.opacity = "0";
+        n.style.transform = "translateY(20px)";
+        setTimeout(() => n.remove(), 300);
+    }, 3000);
+}
+function buscar() {
+    let q = document.getElementById('busqueda').value.trim();
+    let resContenedor = document.getElementById('res_busqueda');
+    let todasLasCards = document.querySelectorAll('.card-ubi'); // Seleccionamos todas las tarjetas del mapa
+    
+    // Si no hay búsqueda, limpiamos el mapa y el texto
+    if(!q) { 
+        resContenedor.innerText = "Esperando búsqueda..."; 
+        todasLasCards.forEach(c => c.classList.remove('ubi-off', 'ubi-highlight'));
+        return; 
+    }
+    
+    let resultadosHTML = "";
+    let encontrado = false;
+    let totalKg = 0;
+
+    // 1. Lógica de búsqueda y suma
+    for(let ubi in db) {
+        if(db[ubi][q]) {
+            encontrado = true;
+            let kilos = db[ubi][q].kg;
+            totalKg += kilos;
+            resultadosHTML += `
+                <div style="padding: 2px 0; font-family: monospace; font-size: 13px;">
+                    📍 <b>${ubi}</b>: ${fmt(kilos)} kg
+                </div>`;
+        }
+    }
+
+    // 2. Lógica de FILTRO EN EL MAPA
+    todasLasCards.forEach(card => {
+        // Obtenemos el ID de la ubicación desde el primer div de la tarjeta
+        let idUbi = card.dataset.id; 
+
+        if (db[idUbi] && db[idUbi][q]) {
+            card.classList.remove('ubi-off');
+            card.classList.add('ubi-highlight'); // Resalta si tiene el PP
+        } else {
+            card.classList.add('ubi-off'); // Se apaga si no lo tiene
+            card.classList.remove('ubi-highlight');
+        }
+    });
+    
+    if (encontrado) {
+        resultadosHTML += `
+            <div style="border-top: 2px solid #333; margin-top: 8px; padding-top: 5px; font-family: monospace; font-size: 14px; font-weight: bold; color: #d32f2f;">
+                TOTAL GENERAL: ${fmt(totalKg)} kg
+            </div>`;
+        resContenedor.innerHTML = resultadosHTML;
+    } else {
+        resContenedor.innerText = "No encontrado";
+    }
+}
+function toggleMenu() {
+    let menu = document.getElementById("menuDropdown");
+    menu.classList.toggle("show");
+}
+
+document.addEventListener("click", function(e) {
+    const menu = document.getElementById("menuDropdown");
+    const btn = document.querySelector(".menu-opciones button");
+
+    if (!menu || !btn) return;
+
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove("show");
+    }
+});
+function deshacer() {
+            if (logs.length === 0) return alert("No hay movimientos para deshacer");
+
+            const ultimoLog = logs[0]; 
+            const { tipo, pp, kg, ubi } = ultimoLog;
+
+            if (tipo === 'ingreso') {
+                if (db[ubi] && db[ubi][pp]) {
+                    let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
+                    db[ubi][pp].kg -= kg;
+                    db[ubi][pp].bultos -= (kg * ratio);
+                    if (db[ubi][pp].kg <= 0) delete db[ubi][pp];
+                }
+            } else if (tipo === 'salida') {
+                if (!db[ubi]) db[ubi] = {};
+                if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
+                let pesoBulto = pesosValidos.find(p => Math.abs((kg / p) - Math.round(kg / p)) < 0.01);
+if (!pesoBulto) return alert("Error al deshacer: peso inválido");
+                db[ubi][pp].kg += kg;
+                db[ubi][pp].bultos += (kg / pesoBulto);
+            }
+
+            logs.shift();
+            localStorage.setItem('bodega_db', JSON.stringify(db));
+            localStorage.setItem('bodega_logs', JSON.stringify(logs));
+            render();
+            alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
+        }
+function exportarExcel() {
+    // 1. Crear una lista de datos plana para el Excel
+    let datosExcel = [];
+    
+    for (let ubi in db) {
+        for (let pp in db[ubi]) {
+            datosExcel.push({
+                "Ubicación": ubi,
+                "PP": pp,
+                "Kilos": db[ubi][pp].kg,
+                "Bultos": Math.round(db[ubi][pp].bultos),
+                "Bodega": (ubi.startsWith('A') || ubi.startsWith('B') || ubi.startsWith('C')) ? 'Principal' : 'Adoquines'
+            });
+        }
+    }
+
+    if (datosExcel.length === 0) return alert("No hay stock para exportar");
+
+    // 2. Convertir datos a hoja de Excel
+    const hoja = XLSX.utils.json_to_sheet(datosExcel);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Stock_Bodega");
+
+    // 3. Descargar el archivo
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(libro, `Stock_Bodega_${fecha}.xlsx`);
+document.getElementById('busqueda').value = "";
+}
+
+// 💾 BACKUP MANUAL
+function crearBackup() {
+    const backup = {
+        db: db,
+        logs: logs,
+        fecha: new Date().toISOString(),
+        version: "0.9"
+    };
+    
+    const dataStr = JSON.stringify(backup, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Backup_Bodega_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    
+    notificar("Backup descargado correctamente", "success");
+}
+
+// 📥 RESTAURAR BACKUP
+function restaurarBackup(archivo) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const backup = JSON.parse(e.target.result);
+
+            if (backup.db && backup.logs) {
+
+                db = backup.db;
+                logs = backup.logs;
+
+                localStorage.setItem('bodega_db', JSON.stringify(db));
+                localStorage.setItem('bodega_logs', JSON.stringify(logs));
+
+                render();
+
+                notificar("Backup restaurado correctamente", "success");
+            } else {
+                notificar("Backup incompleto", "error");
+            }
+
+        } catch (err) {
+            notificar("Archivo inválido", "error");
+        }
+    };
+
+    reader.readAsText(archivo);
+}
+function autoBackup() {
+    const backup = {
+        db: db,
+        logs: logs,
+        fecha: new Date().toISOString()
+    };
+
+    let backups = JSON.parse(localStorage.getItem("bodega_backups")) || [];
+
+    backups.unshift(backup); // guarda al inicio
+
+    // 🔥 mantener solo los últimos 10 backups
+    if (backups.length > 10) {
+        backups = backups.slice(0, 10);
+    }
+
+    localStorage.setItem("bodega_backups", JSON.stringify(backups));
+
+    console.log("💾 Auto-backup guardado");
+}
+        render();
+setInterval(autoBackup, 300000); // cada 5 minutos
+    </script>
+</body>
+</html>
