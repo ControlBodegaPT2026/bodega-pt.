@@ -363,19 +363,38 @@ color: #1f2937;
         });
 
         // Función para ocultar controles a los operadores (Solo Lectura)
-        function verificarAcceso() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('rol') === 'operador') {
-                const panelAcciones = document.querySelector('.top-grid');
-                if (panelAcciones) panelAcciones.style.display = 'none';
-                
-                document.querySelectorAll('.btn-nav, .menu-opciones').forEach(el => {
-                    el.style.display = 'none';
-                });
-                
-                console.log("Acceso de Operador: Modo solo lectura activado.");
+function verificarAcceso() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.get('rol') === 'operador') {
+        // 1. Ocultamos el panel de acciones (Ingreso, Salida, etc.)
+        const panelAcciones = document.querySelector('.top-grid');
+        if (panelAcciones) panelAcciones.style.display = 'none';
+        
+        // 2. Ocultamos el botón DESHACER
+        const botones = document.querySelectorAll('button');
+        botones.forEach(btn => {
+            const texto = btn.innerText.toUpperCase();
+            if (texto.includes('DESHACER')) {
+                btn.style.display = 'none';
             }
-        }
+        });
+
+        // 3. Menú de configuración fuera
+        document.querySelectorAll('.menu-opciones').forEach(el => el.style.display = 'none');
+        
+        // 4. MANTENER botones de cambio de bodega: PRINCIPAL y ADOQUINES
+        document.querySelectorAll('.btn-nav').forEach(btn => {
+            const texto = btn.innerText.toUpperCase();
+            // Si NO es el botón de la Principal Y NO es el de Adoquines, se oculta
+            if (!texto.includes('PRINCIPAL') && !texto.includes('ADOQUINES')) {
+                btn.style.display = 'none';
+            }
+        });
+
+        console.log("Acceso de Operador: Vista de Bodega Principal y Adoquines activada.");
+    }
+}
         const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 875];
 let bultoSeleccionado = {
     ingreso: null,
@@ -423,6 +442,16 @@ buscar();
 }
 
 function accion(tipo) {
+// Si no es administrador por URL, pedimos clave
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('rol') !== 'admin') {
+        const pass = prompt("Introduce la clave de autorización para modificar stock:");
+        if (pass !== "isidora2013") { // Cambia "TuClave123" por la que quieras
+            alert("Clave incorrecta. No tienes permiso para esta acción.");
+            return;
+        }
+    }
+
             let ppInput = document.getElementById(tipo === 'ingreso' ? 'pp_in' : 'pp_out');
             let pp = ppInput.value.trim();
             let kg = parseFloat(document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value);
