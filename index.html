@@ -415,11 +415,14 @@ let bultoSeleccionado = {
 "EXCEPCIÓN",
 ["EX-01", 500]
 ];
-        const layoutAdo = [
+const layoutAdo = [
     "SECTORES",
-    ["D1", 300], ["D2", 300], ["D3", 300], ["D4", 300], ["D5", 300], ["D6", 300], ["D7", 300],
+    ["D1", 300], ["D2", 300], ["D3", 300], ["D4", 300], ["D5", 300], ["D6", 300], 
+    "",          // Salto de línea 
+["D7", 300],
+
 "GALPÓN",
-["E1", 100], ["E2", 100], ["E3", 200], ["E4", 200],
+["E1", 80], ["E2", 80], ["E3", 240], ["E4", 240],
 
 "EXCEPCIÓN",
 ["EX-02", 500]
@@ -632,7 +635,10 @@ document.getElementById("mapa-titulo").innerText = titulo;
             let currentSectionName = "";
 
             layout.forEach(item => {
+
+
                 if (typeof item === 'string') {
+
                     currentSectionName = item;
                     let h = document.createElement('h5'); 
                     h.style.margin = "15px 0 5px 0";
