@@ -215,6 +215,10 @@ color: #1f2937;
     background: #e2e8f0;
     margin: 4px 0;
 }
+/* Bloqueo preventivo: oculta los paneles antes de que cargue el script */
+.top-grid, .bottom-grid, .menu-opciones {
+    display: none !important;
+}
 </style>
 </head>
 <body>
@@ -323,8 +327,7 @@ color: #1f2937;
         <div id="dibujo-bodega"></div>
     </div>
 
-    <div class="bottom-grid">
-        <div class="panel">
+<div class="bottom-grid panel"> <div style="display:flex; justify-content:space-between; align-items:center;">
 <div style="display:flex; justify-content:space-between; align-items:center;">
         <h4>📜 HISTORIAL</h4>
         <button onclick="deshacer()" style="font-size:10px; cursor:pointer;">↩ Deshacer</button>
