@@ -372,27 +372,28 @@ function verificarAcceso() {
     const urlParams = new URLSearchParams(window.location.search);
     const rol = urlParams.get('rol');
 
+    // Seleccionamos los paneles
+    const panelAcciones = document.querySelector('.top-grid');
+    const panelHistorial = document.querySelector('.bottom-grid');
+    const menuOpciones = document.querySelectorAll('.menu-opciones');
+
     if (rol === 'admin') {
-        // SI ES ADMIN: Mostramos las acciones y el historial
-        const panelAcciones = document.querySelector('.top-grid');
-        const panelHistorial = document.querySelector('.bottom-grid');
-        const menuOpciones = document.querySelectorAll('.menu-opciones');
+        // SI ES ADMIN: Forzamos que se vean los paneles
+        if (panelAcciones) panelAcciones.style.setProperty('display', 'grid', 'important');
+        if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
+        menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
 
-        if (panelAcciones) panelAcciones.style.display = 'grid'; // o 'flex' según tu diseño
-        if (panelHistorial) panelHistorial.style.display = 'block';
-        menuOpciones.forEach(el => el.style.display = 'block');
-
-        console.log("Acceso: ADMINISTRADOR");
+        console.log("Acceso: ADMINISTRADOR - Paneles activados");
     } else {
-        // SI ES CUALQUIER OTRA COSA (operador o vacío):
-        // Nos aseguramos de que solo se vean los botones de cambio de bodega
+        // SI ES OPERADOR O LINK LIMPIO:
+        // El CSS ya los oculta, solo nos aseguramos de limpiar los botones de navegación
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
             if (!texto.includes('PRINCIPAL') && !texto.includes('ADOQUINES')) {
                 btn.style.display = 'none';
             }
         });
-        console.log("Acceso: RESTRINGIDO (Operador)");
+        console.log("Acceso: OPERADOR - Paneles restringidos");
     }
 }
         const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 875];
