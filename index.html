@@ -219,51 +219,66 @@ color: #1f2937;
 .top-grid, .bottom-grid, .menu-opciones {
     display: none !important;
 }
-/* AJUSTES PARA CELULARES - DISEÑO DE 2 COLUMNAS */
-@media (max-width: 768px) {
-    /* El encabezado más compacto */
-    .header {
-        flex-direction: column;
-        padding: 10px;
-        gap: 10px;
-    }
+/* NUEVO AJUSTE: REEMPLAZA EL ANTERIOR CON ESTE */
+    @media (max-width: 768px) {
+        /* Mantenemos las 4 columnas pero reducimos el espacio entre ellas */
+        .top-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 5px !important;
+            margin-bottom: 10px;
+        }
 
-    /* Las 4 tarjetas de arriba ahora en 2 columnas (Ingreso/Salida arriba, Buscar/Stock abajo) */
-    .top-grid {
-        grid-template-columns: repeat(2, 1fr) !important; 
-        gap: 8px;
-    }
+        /* Hacemos las tarjetas más pequeñas */
+        .card-action {
+            padding: 5px !important;
+        }
 
-    /* Ajustamos el tamaño de letra dentro de las tarjetas para que quepan en 2 columnas */
-    .card-action {
-        padding: 8px;
-    }
-    
-    .card-action h3 {
-        font-size: 12px;
-    }
+        /* Reducimos el tamaño de los títulos (Ingreso, Salida, etc.) */
+        .card-action h3 {
+            font-size: 10px !important;
+            margin-bottom: 5px;
+        }
 
-    input, select, .btn-action {
-        font-size: 12px;
-        padding: 8px;
-    }
+        /* Iconos y textos de los inputs más pequeños para que quepan */
+        .input-box i, .input-box span {
+            padding: 5px !important;
+            font-size: 10px !important;
+        }
 
-    /* Estadísticas en 2 columnas */
-    .stats-container {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
+        input, select {
+            padding: 5px !important;
+            font-size: 10px !important;
+        }
 
-    /* El mapa de la bodega (Pasillos/Sectores) en 2 columnas para que no sea infinito hacia abajo */
-    .grid-pasillos, .grid-sectores-d {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
+        /* Botones compactos */
+        .btn-action {
+            padding: 8px 2px !important;
+            font-size: 9px !important;
+        }
 
-    /* Historial y Stock por PP uno debajo del otro */
-    .bottom-grid {
-        grid-template-columns: 1fr !important;
+        /* Selector de bultos mini */
+        .bulto-btn {
+            padding: 3px 5px !important;
+            font-size: 9px !important;
+        }
+
+        /* Tabla de stock por PP miniatura */
+        #tabla-stock th, #tabla-stock td {
+            font-size: 9px !important;
+            padding: 3px !important;
+        }
+
+        /* Ajuste de estadísticas para que no ocupen tanto espacio */
+        .stats-container {
+            grid-template-columns: repeat(3, 1fr);
+            padding: 10px;
+            gap: 5px;
+        }
+        
+        .kpi-val { font-size: 14px !important; }
+        .pct-badge { font-size: 10px !important; }
+        #mini-grafico { display: none; } /* Ocultamos gráfico en móvil para ganar espacio */
     }
-}
 </style>
 </head>
 <body>
