@@ -79,14 +79,16 @@
         gap: 10px; 
         margin-bottom: 20px;
     }
-
-    .grid-sectores-d { 
-        display: grid; 
-        grid-template-columns: repeat(7, 1fr); /* Sector D siempre en 7 para una sola fila */
-        gap: 10px; 
-        margin-bottom: 20px;
-    }
-
+.grid-sectores-d { 
+    display: grid; 
+    grid-template-columns: repeat(6, minmax(140px, 1fr));
+    gap: 10px; 
+    margin-bottom: 20px;
+    justify-items: stretch;
+}
+.grid-sectores-d .card-ubi[data-id="D7"] {
+    grid-column: 4;
+}
     .galpon-grid { 
         display: grid; 
         grid-template-columns: repeat(2, 1fr); /* Esto fuerza el 2x2: E1,E2 arriba / E3,E4 abajo */
@@ -392,7 +394,11 @@ function verificarAcceso() {
             }
         });
 
-        console.log("Acceso de Operador: Vista de Bodega Principal y Adoquines activada.");
+// 5. OCULTAR EL HISTORIAL (Añadido)
+        const panelHistorial = document.querySelector('.bottom-grid'); // Oculta toda la sección de abajo
+        if (panelHistorial) panelHistorial.style.display = 'none';
+
+        console.log("Acceso de Operador: Vista restringida activa.");
     }
 }
         const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 875];
@@ -418,7 +424,6 @@ let bultoSeleccionado = {
 const layoutAdo = [
     "SECTORES",
     ["D1", 300], ["D2", 300], ["D3", 300], ["D4", 300], ["D5", 300], ["D6", 300], 
-    "",          // Salto de línea 
 ["D7", 300],
 
 "GALPÓN",
@@ -976,33 +981,55 @@ document.addEventListener("click", function(e) {
     }
 });
 function deshacer() {
-            if (logs.length === 0) return alert("No hay movimientos para deshacer");
+    if (logs.length === 0) return alert("No hay movimientos para deshacer");
 
-            const ultimoLog = logs[0]; 
-            const { tipo, pp, kg, ubi } = ultimoLog;
+    const ultimoLog = logs[0]; 
+    const { tipo, pp, kg, ubi } = ultimoLog;
 
-            if (tipo === 'ingreso') {
-                if (db[ubi] && db[ubi][pp]) {
-                    let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
-                    db[ubi][pp].kg -= kg;
-                    db[ubi][pp].bultos -= (kg * ratio);
-                    if (db[ubi][pp].kg <= 0) delete db[ubi][pp];
-                }
-            } else if (tipo === 'salida') {
-                if (!db[ubi]) db[ubi] = {};
-                if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
-                let pesoBulto = pesosValidos.find(p => Math.abs((kg / p) - Math.round(kg / p)) < 0.01);
-if (!pesoBulto) return alert("Error al deshacer: peso inválido");
-                db[ubi][pp].kg += kg;
-                db[ubi][pp].bultos += (kg / pesoBulto);
-            }
-
-            logs.shift();
-            localStorage.setItem('bodega_db', JSON.stringify(db));
-            localStorage.setItem('bodega_logs', JSON.stringify(logs));
-            render();
-            alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
+    // 1. LÓGICA DE REVERSIÓN DE STOCK
+    if (tipo === 'ingreso') {
+        if (db[ubi] && db[ubi][pp]) {
+            // Calculamos el ratio actual para descontar bultos proporcionalmente
+            let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
+            db[ubi][pp].kg -= kg;
+            db[ubi][pp].bultos -= (kg * ratio);
+            
+            // Si el stock llega a cero o menos por decimales, eliminamos la entrada
+            if (db[ubi][pp].kg <= 0.1) delete db[ubi][pp];
         }
+    } else if (tipo === 'salida') {
+        if (!db[ubi]) db[ubi] = {};
+        if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
+        
+        // Buscamos el peso del bulto original comparando con la lista de pesos válidos
+        let pesoBulto = pesosValidos.find(p => Math.abs((kg / p) - Math.round(kg / p)) < 0.01) || 1000;
+        
+        db[ubi][pp].kg += kg;
+        db[ubi][pp].bultos += (kg / pesoBulto);
+    }
+
+    // 2. ACTUALIZACIÓN LOCAL
+    logs.shift(); // Quitamos el primer registro del historial
+    localStorage.setItem('bodega_db', JSON.stringify(db));
+    localStorage.setItem('bodega_logs', JSON.stringify(logs));
+
+    // 3. ☁️ SINCRONIZACIÓN AUTOMÁTICA CON LA NUBE (Firebase)
+    // Usamos dbRef.set para que todos los operadores vean el cambio de inmediato
+    dbRef.set({
+        inventario: db,
+        historial: logs
+    }).then(() => {
+        console.log("Nube actualizada tras deshacer movimiento.");
+    }).catch((error) => {
+        console.error("Error al sincronizar con la nube:", error);
+    });
+
+    // 4. ACTUALIZACIÓN VISUAL Y ALERTAS
+    render(); // Redibujamos el mapa y las tablas
+    
+    // Mantenemos tu alerta original tal como pediste
+    alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
+}
 function exportarExcel() {
     // 1. Crear una lista de datos plana para el Excel
     let datosExcel = [];
