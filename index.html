@@ -367,38 +367,29 @@ color: #1f2937;
         // Función para ocultar controles a los operadores (Solo Lectura)
 function verificarAcceso() {
     const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.get('rol') === 'operador') {
-        // 1. Ocultamos el panel de acciones (Ingreso, Salida, etc.)
-        const panelAcciones = document.querySelector('.top-grid');
-        if (panelAcciones) panelAcciones.style.display = 'none';
-        
-        // 2. Ocultamos el botón DESHACER
-        const botones = document.querySelectorAll('button');
-        botones.forEach(btn => {
-            const texto = btn.innerText.toUpperCase();
-            if (texto.includes('DESHACER')) {
-                btn.style.display = 'none';
-            }
-        });
+    const rol = urlParams.get('rol');
 
-        // 3. Menú de configuración fuera
-        document.querySelectorAll('.menu-opciones').forEach(el => el.style.display = 'none');
-        
-        // 4. MANTENER botones de cambio de bodega: PRINCIPAL y ADOQUINES
+    if (rol === 'admin') {
+        // SI ES ADMIN: Mostramos las acciones y el historial
+        const panelAcciones = document.querySelector('.top-grid');
+        const panelHistorial = document.querySelector('.bottom-grid');
+        const menuOpciones = document.querySelectorAll('.menu-opciones');
+
+        if (panelAcciones) panelAcciones.style.display = 'grid'; // o 'flex' según tu diseño
+        if (panelHistorial) panelHistorial.style.display = 'block';
+        menuOpciones.forEach(el => el.style.display = 'block');
+
+        console.log("Acceso: ADMINISTRADOR");
+    } else {
+        // SI ES CUALQUIER OTRA COSA (operador o vacío):
+        // Nos aseguramos de que solo se vean los botones de cambio de bodega
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
-            // Si NO es el botón de la Principal Y NO es el de Adoquines, se oculta
             if (!texto.includes('PRINCIPAL') && !texto.includes('ADOQUINES')) {
                 btn.style.display = 'none';
             }
         });
-
-// 5. OCULTAR EL HISTORIAL (Añadido)
-        const panelHistorial = document.querySelector('.bottom-grid'); // Oculta toda la sección de abajo
-        if (panelHistorial) panelHistorial.style.display = 'none';
-
-        console.log("Acceso de Operador: Vista restringida activa.");
+        console.log("Acceso: RESTRINGIDO (Operador)");
     }
 }
         const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 875];
@@ -1126,12 +1117,17 @@ function autoBackup() {
         backups = backups.slice(0, 10);
     }
 
-    localStorage.setItem("bodega_backups", JSON.stringify(backups));
+localStorage.setItem("bodega_backups", JSON.stringify(backups));
 
     console.log("💾 Auto-backup guardado");
 }
-        render();
+
+// === AQUÍ ES EL CAMBIO CRÍTICO ===
+verificarAcceso(); // Primero bloqueamos/permitimos según el link
+render();          // Luego dibujamos la página
+// ================================
+
 setInterval(autoBackup, 300000); // cada 5 minutos
-    </script>
+</script>
 </body>
 </html>
