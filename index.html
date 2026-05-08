@@ -219,8 +219,19 @@ color: #1f2937;
 .top-grid, .bottom-grid, .menu-opciones {
     display: none !important;
 }
-/* NUEVO AJUSTE: REEMPLAZA EL ANTERIOR CON ESTE */
-    @media (max-width: 768px) {
+@media (max-width: 768px) {
+    /* 1. Forzamos que el cuerpo y los paneles ocupen todo el ancho */
+    body {
+        padding: 10px !important; /* Reducimos margen lateral */
+        width: calc(100% - 20px) !important;
+    }
+
+    .stats-container, .panel {
+        width: 100% !important;
+        box-sizing: border-box; /* Asegura que el padding no los desborde */
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
         /* Mantenemos las 4 columnas pero reducimos el espacio entre ellas */
         .top-grid {
             grid-template-columns: repeat(4, 1fr) !important;
