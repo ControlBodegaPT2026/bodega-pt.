@@ -87,7 +87,7 @@
     justify-items: stretch;
 }
 .grid-sectores-d .card-ubi[data-id="D7"] {
-    grid-column: 4;
+    grid-column: 5;
 }
     .galpon-grid { 
         display: grid; 
@@ -397,14 +397,13 @@ color: #1f2937;
         <h3 id="mapa-titulo">LAYOUT DE BODEGA</h3>
         <div id="dibujo-bodega"></div>
     </div>
-<div id="panel-historial-contenedor" class="panel" style="margin-top: 20px;">
-    <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; margin-bottom: 10px;">
-        <h4 style="margin: 0;"><i class='bx bx-history'></i> 📜 HISTORIAL</h4>
-        <button onclick="deshacer()" style="padding: 5px 10px; cursor: pointer; border-radius: 6px; border: 1px solid #ccc; background: #fff; font-size: 11px; display: flex; align-items: center; gap: 5px;">
-            <i class='bx bx-undo'></i> Deshacer último
-        </button>
+
+<div class="bottom-grid panel"> <div style="display:flex; justify-content:space-between; align-items:center;">
+<div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4>📜 HISTORIAL</h4>
+        <button onclick="deshacer()" style="font-size:10px; cursor:pointer;">↩ Deshacer</button>
     </div>
-    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 100%;"></div>
+    <div id="historial-lista" style="font-size: 12px; max-height: 300px; overflow-y: auto;"></div>
 </div>
     <script>
 // ==========================================
@@ -444,30 +443,28 @@ function verificarAcceso() {
     const urlParams = new URLSearchParams(window.location.search);
     const rol = urlParams.get('rol');
 
-    // Referencias exactas por ID y Clase
+    // Seleccionamos los paneles
     const panelAcciones = document.querySelector('.top-grid');
-    const panelHistorial = document.getElementById('panel-historial-contenedor');
+    const panelHistorial = document.querySelector('.bottom-grid');
     const menuOpciones = document.querySelectorAll('.menu-opciones');
 
     if (rol === 'admin') {
-        // ADMIN: Ver todo
+        // SI ES ADMIN: Forzamos que se vean los paneles
         if (panelAcciones) panelAcciones.style.setProperty('display', 'grid', 'important');
         if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
-        console.log("Acceso: ADMINISTRADOR");
-    } else {
-        // OPERADOR: Ocultar todo
-        if (panelAcciones) panelAcciones.style.setProperty('display', 'none', 'important');
-        if (panelHistorial) panelHistorial.style.setProperty('display', 'none', 'important');
-        menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
 
+        console.log("Acceso: ADMINISTRADOR - Paneles activados");
+    } else {
+        // SI ES OPERADOR O LINK LIMPIO:
+        // El CSS ya los oculta, solo nos aseguramos de limpiar los botones de navegación
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
             if (!texto.includes('PRINCIPAL') && !texto.includes('ADOQUINES')) {
                 btn.style.display = 'none';
             }
         });
-        console.log("Acceso: OPERADOR");
+        console.log("Acceso: OPERADOR - Paneles restringidos");
     }
 }
         const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 875];
