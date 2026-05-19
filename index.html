@@ -215,8 +215,8 @@ color: #1f2937;
     background: #e2e8f0;
     margin: 4px 0;
 }
-/* Bloqueo preventivo: oculta los paneles antes de que cargue el script */
-.top-grid, .bottom-grid, .menu-opciones {
+/* Bloqueo preventivo ajustado */
+.bottom-grid, .menu-opciones {
     display: none !important;
 }
 @media (max-width: 768px) {
@@ -321,7 +321,7 @@ color: #1f2937;
 <div class="top-grid">
 
     <!-- Tarjeta 1: Ingreso -->
-    <div class="card-action">
+    <div class="card-action" id="tarjeta-ingreso">
         <h3 style="color:var(--success)"><i class='bx bxs-plus-circle'></i> Ingreso</h3>
         <div class="input-group">
             <div class="input-box">
@@ -336,7 +336,7 @@ color: #1f2937;
     </div>
 
     <!-- Tarjeta 2: Salida -->
-    <div class="card-action">
+    <div class="card-action" id="tarjeta-salida">
         <h3 style="color:var(--danger)"><i class='bx bxs-minus-circle'></i> Salida</h3>
         <div class="input-group">
             <div class="input-box">
@@ -439,25 +439,33 @@ color: #1f2937;
             }
         });
 
-        // Función para ocultar controles a los operadores (Solo Lectura)
+// Función para ocultar controles a los operadores (Dando acceso a Buscar y Stock PP)
 function verificarAcceso() {
     const urlParams = new URLSearchParams(window.location.search);
     const rol = urlParams.get('rol');
 
-    // Referencias exactas por ID y Clase
-    const panelAcciones = document.querySelector('.top-grid');
+    // Referencias de elementos clave
+    const contenedorGrid = document.querySelector('.top-grid');
+    const tarjetaIngreso = document.getElementById('tarjeta-ingreso');
+    const tarjetaSalida = document.getElementById('tarjeta-salida');
     const panelHistorial = document.getElementById('panel-historial-contenedor');
     const menuOpciones = document.querySelectorAll('.menu-opciones');
 
     if (rol === 'admin') {
-        // ADMIN: Ver todo
-        if (panelAcciones) panelAcciones.style.setProperty('display', 'grid', 'important');
+        // ADMIN: Ver todo completo
+        if (contenedorGrid) contenedorGrid.style.setProperty('display', 'grid', 'important');
+        if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'block', 'important');
+        if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'block', 'important');
         if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
         console.log("Acceso: ADMINISTRADOR");
     } else {
-        // OPERADOR: Ocultar todo
-        if (panelAcciones) panelAcciones.style.setProperty('display', 'none', 'important');
+        // OPERADOR: Habilitar contenedor principal pero ocultar selectivamente
+        if (contenedorGrid) contenedorGrid.style.setProperty('display', 'grid', 'important');
+        if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'none', 'important');
+        if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'none', 'important');
+        
+        // El historial y la configuración (Exportar/Backup) siguen ocultos por seguridad
         if (panelHistorial) panelHistorial.style.setProperty('display', 'none', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
 
@@ -467,7 +475,7 @@ function verificarAcceso() {
                 btn.style.display = 'none';
             }
         });
-        console.log("Acceso: OPERADOR");
+        console.log("Acceso: OPERADOR (Con Buscador y Stock PP)");
     }
 }
         const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 1224.72, 875];
