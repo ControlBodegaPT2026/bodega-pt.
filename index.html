@@ -62,6 +62,17 @@
     .input-box { display: flex; border: 1px solid var(--border-color); border-radius: 8px; flex: 1; overflow: hidden; background: #fafafa; }
     .input-box i { padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); }
     input, select { border: none; padding: 10px; width: 100%; background: transparent; outline: none; }
+/* Ocultar flechas en inputs de tipo número (Chrome, Safari, Edge, Opera) */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Ocultar flechas en inputs de tipo número (Firefox) */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
 
     .btn-action { width: 100%; border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; }
     .btn-ingreso { background: var(--success); }
@@ -328,7 +339,7 @@ color: #1f2937;
                 <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
                 <input id="pp_in" placeholder="00-00-00">
             </div>
-            <div class="input-box"><i class='bx bx-weight'></i><input id="kg_in" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('ingreso')"></div>
+            <div class="input-box"><i class='bx bx-weight'></i><input id="kg_in" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('ingreso')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
         <div id="bultos_ingreso" class="bultos-selector"></div>            
         <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
@@ -343,7 +354,7 @@ color: #1f2937;
                 <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
                 <input id="pp_out" placeholder="00-00-00">
             </div>
-            <div class="input-box"><i class='bx bx-weight'></i><input id="kg_out" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('salida')"></div>
+            <div class="input-box"><i class='bx bx-weight'></i><input id="kg_out" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('salida')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
         <div id="bultos_salida" class="bultos-selector"></div>         
         <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
@@ -478,7 +489,7 @@ function verificarAcceso() {
         console.log("Acceso: OPERADOR (Con Buscador y Stock PP)");
     }
 }
-        const pesosValidos = [1200, 1100, 1000, 1088.6, 907.2, 1350, 1224.72, 875];
+        const pesosValidos = [1350, 1100, 1200, 1000, 1088.6, 907.2, 1224.72, 875];
 let bultoSeleccionado = {
     ingreso: null,
     salida: null
@@ -500,11 +511,11 @@ let bultoSeleccionado = {
 ];
 const layoutAdo = [
     "SECTORES",
-    ["D1", 300], ["D2", 300], ["D3", 300], ["D4", 300], ["D5", 300], ["D6", 300], 
+    ["D1", 350], ["D2", 350], ["D3", 350], ["D4", 350], ["D5", 350], ["D6", 350], 
 ["D7", 300],
 
 "GALPÓN",
-["E1", 80], ["E2", 80], ["E3", 240], ["E4", 240],
+["E1", 80], ["E2", 80], ["E3", 250], ["E4", 250],
 
 "EXCEPCIÓN",
 ["EX-02", 500]
