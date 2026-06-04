@@ -614,6 +614,9 @@ let bultosNuevos = kg / pesoBulto;
                 db[ubi][pp].kg -= kg;
                 db[ubi][pp].bultos -= (kg * ratio);
                 if (db[ubi][pp].kg <= 0) delete db[ubi][pp];
+		if (db[ubi] && Object.keys(db[ubi]).length === 0) {
+                    delete db[ubi];
+                }
             }
 
             logs.unshift({ tipo, pp, kg, ubi, fecha: new Date().toLocaleString() });
@@ -700,6 +703,7 @@ function autoSeleccionarBulto(tipo) {
 
 function render() {
             let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+if (!db) db = {}; //
 // 🔥 TÍTULO DINÁMICO
 let titulo = bodegaActual === "principal" 
     ? "LAYOUT BODEGA PRINCIPAL" 
