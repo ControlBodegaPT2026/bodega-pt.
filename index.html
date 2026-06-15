@@ -885,27 +885,37 @@ if (id.startsWith('EX')) {
             let pctPVal = pC > 0 ? Math.round((pB/pC)*100) : 0;
             let pctExtVal = eC > 0 ? Math.round((eB/eC)*100) : 0;
 function barra(pct) {
-    let color = pct > 90 ? "#e53e3e" : (pct > 70 ? "#d69e2e" : "#38a169");
+    // Definimos degradados modernos (Gris/Rojo para crítico, Amarillo/Naranja para advertencia, Verde/Menta para óptimo)
+    let gradient = pct > 90 
+        ? "linear-gradient(90deg, #f56565, #e53e3e)" 
+        : (pct > 70 ? "linear-gradient(90deg, #ecc94b, #dd6b20)" : "linear-gradient(90deg, #48bb78, #38a169)");
+    
+    // Color de sombra que combine con el estado
+    let shadowColor = pct > 90 ? "rgba(229,62,62,0.4)" : (pct > 70 ? "rgba(221,107,32,0.3)" : "rgba(56,161,105,0.3)");
 
     return `
-        <div style="display:flex; align-items:center; gap:8px; width:140px;">
+        <div style="display:flex; align-items:center; gap:10px; width:150px;">
             
             <div style="
                 flex:1;
-                height:10px;
-                background:#e2e8f0;
-                border-radius:6px;
+                height:14px;
+                background:#edf2f7;
+                border-radius:20px;
                 overflow:hidden;
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+                border: 1px solid #e2e8f0;
             ">
                 <div style="
                     height:100%;
                     width:0%;
-                    background:${color};
-                    transition: width 0.6s ease;
+                    background:${gradient};
+                    border-radius:20px;
+                    box-shadow: 0 2px 6px ${shadowColor};
+                    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
                 " class="barra-fill" data-pct="${pct}"></div>
             </div>
 
-            <span style="font-size:11px; width:35px; text-align:right;">
+            <span style="font-size:12px; font-weight:700; width:38px; text-align:right; color:#2d3748;">
                 ${pct}%
             </span>
         </div>
@@ -916,20 +926,20 @@ function barra(pct) {
 let nombre1 = bodegaActual === "principal" ? "PASILLOS" : "SECTORES";
 let nombre2 = bodegaActual === "principal" ? "PATIO" : "GALPÓN";
 
-// Dibujar gráfico
+// Dibujar gráfico con filas más espaciadas y estilizadas
 document.getElementById('mini-grafico').innerHTML = `
-    <div style="display:flex; justify-content:space-between;">
-        <span>${nombre1}</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-weight:600; font-size:12px; color:#4a5568;">${nombre1}</span>
         <span>${barra(pctPVal)}</span>
     </div>
 
-    <div style="display:flex; justify-content:space-between;">
-        <span>${nombre2}</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-weight:600; font-size:12px; color:#4a5568;">${nombre2}</span>
         <span>${barra(pctExtVal)}</span>
     </div>
 
-    <div style="display:flex; justify-content:space-between; font-weight:bold;">
-        <span>TOTAL</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:6px; font-weight:bold;">
+        <span style="font-size:12px; color:#1a202c;">TOTAL</span>
         <span>${barra(pctTotalVal)}</span>
     </div>
 `;
