@@ -87,7 +87,8 @@
     .grid-pasillos { 
         display: grid; 
         grid-template-columns: repeat(4, 1fr); /* Pasillos A y B siempre en 4 */
-        gap: 10px; 
+        gap: 5px;
+	row-gap: 50px; 
         background: #e2e8f0; 
         padding: 20px; 
         border-radius: 12px; 
@@ -97,7 +98,8 @@
 .grid-sectores-d { 
     display: grid; 
     grid-template-columns: repeat(6, minmax(140px, 1fr));
-    gap: 10px; 
+    gap: 5px; 
+	row-gap: 50px; 
         background: #e2e8f0; 
         padding: 15px; 
         border-radius: 12px; 
@@ -111,8 +113,9 @@
     .galpon-grid { 
         display: grid; 
         grid-template-columns: repeat(2, 1fr); /* Esto fuerza el 2x2: E1,E2 arriba / E3,E4 abajo */
-        gap: 15px; 
-        background: #e2e8f0; 
+        gap: 10px; 
+	row-gap: 100px;        
+	background: #e2e8f0; 
         padding: 20px; 
         border-radius: 12px; 
         border: 2px solid #cbd5e0;
@@ -122,7 +125,8 @@
 	.patio-grid { 
         display: grid; 
         grid-template-columns: repeat(2, 1fr); 
-        gap: 15px; 
+	column-gap: 300px;
+        row-gap: 10px;
         background: #e2e8f0; 
         padding: 20px; 
         border-radius: 12px;
