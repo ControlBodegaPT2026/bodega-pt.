@@ -88,12 +88,20 @@
         display: grid; 
         grid-template-columns: repeat(4, 1fr); /* Pasillos A y B siempre en 4 */
         gap: 10px; 
+        background: #e2e8f0; 
+        padding: 20px; 
+        border-radius: 12px; 
+        border: 2px solid #cbd5e0;
         margin-bottom: 20px;
     }
 .grid-sectores-d { 
     display: grid; 
     grid-template-columns: repeat(6, minmax(140px, 1fr));
     gap: 10px; 
+        background: #e2e8f0; 
+        padding: 15px; 
+        border-radius: 12px; 
+        border: 2px solid #cbd5e0;
     margin-bottom: 20px;
     justify-items: stretch;
 }
@@ -104,8 +112,8 @@
         display: grid; 
         grid-template-columns: repeat(2, 1fr); /* Esto fuerza el 2x2: E1,E2 arriba / E3,E4 abajo */
         gap: 15px; 
-        background: #f1f5f9; 
-        padding: 15px; 
+        background: #e2e8f0; 
+        padding: 20px; 
         border-radius: 12px; 
         border: 2px solid #cbd5e0;
     }	    
@@ -116,8 +124,9 @@
         grid-template-columns: repeat(2, 1fr); 
         gap: 15px; 
         background: #e2e8f0; 
-        padding: 15px; 
-        border-radius: 12px; 
+        padding: 20px; 
+        border-radius: 12px;
+	border: 2px solid #cbd5e0;
     }
     
     .card-ubi { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
@@ -341,7 +350,7 @@ color: #1f2937;
             </div>
             <div class="input-box"><i class='bx bx-weight'></i><input id="kg_in" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('ingreso')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
-        <div id="bultos_ingreso" class="bultos-selector"></div>            
+        <select id="bultos_ingreso" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 8px; width: 100%; height: 40px; padding: 5px 10px;"></select>            
         <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
         <button class="btn-action btn-ingreso" onclick="accion('ingreso')">Ingresar</button>
     </div>
@@ -356,7 +365,7 @@ color: #1f2937;
             </div>
             <div class="input-box"><i class='bx bx-weight'></i><input id="kg_out" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('salida')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
-        <div id="bultos_salida" class="bultos-selector"></div>         
+        <select id="bultos_salida" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 8px; width: 100%; height: 40px; padding: 5px 10px;"></select>         
         <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
         <button class="btn-action btn-salida" onclick="accion('salida')">Retirar</button>
     </div>
@@ -532,7 +541,15 @@ function cambiarBodega(tipo) {
     
     // --- MEJORA: Limpiar el buscador al cambiar de sección ---
     document.getElementById('busqueda').value = ""; 
-buscar();
+    buscar();
+
+    // 🔥 NUEVA MEJORA: Limpiar selección interna de bultos al cambiar de bodega
+    bultoSeleccionado.ingreso = null;
+    bultoSeleccionado.salida = null;
+
+    // Forzamos a que los menús desplegables vuelvan a su estado inicial vacío
+    if (document.getElementById('bultos_ingreso')) document.getElementById('bultos_ingreso').value = "";
+    if (document.getElementById('bultos_salida')) document.getElementById('bultos_salida').value = "";
 
     render();
 }
@@ -648,28 +665,44 @@ function renderBultos() {
     const pesos = pesosValidos;
 
     ["ingreso", "salida"].forEach(tipo => {
-        const cont = document.getElementById(`bultos_${tipo}`);
-        if (!cont) return;
+        const selectContainer = document.getElementById(`bultos_${tipo}`);
+        if (!selectContainer) return;
 
-        cont.innerHTML = "";
+        // Limpiamos el menú desplegable
+        selectContainer.innerHTML = "";
 
+        // Creamos la opción inicial por defecto
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.textContent = "Seleccione bulto";
+        selectContainer.appendChild(defaultOpt);
+
+        // Inyectamos cada peso válido como una opción seleccionable
         pesos.forEach(p => {
-            let btn = document.createElement("button");
-            btn.innerText = p;
-            btn.className = "bulto-btn";
+            let opt = document.createElement("option");
+            opt.value = p;
+            opt.textContent = `${p} kg`;
+            
+            // Si por algún motivo ya estaba seleccionado, lo marcamos
+            if (bultoSeleccionado[tipo] === p) {
+                opt.selected = true;
+            }
 
-            btn.onclick = () => {
-                bultoSeleccionado[tipo] = p;
-
-                // quitar selección anterior
-                cont.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-
-                // marcar este
-                btn.classList.add("active");
-            };
-
-            cont.appendChild(btn);
+            selectContainer.appendChild(opt);
         });
+
+        // Configuramos qué pasa cuando el usuario cambia la opción del menú
+        selectContainer.onchange = function() {
+            if (this.value) {
+                const pesoElegido = parseFloat(this.value);
+                bultoSeleccionado[tipo] = pesoElegido;
+                
+                // Opcional: notificamos internamente al sistema el cambio
+                notificar(`Bulto seleccionado para ${tipo}: ${pesoElegido} kg`, "info");
+            } else {
+                bultoSeleccionado[tipo] = null;
+            }
+        };
     });
 }
 function autoSeleccionarBulto(tipo) {
@@ -692,13 +725,11 @@ function autoSeleccionarBulto(tipo) {
 
     bultoSeleccionado[tipo] = encontrado;
 
-    // marcar botón visualmente
-    let cont = document.getElementById(`bultos_${tipo}`);
-    if (!cont) return;
+    // Actualiza el menú desplegable de forma automática si detecta un peso válido
+    let selectContainer = document.getElementById(`bultos_${tipo}`);
+    if (!selectContainer) return;
 
-    cont.querySelectorAll("button").forEach(btn => {
-        btn.classList.toggle("active", parseFloat(btn.innerText) === encontrado);
-    });
+    selectContainer.value = encontrado;
 }
 
 function render() {
