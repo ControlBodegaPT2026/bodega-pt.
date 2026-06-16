@@ -16,10 +16,10 @@
     :root {
         --bg-body: #f4f7fc; --bg-card: #ffffff; --text-main: #333333;
         --text-muted: #718096; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        --radius: 12px; --primary: #2b6cb0; --success: #38a169; --danger: #e53e3e;
+        --radius: 6px; --primary: #2b6cb0; --success: #38a169; --danger: #e53e3e;
     }
 
-    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; }
+    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 30px; }
     
     .header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); padding: 15px 30px; border-radius: var(--radius); color: white; margin-bottom: 20px; box-shadow: var(--shadow); }
     .header-nav {
@@ -41,7 +41,7 @@
 
 .card-action {
     background: var(--bg-card); 
-    padding: 12px; /* Reducido de 20px para ganar espacio */
+    padding: 20px; /* Reducido de 20px para ganar espacio */
     border-radius: var(--radius); 
     border: 1px solid var(--border-color);
     min-width: 0; /* Crucial para que el grid pueda encoger la tarjeta */
@@ -59,8 +59,8 @@
 }
     
     .input-group { display: flex; gap: 8px; margin-bottom: 10px; }
-    .input-box { display: flex; border: 1px solid var(--border-color); border-radius: 8px; flex: 1; overflow: hidden; background: #fafafa; }
-    .input-box i { padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); }
+    .input-box { display: flex; border: 1px solid var(--border-color); border-radius: 5px; flex: 1; overflow: hidden; background: #fafafa; }
+    .input-box i { padding: 5px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); }
     input, select { border: none; padding: 10px; width: 100%; background: transparent; outline: none; }
 /* Ocultar flechas en inputs de tipo número (Chrome, Safari, Edge, Opera) */
     input::-webkit-outer-spin-button,
@@ -74,14 +74,14 @@
         -moz-appearance: textfield;
     }
 
-    .btn-action { width: 100%; border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+    .btn-action { width: 100%; border: none; padding: 12px; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; }
     .btn-ingreso { background: var(--success); }
     .btn-salida { background: var(--danger); }
 
-    .stats-container { display: grid; grid-template-columns: repeat(3, 1fr) auto; background: var(--bg-card); padding: 20px; border-radius: var(--radius); gap: 20px; margin-bottom: 20px; align-items: center; }
+    .stats-container { display: grid; grid-template-columns: repeat(3, 1fr) auto; background: var(--bg-card); padding: 20px; border-radius: var(--radius); gap: 100px; margin-bottom: 20px; align-items: center; }
     .kpi-block { border-right: 1px solid var(--border-color); padding-right: 20px; }
     .kpi-val { font-size: 22px; font-weight: bold; display: block; }
-    .pct-badge { background: #e6fffa; color: #333; padding: 4px 10px; border-radius: 12px; font-size: 14px; font-weight: bold; }
+    .pct-badge { background: #e6fffa; color: #333; padding: 4px 10px; border-radius: 12px; font-size: 22px; font-weight: bold; }
 
     /* ESTILOS DE GRILLAS INDEPENDIENTES */
     .grid-pasillos { 
@@ -91,7 +91,7 @@
 	row-gap: 50px; 
         background: #e2e8f0; 
         padding: 20px; 
-        border-radius: 12px; 
+        border-radius: 5px; 
         border: 2px solid #cbd5e0;
         margin-bottom: 20px;
     }
@@ -102,7 +102,7 @@
 	row-gap: 50px; 
         background: #e2e8f0; 
         padding: 15px; 
-        border-radius: 12px; 
+        border-radius: 5px; 
         border: 2px solid #cbd5e0;
     margin-bottom: 20px;
     justify-items: stretch;
@@ -117,7 +117,7 @@
 	row-gap: 50px;        
 	background: #e2e8f0; 
         padding: 20px; 
-        border-radius: 12px; 
+        border-radius: 5px; 
         border: 2px solid #cbd5e0;
     }	    
 
@@ -125,15 +125,15 @@
 	.patio-grid { 
         display: grid; 
         grid-template-columns: repeat(2, 1fr); 
-	column-gap: 250px;
+	column-gap: 150px;
         row-gap: 5px;
         background: #e2e8f0; 
         padding: 20px; 
-        border-radius: 12px;
+        border-radius: 5px;
 	border: 2px solid #cbd5e0;
     }
     
-    .card-ubi { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
+    .card-ubi { background: white; border-radius: 6px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
     .ubi-green { border-top-color: var(--success); background: #f0fff4; }
     .ubi-yellow { border-top-color: #d69e2e; background: #fffaf0; }
     .ubi-red { border-top-color: var(--danger); background: #fff5f5; }
@@ -348,14 +348,14 @@ color: #1f2937;
     <div class="card-action" id="tarjeta-ingreso">
         <h3 style="color:var(--success)"><i class='bx bxs-plus-circle'></i> Ingreso</h3>
         <div class="input-group">
-            <div class="input-box">
-                <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
-                <input id="pp_in" placeholder="00-00-00">
-            </div>
+<div class="input-box">
+    <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
+    <input id="pp_in" placeholder="00-00-00" inputmode="numeric" maxlength="8" oninput="formatearMascara(this)">
+</div>
             <div class="input-box"><i class='bx bx-weight'></i><input id="kg_in" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('ingreso')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
-        <select id="bultos_ingreso" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 8px; width: 100%; height: 40px; padding: 5px 10px;"></select>            
-        <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
+        <select id="bultos_ingreso" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 5px; width: 100%; height: 40px; padding: 5px 10px;"></select>            
+        <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;"></select>
         <button class="btn-action btn-ingreso" onclick="accion('ingreso')">Ingresar</button>
     </div>
 
@@ -363,22 +363,22 @@ color: #1f2937;
     <div class="card-action" id="tarjeta-salida">
         <h3 style="color:var(--danger)"><i class='bx bxs-minus-circle'></i> Salida</h3>
         <div class="input-group">
-            <div class="input-box">
-                <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
-                <input id="pp_out" placeholder="00-00-00">
-            </div>
+<div class="input-box">
+    <span style="padding: 10px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
+    <input id="pp_out" placeholder="00-00-00" inputmode="numeric" maxlength="8" oninput="formatearMascara(this)">
+</div>
             <div class="input-box"><i class='bx bx-weight'></i><input id="kg_out" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('salida')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
-        <select id="bultos_salida" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 8px; width: 100%; height: 40px; padding: 5px 10px;"></select>         
-        <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></select>
+        <select id="bultos_salida" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 5px; width: 100%; height: 40px; padding: 5px 10px;"></select>         
+        <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;"></select>
         <button class="btn-action btn-salida" onclick="accion('salida')">Retirar</button>
     </div>
 
     <!-- Tarjeta 3: Buscar -->
     <div class="card-action">
         <h3>🔍 Buscar</h3>
-        <div class="input-box" style="margin-bottom: 10px;">
-    <input id="busqueda" placeholder="Ingrese PP ..." maxlength="8" oninput="formatearYBuscar(this)">
+<div class="input-box" style="margin-bottom: 10px;">
+    <input id="busqueda" placeholder="Ingrese PP (000000)..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)">
 </div>
         <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
     </div>
@@ -387,12 +387,12 @@ color: #1f2937;
     <div class="card-action">
         <h3 style="margin-top:0;">📦 Stock por PP</h3>
         <!-- El div siguiente permite que la tabla tenga su propio scroll si hay muchos datos -->
-        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 4px;">
+        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 3px;">
             <table id="tabla-stock" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="position: sticky; top: 0; background: white;">
-                        <th style="font-size: 10px; padding: 5px;">PP</th>
-                        <th style="font-size: 10px; padding: 5px;">KG TOTAL</th>
+                        <th style="font-size: 12px; padding: 5px;">PP</th>
+                        <th style="font-size: 12px; padding: 5px;">KG TOTAL</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -426,11 +426,11 @@ color: #1f2937;
 <div id="panel-historial-contenedor" class="panel" style="margin-top: 20px;">
     <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; margin-bottom: 10px;">
         <h4 style="margin: 0;"><i class='bx bx-history'></i> 📜 HISTORIAL</h4>
-        <button onclick="deshacer()" style="padding: 5px 10px; cursor: pointer; border-radius: 6px; border: 1px solid #ccc; background: #fff; font-size: 11px; display: flex; align-items: center; gap: 5px;">
+        <button onclick="deshacer()" style="padding: 5px 10px; cursor: pointer; border-radius: 16px; border: 2px solid #ccc; background: #fff; font-size: 12px; display: flex; align-items: center; gap: 5px;">
             <i class='bx bx-undo'></i> Deshacer último
         </button>
     </div>
-    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 100%;"></div>
+    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 20%;"></div>
 </div>
     <script>
 // ==========================================
@@ -522,7 +522,7 @@ let bultoSeleccionado = {
 ["C2", 350], ["C4", 350], ["C1", 350], ["C3", 350],
 
 "EXCEPCIÓN",
-["EX-01", 500]
+["EX-01", 250]
 ];
 const layoutAdo = [
     "SECTORES",
@@ -533,7 +533,7 @@ const layoutAdo = [
 ["E1", 80], ["E2", 80], ["E3", 250], ["E4", 250],
 
 "EXCEPCIÓN",
-["EX-02", 500]
+["EX-02", 250]
 ];
 
         let bodegaActual = "principal";
@@ -894,7 +894,7 @@ function barra(pct) {
     let shadowColor = pct > 90 ? "rgba(229,62,62,0.4)" : (pct > 70 ? "rgba(221,107,32,0.3)" : "rgba(56,161,105,0.3)");
 
     return `
-        <div style="display:flex; align-items:center; gap:10px; width:150px;">
+        <div style="display:flex; align-items:center; gap:10px; width:200px;">
             
             <div style="
                 flex:1;
@@ -1051,22 +1051,24 @@ function notificar(msg, tipo = "info") {
         setTimeout(() => n.remove(), 300);
     }, 3000);
 }
-function formatearYBuscar(input) {
-    // 1. Dejar solo los números (elimina letras, símbolos y guiones previos)
+function formatearMascara(input, esBusqueda = false) {
+    // 1. Dejar solo los números (elimina letras, símbolos o guiones erróneos)
     let valor = input.value.replace(/\D/g, '');
     
-    // 2. Ir armando el formato 00-00-00 dinámicamente según lo que escribe
+    // 2. Insertar los guiones automáticamente en las posiciones 2 y 4
     if (valor.length > 2 && valor.length <= 4) {
         valor = valor.slice(0, 2) + '-' + valor.slice(2);
     } else if (valor.length > 4) {
         valor = valor.slice(0, 2) + '-' + valor.slice(2, 4) + '-' + valor.slice(4, 6);
     }
     
-    // 3. Colocar el valor formateado visualmente en el cuadro
+    // 3. Devolver el valor formateado al cuadro de texto en tiempo real
     input.value = valor;
     
-    // 4. Ejecutar tu función de búsqueda original con el texto ya formateado
-    buscar();
+    // 4. Si la casilla es la de BUSCAR, ejecuta la función de filtrado del mapa
+    if (esBusqueda) {
+        buscar(); 
+    }
 }
 function buscar() {
     let q = document.getElementById('busqueda').value.trim();
