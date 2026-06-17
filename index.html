@@ -58,7 +58,7 @@
     margin-top: 0;
 }
     
-    .input-group { display: flex; gap: 8px; margin-bottom: 10px; }
+    .input-group { display: flex; gap: 5px; margin-bottom: 10px; }
     .input-box { display: flex; border: 1px solid var(--border-color); border-radius: 5px; flex: 1; overflow: hidden; background: #fafafa; }
     .input-box i { padding: 5px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); }
     input, select { border: none; padding: 10px; width: 100%; background: transparent; outline: none; }
@@ -74,9 +74,43 @@
         -moz-appearance: textfield;
     }
 
-    .btn-action { width: 100%; border: none; padding: 12px; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-    .btn-ingreso { background: var(--success); }
-    .btn-salida { background: var(--danger); }
+.btn-action { 
+    width: 100%; 
+    border: none;
+    padding: 12px; 
+    border-radius: 6px; 
+    color: white; 
+    cursor: pointer; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    
+    /* 🚀 Sombra sutil por defecto */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease; 
+}
+
+/* Efecto cuando el operador pasa el mouse por encima (Se eleva un poquito) */
+.btn-action:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tu efecto de presión que agregamos antes (Se hunde y pierde la sombra) */
+.btn-action:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    opacity: 0.9;
+}
+
+.btn-ingreso { background: var(--success); }
+.btn-salida { background: var(--danger); }
+
+/* 🚀 NUEVO: Este estado se activa JUSTO en el momento en que el usuario hace clic o presiona el botón */
+.btn-action:active {
+    /* Reduce el tamaño del botón al 95% para simular que se hunde */
+    transform: scale(0.95);
+    /* Reduce la opacidad un poco para simular un cambio de luz al presionarse */
+    opacity: 0.9;
+}
 
 .stats-container { 
         display: grid; 
@@ -118,7 +152,8 @@
     justify-items: stretch;
 }
 .grid-sectores-d .card-ubi[data-id="D7"] {
-    grid-column: 5;
+    /* 🚀 Hace que empiece en la columna 5 y se extienda hasta la línea 7 (abarcando 2 columnas de ancho) */
+    grid-column: 5 / span 2; 
 }
     .galpon-grid { 
         display: grid; 
@@ -356,7 +391,7 @@ color: #1f2937;
 
     <!-- Tarjeta 1: Ingreso -->
     <div class="card-action" id="tarjeta-ingreso">
-        <h3 style="color:var(--success)"><i class='bx bxs-plus-circle'></i> Ingreso</h3>
+<h3 style="color:var(--success)"><i class='bx bxs-plus-circle' style="margin-right: 8px;"></i>Ingreso</h3>
         <div class="input-group">
 <div class="input-box">
     <span style="padding: 8px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
@@ -371,7 +406,7 @@ color: #1f2937;
 
     <!-- Tarjeta 2: Salida -->
     <div class="card-action" id="tarjeta-salida">
-        <h3 style="color:var(--danger)"><i class='bx bxs-minus-circle'></i> Salida</h3>
+<h3 style="color:var(--danger)"><i class='bx bxs-minus-circle' style="margin-right: 8px;"></i>Salida</h3>
         <div class="input-group">
 <div class="input-box">
     <span style="padding: 8px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); font-weight: bold; font-size: 13px;">PP</span>
