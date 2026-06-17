@@ -35,7 +35,7 @@
     /* El uso de 0min permite que las columnas se encojan al máximo */
     grid-template-columns: repeat(4, minmax(0, 1fr)); 
     gap: 10px; /* Espacio reducido entre tarjetas */
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     align-items: start; /* Alinea las tarjetas al tope */
 }
 
@@ -54,7 +54,7 @@
 }
 
 .card-action h3 {
-    font-size: 14px; /* Títulos ligeramente más pequeños */
+    font-size: 15px; /* Títulos ligeramente más pequeños */
     margin-top: 0;
 }
     
@@ -378,7 +378,7 @@ color: #1f2937;
     <div class="card-action">
         <h3>🔍 Buscar</h3>
 <div class="input-box" style="margin-bottom: 10px;">
-    <input id="busqueda" placeholder="Ingrese PP (000000)..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)">
+    <input id="busqueda" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)">
 </div>
         <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
     </div>
@@ -430,7 +430,7 @@ color: #1f2937;
             <i class='bx bx-undo'></i> Deshacer último
         </button>
     </div>
-    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 20%;"></div>
+    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 35%;"></div>
 </div>
     <script>
 // ==========================================
