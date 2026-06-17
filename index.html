@@ -78,10 +78,20 @@
     .btn-ingreso { background: var(--success); }
     .btn-salida { background: var(--danger); }
 
-    .stats-container { display: grid; grid-template-columns: repeat(3, 1fr) auto; background: var(--bg-card); padding: 20px; border-radius: var(--radius); gap: 100px; margin-bottom: 20px; align-items: center; }
+.stats-container { 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr) auto; 
+        background: var(--bg-card); 
+        padding: 10px 20px; /* 🔥 Reducido de 20px a 10px arriba/abajo para que sea más delgada */
+        border-radius: var(--radius); 
+        gap: 30px; /* 🔥 Reducido de 100px a 30px para que los semáforos estén más juntos */
+        margin-bottom: 1px; 
+        align-items: center; 
+        max-width: 1800px; /* 🚀 NUEVO: Evita que la barra se estire infinitamente en pantallas grandes */
+    }
     .kpi-block { border-right: 1px solid var(--border-color); padding-right: 20px; }
-    .kpi-val { font-size: 22px; font-weight: bold; display: block; }
-    .pct-badge { background: #e6fffa; color: #333; padding: 4px 10px; border-radius: 12px; font-size: 22px; font-weight: bold; }
+    .kpi-val { font-size: 20px; font-weight: bold; display: block; }
+    .pct-badge { background: #e6fffa; color: #333; padding: 2px 8px; border-radius: 12px; font-size: 20px; font-weight: bold; }
 
     /* ESTILOS DE GRILLAS INDEPENDIENTES */
     .grid-pasillos { 
@@ -894,7 +904,7 @@ function barra(pct) {
     let shadowColor = pct > 90 ? "rgba(229,62,62,0.4)" : (pct > 70 ? "rgba(221,107,32,0.3)" : "rgba(56,161,105,0.3)");
 
     return `
-        <div style="display:flex; align-items:center; gap:10px; width:200px;">
+        <div style="display:flex; align-items:center; gap:10px; width:160px;">
             
             <div style="
                 flex:1;
