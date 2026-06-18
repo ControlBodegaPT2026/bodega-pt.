@@ -536,6 +536,8 @@ function verificarAcceso() {
         if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'none', 'important');
         if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'none', 'important');
         
+if (contenedorGrid) contenedorGrid.style.setProperty('grid-template-columns', '1fr 1fr', 'important');
+
         // El historial y la configuración (Exportar/Backup) siguen ocultos por seguridad
         if (panelHistorial) panelHistorial.style.setProperty('display', 'none', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
