@@ -410,6 +410,27 @@ color: #1f2937;
             text-align: center !important;
             white-space: nowrap;
         }
+/* 🚀 EFECTO ZOOM PARA TARJETAS EN MÓVIL */
+.card-ubi {
+    /* Aseguramos que la tarjeta tenga una transición suave al agrandarse */
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease, z-index 0.2s ease !important;
+}
+
+.card-ubi.zoom-active {
+    transform: scale(2.0) !important; /* 🚀 AHORA EL DOBLE DE GRANDE (200%) */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important; /* Sombra un poco más profunda por el tamaño */
+    z-index: 9999 !important; /* Máxima prioridad para que nada lo tape */
+    position: relative !important;
+    border: 1.5px solid #fff !important; /* Borde blanco sutil para resaltar */
+    
+    /* Opcional pero recomendado: Asegura que los textos internos también escalen perfecto */
+    text-shadow: none !important; 
+}
+
+/* 🔥 Extra: Hace que las letras y números de adentro se mantengan nítidos al agrandarse */
+.card-ubi.zoom-active * {
+    font-size: 110% !important; 
+}
     }
 </style>
 </head>
@@ -527,7 +548,7 @@ color: #1f2937;
             <i class='bx bx-undo'></i> Deshacer último
         </button>
     </div>
-    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 35%;"></div>
+    <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 50%;"></div>
 </div>
     <script>
 // ==========================================
@@ -1394,6 +1415,35 @@ render();          // Luego dibujamos la página
 // ================================
 
 setInterval(autoBackup, 300000); // cada 5 minutos
+
+// 🚀 PASO 2 PEGADO AQUÍ: Lógica interactiva de Zoom para los Casilleros
+document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("click", (e) => {
+        // Buscamos si el clic/toque fue en una tarjeta de ubicación
+        const tarjeta = e.target.closest(".card-ubi");
+
+        if (tarjeta) {
+            // Si la tarjeta ya tenía zoom, se lo quitamos
+            if (tarjeta.classList.contains("zoom-active")) {
+                tarjeta.classList.remove("zoom-active");
+            } else {
+                // Quitamos el zoom de cualquier otra tarjeta abierta antes
+                document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
+                    el.classList.remove("zoom-active");
+                });
+                // Le aplicamos el zoom a la tarjeta seleccionada
+                tarjeta.classList.add("zoom-active");
+            }
+            e.stopPropagation();
+        } else {
+            // Si el operador toca en cualquier otra parte, cerramos todos los zooms
+            document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
+                el.classList.remove("zoom-active");
+            });
+        }
+    });
+});
+
 </script>
 </body>
 </html>
