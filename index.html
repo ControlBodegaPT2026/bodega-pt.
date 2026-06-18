@@ -303,9 +303,9 @@ color: #1f2937;
     }
         /* Mantenemos las 4 columnas pero reducimos el espacio entre ellas */
         .top-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 5px !important;
-            margin-bottom: 10px;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 12px;
         }
 
         /* Hacemos las tarjetas más pequeñas */
@@ -358,6 +358,58 @@ color: #1f2937;
         .kpi-val { font-size: 14px !important; }
         .pct-badge { font-size: 10px !important; }
         #mini-grafico { display: none; } /* Ocultamos gráfico en móvil para ganar espacio */
+
+/* 🚀 PASO 2 PEGADO AQUÍ: Contener los sectores D en el móvil */
+        .grid-sectores-d {
+            overflow-x: auto; /* Activa el desplazamiento horizontal interno */
+            display: grid;
+            grid-template-columns: repeat(6, minmax(140px, 1fr)) !important; 
+            padding: 10px !important;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch; /* Suavizado para iPhone y Android */
+        }
+
+        /* Hace que la barra de scroll horizontal en el celular sea fina y elegante */
+        .grid-sectores-d::-webkit-scrollbar {
+            height: 5px;
+        }
+        .grid-sectores-d::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+/* 🚀 NUEVO: Reorganiza el encabezado para que no se apriete en el móvil */
+        header {
+            display: flex !important;
+            flex-direction: column !important; /* Pone el título arriba y los botones abajo */
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 5px !important;
+            text-align: center !important;
+        }
+
+        /* Hace el título más pequeño y estilizado en el celular */
+        header h1 {
+            font-size: 16px !important; /* Reduce el tamaño para que no se vea apretado */
+            letter-spacing: 0.5px;
+            width: 100% !important;
+        }
+
+        /* Ajusta el contenedor de los botones de navegación */
+        .nav-tabs {
+            display: flex !important;
+            width: 100% !important; /* Utiliza todo el ancho disponible del celular */
+            gap: 8px !important; /* Espacio uniforme entre los dos botones */
+            justify-content: space-between !important;
+        }
+
+        /* Hace que los botones PRINCIPAL y ADOQUINES se repartan el 50% cada uno */
+        .btn-nav {
+            flex: 1 !important; /* Obliga a ambos botones a medir exactamente lo mismo */
+            padding: 10px 5px !important; /* Tamaño cómodo para el dedo */
+            font-size: 12px !important; /* Letra legible pero compacta */
+            text-align: center !important;
+            white-space: nowrap;
+        }
     }
 </style>
 </head>
