@@ -377,43 +377,86 @@ color: #1f2937;
             background: #cbd5e0;
             border-radius: 10px;
         }
-/* 🚀 NUEVO: Reorganiza el encabezado para que no se apriete en el móvil */
-        header {
+/* 🚗 PATIO C: Forzar ensanchamiento definitivo en móviles */
+        /* Buscamos cualquier contenedor que tenga relación con el patio c y reconfiguramos su grilla */
+        .grid-patio-c, [class*="patio"], [id*="patio"], .patio-c, #patio-c {
+            display: grid !important;
+            /* Bajamos a 2 columnas fijas si es necesario, o forzamos un mínimo de 150px por tarjeta */
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)) !important;
+            column-gap: 50px;
+        }
+
+        /* 🎯 EL CAMBIO DEFINITIVO: Atacamos directamente a las tarjetas que están dentro del contenedor del Patio C */
+        /* Usamos '!important' en el ancho mínimo e incluso en el ancho base para romper cualquier bloqueo de JavaScript */
+        [class*="patio"] .card-ubi, [id*="patio"] .card-ubi, .grid-patio-c .card-ubi {
+            min-width: 100px !important; /* 🔥 Fuerza a que cada tarjeta mida mínimo 145px de ancho */
+            width: 125px !important;     /* Obliga al navegador a estirarlas sí o sí */
+            box-sizing: border-box !important;
+        }
+
+        /* 🚀 CORREGIDO CON ULTRA FUERZA: Reorganiza el encabezado obligatoriamente */
+        html body header, html body .header, html body #header {
             display: flex !important;
             flex-direction: column !important; /* Pone el título arriba y los botones abajo */
             align-items: center !important;
-            gap: 12px !important;
-            padding: 10px 5px !important;
+            gap: 10px !important; 
+            padding: 12px 5px 8px 5px !important; 
             text-align: center !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
-        /* Hace el título más pequeño y estilizado en el celular */
-        header h1 {
-            font-size: 16px !important; /* Reduce el tamaño para que no se vea apretado */
-            letter-spacing: 0.5px;
-            width: 100% !important;
+        /* 🔎 Forzamos la letra PEQUEÑA en el título usando rutas absolutas imposibles de ignorar */
+        html body header h1, html body .header h1, html body #header h1, html body h1 {
+            font-size: 11px !important; /* Letra ultra pequeña y fina */
+            letter-spacing: 1.5px !important; /* Separa las letras elegantemente */
+            text-transform: uppercase !important;
+            line-height: 1.3 !important; 
+            width: 95% !important; 
+            margin: 0 auto !important;
+        }
+
+        /* 🛠️ Botón Exportar / Menú de opciones compacto */
+        .menu-opciones, .btn-exportar, header .menu-opciones {
+            position: static !important; 
+            margin-top: 4px !important; 
+            margin-bottom: 4px !important;
+            font-size: 10px !important; 
+            padding: 4px 8px !important; 
+            max-width: 95% !important;
+            text-align: center !important;
         }
 
         /* Ajusta el contenedor de los botones de navegación */
         .nav-tabs {
             display: flex !important;
-            width: 100% !important; /* Utiliza todo el ancho disponible del celular */
-            gap: 8px !important; /* Espacio uniforme entre los dos botones */
+            width: 100% !important; 
+            gap: 6px !important; /* Espacio ligeramente más compacto */
             justify-content: space-between !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Botones de navegación proporcionales al nuevo tamaño del título */
+        .btn-nav {
+            flex: 1 !important; 
+            padding: 8px 4px !important; /* Un poco más compactos */
+            font-size: 10px !important; /* 🔥 Letra a 10px para que combine con el título */
+            text-align: center !important;
+            white-space: nowrap;
         }
 
         /* Hace que los botones PRINCIPAL y ADOQUINES se repartan el 50% cada uno */
         .btn-nav {
             flex: 1 !important; /* Obliga a ambos botones a medir exactamente lo mismo */
             padding: 10px 5px !important; /* Tamaño cómodo para el dedo */
-            font-size: 12px !important; /* Letra legible pero compacta */
+            font-size: 11px !important; /* Letra ligeramente más compacta para evitar desbordes */
             text-align: center !important;
             white-space: nowrap;
         }
 /* 🚀 EFECTO ZOOM PARA TARJETAS EN MÓVIL */
 .card-ubi {
     /* Aseguramos que la tarjeta tenga una transición suave al agrandarse */
-    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease, z-index 0.2s ease !important;
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s ease, z-index 0.5s ease !important;
 }
 
 .card-ubi.zoom-active {
