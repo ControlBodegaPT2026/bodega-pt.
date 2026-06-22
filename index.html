@@ -474,7 +474,23 @@ color: #1f2937;
 .card-ubi.zoom-active * {
     font-size: 95% !important; 
 }
-    }
+/* ================================================================= */
+/* 🔄 ANIMACIONES DE MOVIMIENTO SUTIL PARA LAS FLECHAS DE ENTRADA    */
+/* ================================================================= */
+@keyframes bounceX {
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(-55%); }
+}
+
+@keyframes bounceXDer {
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(-45%); }
+}
+
+@keyframes bounceY {
+    0%, 100% { transform: translateY(-50%); }
+    50% { transform: translateY(-55%); }
+}
 </style>
 </head>
 <body>
@@ -484,23 +500,27 @@ color: #1f2937;
     <img src="logo.png" style="width:55px; height:28px; object-fit:contain;">
     CONTROL DE BODEGA PT.  v0.9
 </div>
-        <div class="header-nav">
+<div class="header-nav">
             <button class="btn-nav active" id="btnPrin" onclick="cambiarBodega('principal')">PRINCIPAL</button>
             <button class="btn-nav" id="btnAdo" onclick="cambiarBodega('adoquines')">ADOQUINES</button>
             
-<div class="menu-opciones">
-    <button class="btn-nav btn-nav-small" onclick="toggleMenu()">
-        ⚙
-    </button>
+            <div class="menu-opciones">
+                <button class="btn-nav btn-nav-small" onclick="toggleMenu()">
+                    ⚙
+                </button>
 
-    <div id="menuDropdown" class="menu-dropdown">
-        <div onclick="exportarExcel()"><span>📊</span> Exportar</div>
-        <div onclick="crearBackup()"><span>💾</span> Backup</div>
-<input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
-        <div onclick="document.getElementById('inputBackup').click()"><span>📥</span> Restaurar</div>
-    </div>
-</div>
-</div>
+                <div id="menuDropdown" class="menu-dropdown">
+                    <div id="btn-movimiento-interno" class="admin-only" style="display: none;" onclick="abrirModalMovimiento(); toggleMenu();">
+                        <span>🔄</span> Movimiento Interno
+                    </div>
+                    
+                    <div onclick="exportarExcel()"><span>📊</span> Exportar</div>
+                    <div onclick="crearBackup()"><span>💾</span> Backup</div>
+                    <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
+                    <div onclick="document.getElementById('inputBackup').click()"><span>📥</span> Restaurar</div>
+                </div>
+            </div>
+        </div>
 </div>
 <!-- Contenedor principal configurado para 4 columnas -->
 <div class="top-grid">
@@ -516,7 +536,7 @@ color: #1f2937;
             <div class="input-box"><i class='bx bx-weight'></i><input id="kg_in" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('ingreso')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
         <select id="bultos_ingreso" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 5px; width: 100%; height: 40px; padding: 5px 10px;"></select>            
-        <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;"></select>
+        <select id="ubi_in" style="border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; cursor: pointer; height: 40px; color: var(--text-main);"><option value="">Seleccione ubicación</option></select>
         <button class="btn-action btn-ingreso" onclick="accion('ingreso')">Ingresar</button>
     </div>
 
@@ -531,7 +551,7 @@ color: #1f2937;
             <div class="input-box"><i class='bx bx-weight'></i><input id="kg_out" type="number" placeholder="Kg" oninput="autoSeleccionarBulto('salida')" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();"></div>
         </div>
         <select id="bultos_salida" class="input-field" style="margin-bottom: 10px; cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 5px; width: 100%; height: 40px; padding: 5px 10px;"></select>         
-        <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;"></select>
+        <select id="ubi_out" style="border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; cursor: pointer; height: 40px; color: var(--text-main);"><option value="">Seleccione ubicación</option></select>
         <button class="btn-action btn-salida" onclick="accion('salida')">Retirar</button>
     </div>
 
@@ -593,6 +613,66 @@ color: #1f2937;
     </div>
     <div id="historial-lista" style="font-size: 12px; max-height: 400px; overflow-y: auto; width: 50%;"></div>
 </div>
+<div id="modal-movimiento" class="modal-backup-lista" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+    <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); box-sizing: border-box; color: var(--text-main); font-family: sans-serif;">
+        <h3 style="margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary);">
+            <i class='bx bx-transfer-alt'></i> MOVIMIENTO INTERNO
+        </h3>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+        
+        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px;">1. DATOS DEL MATERIAL:</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div style="flex: 1;">
+                <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">PP</label>
+                <input type="text" id="mov_pp" placeholder="00-00-00" maxlength="8" oninput="formatearMascara(this)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-weight: bold; height: 40px;">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Kilogramos</label>
+                <input type="number" id="mov_kg" placeholder="Kg" oninput="autoSeleccionarBultoMovimiento()" onkeydown="if(event.key==='-' || event.key==='+') event.preventDefault();" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-weight: bold; height: 40px;">
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Tipo de Bulto:</label>
+            <select id="bultos_movimiento" style="cursor: pointer; background-color: #f8fafc; border: 1px solid #ddd; border-radius: 5px; width: 100%; height: 40px; padding: 5px 10px; color: var(--text-main); font-weight: bold;"></select>
+        </div>
+
+        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px;">2. LOGÍSTICA DE MOVIMIENTO:</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
+            <div style="flex: 1;">
+                <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;"> (Origen):</label>
+                <select id="mov_origen" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: white; font-weight: bold; color: var(--text-main); height: 40px;"></select>
+            </div>
+            <div style="font-size: 20px; color: var(--text-muted); padding-top: 15px;">➡️</div>
+            <div style="flex: 1;">
+                <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;"> (Destino):</label>
+                <select id="mov_destino" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: white; font-weight: bold; color: var(--text-main); height: 40px;"></select>
+            </div>
+        </div>
+
+<div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 5px;">
+            
+            <button type="button" onclick="cerrarModalMovimiento()" 
+                onmouseover="this.style.background='#cbd5e1'; this.style.transform='scale(1.03)';" 
+                onmouseleave="this.style.background='#e2e8f0'; this.style.transform='scale(1)';"
+                onmousedown="this.style.transform='scale(0.97)';"
+                onmouseup="this.style.transform='scale(1.03)';"
+                style="flex: 1; padding: 12px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--text-main); height: 44px; transition: all 0.2s ease-in-out; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                Cancelar
+            </button>
+            
+            <button type="button" onclick="ejecutarMovimientoInterno()" 
+                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.03)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';" 
+                onmouseleave="this.style.filter='brightness(1)'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';"
+                onmousedown="this.style.transform='scale(0.97)';"
+                onmouseup="this.style.transform='scale(1.03)';"
+                style="flex: 1; padding: 12px; background: var(--primary); border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; height: 44px; transition: all 0.2s ease-in-out; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                Confirmar
+            </button>
+            
+        </div>
+    </div>
+</div>
     <script>
 // ==========================================
         // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
@@ -625,8 +705,6 @@ color: #1f2937;
                 verificarAcceso();
             }
         });
-
-// Función para ocultar controles a los operadores (Dando acceso a Buscar y Stock PP)
 function verificarAcceso() {
     const urlParams = new URLSearchParams(window.location.search);
     const rol = urlParams.get('rol');
@@ -637,6 +715,7 @@ function verificarAcceso() {
     const tarjetaSalida = document.getElementById('tarjeta-salida');
     const panelHistorial = document.getElementById('panel-historial-contenedor');
     const menuOpciones = document.querySelectorAll('.menu-opciones');
+    const btnMov = document.getElementById('btn-movimiento-interno');
 
     if (rol === 'admin') {
         // ADMIN: Ver todo completo
@@ -645,6 +724,9 @@ function verificarAcceso() {
         if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'block', 'important');
         if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
+        
+        // Muestra la opción dentro del menú con el diseño nativo de tus dropdowns
+        if (btnMov) btnMov.style.setProperty('display', 'block', 'important'); 
         console.log("Acceso: ADMINISTRADOR");
     } else {
         // OPERADOR: Habilitar contenedor principal pero ocultar selectivamente
@@ -652,11 +734,14 @@ function verificarAcceso() {
         if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'none', 'important');
         if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'none', 'important');
         
-if (contenedorGrid) contenedorGrid.style.setProperty('grid-template-columns', '1fr 1fr', 'important');
+        if (contenedorGrid) contenedorGrid.style.setProperty('grid-template-columns', '1fr 1fr', 'important');
 
         // El historial y la configuración (Exportar/Backup) siguen ocultos por seguridad
         if (panelHistorial) panelHistorial.style.setProperty('display', 'none', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
+        
+        // Asegura ocultar la opción de movimiento interno por completo
+        if (btnMov) btnMov.style.setProperty('display', 'none', 'important'); 
 
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
@@ -738,6 +823,12 @@ function accion(tipo) {
             let pp = ppInput.value.trim();
             let kg = parseFloat(document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value);
             let ubi = document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').value;
+
+// 🛑 NUEVA VALIDACIÓN: Detener el proceso si no se seleccionó ubicación
+            if (!ubi || ubi === "") {
+                notificar("Por favor, seleccione una ubicación válida", "warning");
+                return;
+            }
 
             // 1. REGLA DE FORMATO PP
             const formatoPP = /^\d{2}-\d{2}-\d{2}$/;
@@ -910,7 +1001,7 @@ let titulo = bodegaActual === "principal"
     : "LAYOUT BODEGA ADOQUINES";
 
 document.getElementById("mapa-titulo").innerText = titulo;
-            let container = document.getElementById('dibujo-bodega');
+let container = document.getElementById('dibujo-bodega');
             let selIn = document.getElementById('ubi_in');
             let selOut = document.getElementById('ubi_out');
             container.innerHTML = ""; selIn.innerHTML = ""; selOut.innerHTML = "";
@@ -920,6 +1011,11 @@ document.getElementById("mapa-titulo").innerText = titulo;
             layout.forEach(item => {
                 if (Array.isArray(item)) todasLasUbis.push(item[0]);
             });
+            
+            // 🔥 AGREGADO: Inyectamos la opción neutra al inicio de ambos desplegables
+            selIn.add(new Option("Seleccione ubicación", ""));
+            selOut.add(new Option("Seleccione ubicación", ""));
+
             todasLasUbis.sort().forEach(id => {
                 selIn.add(new Option(id, id));
                 selOut.add(new Option(id, id));
@@ -1006,9 +1102,13 @@ if (bodegaActual === "principal") {
                     let disponible = cap - usados;
                     let color = pct > 90 ? 'ubi-red' : (pct > 70 ? 'ubi-yellow' : 'ubi-green');
                     
-                    let card = document.createElement('div');
+let card = document.createElement('div');
                     card.className = `card-ubi ${color}`;
                     card.dataset.id = id;
+                    
+                    // Aseguramos que la tarjeta sirva de base para posicionar la flecha
+                    card.style.position = 'relative';
+
 if (id.startsWith('EX')) {
     card.style.border = "2px dashed #555";
     card.style.background = "#fffbea";
@@ -1020,8 +1120,33 @@ if (id.startsWith('EX')) {
                         if(id === 'E2' || id === 'E4') card.classList.add('galpon-der');
                     }
 
-                    // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO
+                    // 🔥 INYECCIÓN DE FLECHAS DE ACCESO PARA MAQUINARIA
+                    let flechaHTML = "";
+                    
+                    if (id === "A1" && bodegaActual === "principal") {
+                        // Pasillo 1: flecha izquierda, abajo de A1
+                        flechaHTML = `<div style="position: absolute; bottom: -48px; left: 60%; transform: translateX(-50%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite;">⬅ <span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span></div>`;
+                    } else if (id === "B1" && bodegaActual === "principal") {
+                        // Pasillo 2: flecha izquierda, debajo de B1
+                        flechaHTML = `<div style="position: absolute; bottom: -48px; left: 60%; transform: translateX(-50%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite;">⬅ <span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span></div>`;
+                    } else if (id === "C3" && bodegaActual === "principal") {
+                        // Patio: flecha arriba estructurada verticalmente al lado derecho de C1
+                        flechaHTML = `
+                            <div style="position: absolute; left: -53px; top: 70%; transform: translateY(-50%); color: #e53e3e; font-size: 22px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; text-align: center; display: flex; flex-direction: column; align-items: center; line-height: 1.2;">
+                                <div style="font-size: 35px; margin-bottom: 0px;">⬆</div>
+                                <div style="font-size: 10px; font-family: sans-serif;">ACCESO</div>
+                            </div>`;
+                    } else if (id === "D1" && bodegaActual === "adoquines") {
+                        // Sectores: flecha derecha, debajo de D1
+                        flechaHTML = `<div style="position: absolute; bottom: -42px; left: 32%; transform: translateX(-50%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite;"><span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span> ➡</div>`;
+                    } else if (id === "E1" && bodegaActual === "adoquines") {
+                        // Galpón: flecha derecha, arriba de E1
+                        flechaHTML = `<div style="position: absolute; bottom: -42px; left: 22%; transform: translateX(-120%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite;"><span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span> ➡</div>`;
+                    }
+
+                    // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO (Se concatena la flecha al final)
                     card.innerHTML = `
+                        ${flechaHTML}
                         <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${id}</div>
                         <div style="font-size: 12px; line-height: 1.2;">
                             <div>${Math.round(usados)}/${cap} bultos</div>
@@ -1456,6 +1581,179 @@ localStorage.setItem("bodega_backups", JSON.stringify(backups));
 verificarAcceso(); // Primero bloqueamos/permitimos según el link
 render();          // Luego dibujamos la página
 // ================================
+// =================================================================
+// 🚀 MÓDULO LOGÍSTICO INTERCONECTADO: CORREGIDO Y VERIFICADO
+// =================================================================
+
+let bultoSeleccionadoMovimiento = null;
+
+function abrirModalMovimiento() {
+    document.getElementById('mov_pp').value = '';
+    document.getElementById('mov_kg').value = '';
+    bultoSeleccionadoMovimiento = null;
+    
+    // 1. Cargar selector de bultos usando tus 'pesosValidos' globales
+    const selectBulto = document.getElementById('bultos_movimiento');
+    if (selectBulto) {
+        selectBulto.innerHTML = '<option value="">Seleccione bulto</option>';
+        pesosValidos.forEach(p => {
+            selectBulto.innerHTML += `<option value="${p}">${p} kg</option>`;
+        });
+        selectBulto.onchange = function() {
+            bultoSeleccionadoMovimiento = this.value ? parseFloat(this.value) : null;
+        };
+    }
+
+    // 2. Cargar selectores unificados con divisiones por bodega
+    const selectOrigen = document.getElementById('mov_origen');
+    const selectDestino = document.getElementById('mov_destino');
+    
+    if (selectOrigen && selectDestino) {
+        let ubisPrin = [];
+        layoutPrin.forEach(item => { if (Array.isArray(item)) ubisPrin.push(item[0]); });
+        ubisPrin.sort();
+
+        let ubisAdo = [];
+        layoutAdo.forEach(item => { if (Array.isArray(item)) ubisAdo.push(item[0]); });
+        ubisAdo.sort();
+
+        let opcionesHTML = `<option value="">Seleccione</option>
+            <optgroup label="BOD. PRINCIPAL">`;
+        ubisPrin.forEach(id => { opcionesHTML += `<option value="${id}">${id}</option>`; });
+        opcionesHTML += `</optgroup><optgroup label="BOD. ADOQUINES">`;
+        ubisAdo.forEach(id => { opcionesHTML += `<option value="${id}">${id}</option>`; });
+        opcionesHTML += `</optgroup>`;
+
+        selectOrigen.innerHTML = opcionesHTML;
+        selectDestino.innerHTML = opcionesHTML;
+    }
+
+    // Mostrar ventana modal forzando el diseño flex centrado
+    document.getElementById('modal-movimiento').style.display = 'flex';
+}
+
+function cerrarModalMovimiento() {
+    document.getElementById('modal-movimiento').style.display = 'none';
+}
+
+// Réplica exacta y funcional de tu detector automático de bultos
+function autoSeleccionarBultoMovimiento() {
+    let kgInput = document.getElementById("mov_kg");
+    if (!kgInput) return;
+    let kg = parseFloat(kgInput.value);
+    if (!kg || kg <= 0) return;
+
+    let encontrado = null;
+    for (let p of pesosValidos) {
+        let division = kg / p;
+        if (Math.abs(division - Math.round(division)) < 0.01) {
+            encontrado = p;
+            break;
+        }
+    }
+    if (!encontrado) return;
+
+    bultoSeleccionadoMovimiento = encontrado;
+    let selectContainer = document.getElementById("bultos_movimiento");
+    if (selectContainer) selectContainer.value = encontrado;
+}
+
+function ejecutarMovimientoInterno() {
+    let ppInput = document.getElementById('mov_pp');
+    if (!ppInput) return;
+    let pp = ppInput.value.trim();
+    let kg = parseFloat(document.getElementById('mov_kg').value);
+    let origen = document.getElementById('mov_origen').value;
+    let destino = document.getElementById('mov_destino').value;
+
+    const formatoPP = /^\d{2}-\d{2}-\d{2}$/;
+    if (!formatoPP.test(pp)) {
+        notificar("Formato de PP incorrecto (00-00-00)", "error");
+        ppInput.focus();
+        return;
+    }
+    if (!pp || isNaN(kg) || kg <= 0 || !origen || !destino) {
+        notificar("Datos incompletos para el traspaso", "error");
+        return;
+    }
+    if (origen === destino) {
+        notificar("El origen y el destino no pueden ser iguales", "error");
+        return;
+    }
+    if (!bultoSeleccionadoMovimiento) {
+        notificar("Selecciona un tipo de bulto", "warning");
+        return;
+    }
+
+    let bultosTraspaso = kg / bultoSeleccionadoMovimiento;
+
+    // Validar Stock Origen
+    if (!db[origen] || !db[origen][pp] || db[origen][pp].kg < kg) {
+        notificar(`No hay stock suficiente en ${origen}`, "error");
+        return;
+    }
+
+    // Buscar capacidad máxima del destino en los dos layouts
+    let ubiData = layoutPrin.find(item => Array.isArray(item) && item[0] === destino);
+    if (!ubiData) {
+        ubiData = layoutAdo.find(item => Array.isArray(item) && item[0] === destino);
+    }
+    let capMax = ubiData ? ubiData[1] : 0;
+
+    let bultosActualesDestino = 0;
+    if (db[destino]) {
+        for (let p in db[destino]) {
+            bultosActualesDestino += db[destino][p].bultos;
+        }
+    }
+
+    if (bultosActualesDestino + bultosTraspaso > capMax) {
+        alert(`¡ERROR! Espacio insuficiente en destino ${destino}.\nCapacidad máxima: ${capMax}\nEspacio ocupado: ${Math.round(bultosActualesDestino)}\nIntenta ingresar: ${Math.round(bultosTraspaso)}`);
+        return;
+    }
+
+    // Procesar Base de Datos
+    let ratioOrigen = db[origen][pp].bultos / db[origen][pp].kg;
+    db[origen][pp].kg -= kg;
+    db[origen][pp].bultos -= (kg * ratioOrigen);
+    if (db[origen][pp].kg <= 0) delete db[origen][pp];
+    if (db[origen] && Object.keys(db[origen]).length === 0) delete db[origen];
+
+    if (!db[destino]) db[destino] = {};
+    if (!db[destino][pp]) db[destino][pp] = { kg: 0, bultos: 0 };
+    db[destino][pp].kg += kg;
+    db[destino][pp].bultos += bultosTraspaso;
+
+    // Historial Logs
+    logs.unshift({ 
+        tipo: "transferencia", 
+        pp, 
+        kg, 
+        ubi: `${origen} ➡️ ${destino}`, 
+        fecha: new Date().toLocaleString() 
+    });
+
+    localStorage.setItem('bodega_db', JSON.stringify(db));
+    localStorage.setItem('bodega_logs', JSON.stringify(logs.slice(0, 50)));
+
+    notificar(`TRASPASO OK: ${pp} movido de ${origen} a ${destino}`, "success");
+    autoBackup();
+
+    // Sincronizar Firebase Cloud
+    if (typeof dbRef !== 'undefined' && dbRef.set) {
+        dbRef.set({
+            inventario: db,
+            historial: logs
+        }).then(() => {
+            console.log("Sincronización Inter-Bodegas exitosa.");
+        }).catch((error) => {
+            console.error("Error en sincronización:", error);
+        });
+    }
+
+    render();
+    cerrarModalMovimiento();
+}
 
 setInterval(autoBackup, 300000); // cada 5 minutos
 
