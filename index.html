@@ -1120,28 +1120,47 @@ if (id.startsWith('EX')) {
                         if(id === 'E2' || id === 'E4') card.classList.add('galpon-der');
                     }
 
-                    // 🔥 INYECCIÓN DE FLECHAS DE ACCESO PARA MAQUINARIA
+// 🔥 INYECCIÓN DE FLECHAS DE ACCESO LOGÍSTICO (DISEÑO UNIFICADO Y CONSISTENTE)
                     let flechaHTML = "";
                     
+                    // Estilo base para las flechas CSS (para que todas midan y pesen lo mismo)
+                    const estiloFlechaBase = "display: inline-block; width: 10px; height: 10px; border-top: 3px solid #e53e3e; border-right: 3px solid #e53e3e;";
+
                     if (id === "A1" && bodegaActual === "principal") {
                         // Pasillo 1: flecha izquierda, abajo de A1
-                        flechaHTML = `<div style="position: absolute; bottom: -48px; left: 60%; transform: translateX(-50%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite;">⬅ <span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span></div>`;
+                        flechaHTML = `
+                            <div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                                <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
+                                <span>ACCESO</span>
+                            </div>`;
                     } else if (id === "B1" && bodegaActual === "principal") {
                         // Pasillo 2: flecha izquierda, debajo de B1
-                        flechaHTML = `<div style="position: absolute; bottom: -48px; left: 60%; transform: translateX(-50%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite;">⬅ <span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span></div>`;
-                    } else if (id === "C3" && bodegaActual === "principal") {
-                        // Patio: flecha arriba estructurada verticalmente al lado derecho de C1
                         flechaHTML = `
-                            <div style="position: absolute; left: -53px; top: 70%; transform: translateY(-50%); color: #e53e3e; font-size: 22px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; text-align: center; display: flex; flex-direction: column; align-items: center; line-height: 1.2;">
-                                <div style="font-size: 35px; margin-bottom: 0px;">⬆</div>
-                                <div style="font-size: 10px; font-family: sans-serif;">ACCESO</div>
+                            <div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                                <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
+                                <span>ACCESO</span>
+                            </div>`;
+                    } else if (id === "C2" && bodegaActual === "principal") {
+                        // Patio: flecha arriba sobre la palabra ACCESO
+                        flechaHTML = `
+                            <div style="position: absolute; right: -75px; top: 50%; transform: translateY(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1;">
+                                <span style="${estiloFlechaBase} transform: rotate(-45deg); margin-bottom: 2px;"></span>
+                                <span>ACCESO</span>
                             </div>`;
                     } else if (id === "D1" && bodegaActual === "adoquines") {
                         // Sectores: flecha derecha, debajo de D1
-                        flechaHTML = `<div style="position: absolute; bottom: -42px; left: 32%; transform: translateX(-50%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite;"><span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span> ➡</div>`;
-                    } else if (id === "E1" && bodegaActual === "adoquines") {
-                        // Galpón: flecha derecha, arriba de E1
-                        flechaHTML = `<div style="position: absolute; bottom: -42px; left: 22%; transform: translateX(-120%); color: #e53e3e; font-size: 35px; font-weight: bold; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite;"><span style="font-size:10px; font-family:sans-serif; vertical-align:middle;">ACCESO</span> ➡</div>`;
+                        flechaHTML = `
+                            <div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                                <span>ACCESO</span>
+                                <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
+                            </div>`;
+                    } else if (id === "E3" && bodegaActual === "adoquines") {
+                        // Galpón: flecha derecha, arriba de E3
+                        flechaHTML = `
+                            <div style="position: absolute; top: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                                <span>ACCESO</span>
+                                <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
+                            </div>`;
                     }
 
                     // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO (Se concatena la flecha al final)
