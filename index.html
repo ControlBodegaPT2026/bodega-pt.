@@ -784,6 +784,18 @@ const layoutAdo = [
 ["EX-02", 250]
 ];
 
+// 📦 PASO 1: MAESTRO GENERAL DE PP (AGRUPACIÓN POR CÓDIGO CONTABLE)
+// Aquí puedes ir registrando o modificando tus PP de 6 dígitos mes a mes.
+const maestroProductos = {
+    "37-06-26": { codigo: "PTAB030610", nombre: "Acido Bórico Granular 99,5% - Saca PP 1 MT Logo QB REACH" },
+    "04-06-26": { codigo: "PTAB030315", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 Kg. Logo REACH CHINO" },
+    "04-05-26": { codigo: "PTAB030315", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 Kg. Logo REACH CHINO" },
+    "05-05-26": { codigo: "PTAB031110", nombre: "Acido Bórico Granular 99,5% - Saca PP 1.200 Kg Logo QB REACH" }
+
+
+    // Cuando llegue un PP nuevo, simplemente pones una coma arriba y agregas la nueva línea aquí abajo.
+};
+
         let bodegaActual = "principal";
         let db = JSON.parse(localStorage.getItem('bodega_db')) || {};
         let logs = JSON.parse(localStorage.getItem('bodega_logs')) || [];
@@ -1140,7 +1152,7 @@ if (id.startsWith('EX')) {
                                 <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
                                 <span>ACCESO</span>
                             </div>`;
-                    } else if (id === "C2" && bodegaActual === "principal") {
+                    } else if (id === "C1" && bodegaActual === "principal") {
                         // Patio: flecha arriba sobre la palabra ACCESO
                         flechaHTML = `
                             <div style="position: absolute; right: -75px; top: 50%; transform: translateY(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1;">
@@ -1273,30 +1285,81 @@ setTimeout(() => {
             document.getElementById('kpi-ext').innerText = `${Math.round(eB)} / ${eC}`;
             document.getElementById('pct-ext').innerText = `${pctExtVal}% ${getSemaforo(pctExtVal)}`;
 
-// --- MEJORA: TABLA DE STOCK CON TOTAL GENERAL ---
+// --- MEJORA: TABLA DE STOCK AGRUPADO POR CÓDIGO CONTABLE CON DETALLE INTERACTIVO ---
             let tbody = document.querySelector('#tabla-stock tbody'); 
             tbody.innerHTML = "";
             let sumaTotalKg = 0; 
 
+            // Estructura para agrupar: { COD_CONTABLE: { nombre: "...", totalKg: 0, desgloses: [ {pp, kg}, ... ] } }
+            let agrupacionContable = {};
+
             for (let pp in globalStock) {
                 let kilosPP = globalStock[pp];
                 sumaTotalKg += kilosPP; 
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><span style="background:#eee;padding:2px 5px;border-radius:4px;">${pp}</span></td>
-                        <td>${fmt(kilosPP)} kg</td>
-                    </tr>`;
+
+                // Buscamos en el maestro usando el PP COMPLETO de 6 dígitos (Paso 1)
+                let infoProd = maestroProductos[pp] || { codigo: "SIN-CODIGO", nombre: "Producto No Registrado" };
+                let codContable = infoProd.codigo;
+                let nomProd = infoProd.nombre;
+
+                if (!agrupacionContable[codContable]) {
+                    agrupacionContable[codContable] = {
+                        nombre: nomProd,
+                        totalKg: 0,
+                        desgloses: []
+                    };
+                }
+
+                agrupacionContable[codContable].totalKg += kilosPP;
+                agrupacionContable[codContable].desgloses.push({ pp: pp, kg: kilosPP });
             }
 
-            if (Object.keys(globalStock).length > 0) {
-                tbody.innerHTML += `
-                    <tr style="font-weight: bold; background-color: #f8f9fa; border-top: 2px solid #333;">
-                        <td style="padding: 8px;">TOTAL:</td>
-                        <td style="padding: 8px; color: #d32f2f;">${fmt(sumaTotalKg)} kg</td>
-                    </tr>`;
+            // Guardamos temporalmente el objeto de agrupación de forma global para que el modal lo lea
+            window.datosContablesActuales = agrupacionContable;
+
+            // Dibujamos la tabla principal agrupada
+            if (Object.keys(agrupacionContable).length > 0) {
+                for (let cod in agrupacionContable) {
+                    let item = agrupacionContable[cod];
+                    
+                    // Creamos una fila HTML interactiva con estilos de botón/clic
+                    let fila = document.createElement('tr');
+                    fila.style.cursor = "pointer";
+                    fila.style.transition = "background 0.2s";
+                    fila.title = "Haz clic para ver el desglose de PP";
+                    
+                    // Efecto visual hover al pasar el mouse
+                    fila.onmouseover = function() { this.style.background = "#edf2f7"; };
+                    fila.onmouseout = function() { this.style.background = "transparent"; };
+                    
+                    // Al hacer clic, abrimos la ventana modal pasando el código contable
+                    fila.onclick = function() { abrirModalContable(cod); };
+
+                    fila.innerHTML = `
+                        <td style="padding: 8px 4px; line-height: 1.3;">
+                            <span style="background: var(--primary, #2b6cb0); color: white; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; font-weight: bold;">${cod}</span>
+                            <div style="font-size: 11px; color: #4a5568; margin-top: 2px; font-weight: 500;">${item.nombre}</div>
+                        </td>
+                        <td style="text-align: right; font-weight: bold; white-space: nowrap; padding-right: 5px; color: #2d3748;">
+                            ${fmt(item.totalKg)} kg <i class='bx bx-chevron-right' style='vertical-align: middle; color: #a0aec0; font-size: 16px;'></i>
+                        </td>
+                    `;
+                    tbody.appendChild(fila);
+                }
+
+                // Fila del Gran Total General
+                let filaTotal = document.createElement('tr');
+                filaTotal.style.fontWeight = "bold";
+                filaTotal.style.backgroundColor = "#f8f9fa";
+                filaTotal.style.borderTop = "2px solid #333";
+                filaTotal.innerHTML = `
+                    <td style="padding: 8px;">TOTAL BODEGA:</td>
+                    <td style="padding: 8px; text-align: right; color: #d32f2f; font-size: 14px;">${fmt(sumaTotalKg)} kg</td>
+                `;
+                tbody.appendChild(filaTotal);
+
             } else {
-                tbody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Sin stock</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 10px; color: #777;'>Sin stock</td></tr>";
             }
 
 // MANTENER EL HISTORIAL DE LOGS CON ICONOS BOXICONS
@@ -1312,8 +1375,38 @@ document.getElementById('historial-lista').innerHTML = logs.map(l => {
                 </div>
             </div>`;
 }).join('');
-renderBultos();
-        } // <--- Asegúrate de que esta llave cierre la función render
+
+            renderBultos();
+        } // <--- Cierre de la función render
+
+        function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
+
+// 👇 FUNCIONES MAESTRAS PARA MANEJAR LA VENTANA FLOTANTE DEL DETALLE CONTABLE
+window.abrirModalContable = function(codigoContable) {
+    let datos = window.datosContablesActuales[codigoContable];
+    if (!datos) return;
+
+    document.getElementById('modal-contable-titulo').innerText = `CÓDIGO CONTABLE: ${codigoContable}`;
+    document.getElementById('modal-contable-sub').innerText = datos.nombre;
+
+    let tBodyModal = document.getElementById('modal-contable-tabla-body');
+    tBodyModal.innerHTML = "";
+
+    // Recorremos los PP específicos que pertenecen a este grupo contable
+    datos.desgloses.forEach(d => {
+        tBodyModal.innerHTML += `
+            <tr style="border-bottom: 1px solid #edf2f7;">
+                <td style="padding: 8px 6px;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold;">${d.pp}</span></td>
+                <td style="padding: 8px 6px; text-align: right; font-weight: bold; color: #38a169;">${fmt(d.kg)} kg</td>
+            </tr>`;
+    });
+
+    document.getElementById('modal-detalle-contable').style.display = 'flex';
+};
+
+window.cerrarModalContable = function() {
+    document.getElementById('modal-detalle-contable').style.display = 'none';
+};
 
         function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
 
@@ -1805,5 +1898,30 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 </script>
+
+<div id="modal-detalle-contable" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
+        <h3 id="modal-contable-titulo" style="margin-top: 0; color: var(--primary); font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; font-family: sans-serif;">DETALLE DE STOCK</h3>
+        <p id="modal-contable-sub" style="font-size: 12px; color: #555; margin-bottom: 15px; font-weight: bold; font-family: sans-serif;"></p>
+        
+        <div style="max-height: 250px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: sans-serif;">
+                <thead>
+                    <tr style="background: #f4f7fc; text-align: left;">
+                        <th style="padding: 6px; border-bottom: 1px solid #ddd;">PP</th>
+                        <th style="padding: 6px; border-bottom: 1px solid #ddd; text-align: right;">Total Kilos</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-contable-tabla-body">
+                    </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: right; margin-top: 15px;">
+            <button onclick="cerrarModalContable()" style="background: #718096; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: sans-serif;">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
