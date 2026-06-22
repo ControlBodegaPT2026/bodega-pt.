@@ -572,7 +572,7 @@ color: #1f2937;
             <table id="tabla-stock" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="position: sticky; top: 0; background: white;">
-                        <th style="font-size: 12px; padding: 5px;">PP</th>
+                        <th style="font-size: 12px; padding: 5px;">CÓD. CONT./ MATERIAL</th>
                         <th style="font-size: 12px; padding: 5px;">KG TOTAL</th>
                     </tr>
                 </thead>
@@ -1141,35 +1141,35 @@ if (id.startsWith('EX')) {
                     if (id === "A1" && bodegaActual === "principal") {
                         // Pasillo 1: flecha izquierda, abajo de A1
                         flechaHTML = `
-                            <div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                            <div style="position: absolute; bottom: -32px; left: 80%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
                                 <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
                                 <span>ACCESO</span>
                             </div>`;
                     } else if (id === "B1" && bodegaActual === "principal") {
                         // Pasillo 2: flecha izquierda, debajo de B1
                         flechaHTML = `
-                            <div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                            <div style="position: absolute; bottom: -32px; left: 80%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
                                 <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
                                 <span>ACCESO</span>
                             </div>`;
-                    } else if (id === "C1" && bodegaActual === "principal") {
+                    } else if (id === "C3" && bodegaActual === "principal") {
                         // Patio: flecha arriba sobre la palabra ACCESO
                         flechaHTML = `
-                            <div style="position: absolute; right: -75px; top: 50%; transform: translateY(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1;">
+                            <div style="position: absolute; left: -50px; top: 95%; transform: translateY(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1;">
                                 <span style="${estiloFlechaBase} transform: rotate(-45deg); margin-bottom: 2px;"></span>
                                 <span>ACCESO</span>
                             </div>`;
                     } else if (id === "D1" && bodegaActual === "adoquines") {
                         // Sectores: flecha derecha, debajo de D1
                         flechaHTML = `
-                            <div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                            <div style="position: absolute; bottom: -32px; left: 20%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
                                 <span>ACCESO</span>
                                 <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
                             </div>`;
                     } else if (id === "E3" && bodegaActual === "adoquines") {
                         // Galpón: flecha derecha, arriba de E3
                         flechaHTML = `
-                            <div style="position: absolute; top: -32px; left: 50%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
+                            <div style="position: absolute; top: -32px; left: 10%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
                                 <span>ACCESO</span>
                                 <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
                             </div>`;
@@ -1381,32 +1381,119 @@ document.getElementById('historial-lista').innerHTML = logs.map(l => {
 
         function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
 
-// 👇 FUNCIONES MAESTRAS PARA MANEJAR LA VENTANA FLOTANTE DEL DETALLE CONTABLE
+// 👇 VARIABLES LOCALES PARA CONTROLAR EL ESTADO DEL MODAL
+window.codigoContableSeleccionado = "";
+window.tabActualModal = "material";
+
+// 👇 FUNCION MAESTRA PARA ABRIR EL MODAL (POR DEFECTO EN DETALLE MATERIAL)
 window.abrirModalContable = function(codigoContable) {
-    let datos = window.datosContablesActuales[codigoContable];
-    if (!datos) return;
-
-    document.getElementById('modal-contable-titulo').innerText = `CÓDIGO CONTABLE: ${codigoContable}`;
-    document.getElementById('modal-contable-sub').innerText = datos.nombre;
-
-    let tBodyModal = document.getElementById('modal-contable-tabla-body');
-    tBodyModal.innerHTML = "";
-
-    // Recorremos los PP específicos que pertenecen a este grupo contable
-    datos.desgloses.forEach(d => {
-        tBodyModal.innerHTML += `
-            <tr style="border-bottom: 1px solid #edf2f7;">
-                <td style="padding: 8px 6px;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold;">${d.pp}</span></td>
-                <td style="padding: 8px 6px; text-align: right; font-weight: bold; color: #38a169;">${fmt(d.kg)} kg</td>
-            </tr>`;
-    });
+    window.codigoContableSeleccionado = codigoContable;
+    window.tabActualModal = "material"; // Siempre abre mostrando el material clickeado
+    
+    // Resetear estilos visuales de las pestañas
+    document.getElementById('tab-material').style.color = "var(--primary, #2b6cb0)";
+    document.getElementById('tab-material').style.borderBottom = "3px solid var(--primary, #2b6cb0)";
+    document.getElementById('tab-general').style.color = "#718096";
+    document.getElementById('tab-general').style.borderBottom = "3px solid transparent";
 
     document.getElementById('modal-detalle-contable').style.display = 'flex';
+    dibujarContenidoModal();
 };
 
 window.cerrarModalContable = function() {
     document.getElementById('modal-detalle-contable').style.display = 'none';
 };
+
+// 👇 CAMBIAR ENTRE VISTA INDIVIDUAL Y REPORTE GENERAL DE STOCK
+window.cambiarTabModal = function(tab) {
+    window.tabActualModal = tab;
+    
+    let btnMaterial = document.getElementById('tab-material');
+    let btnGeneral = document.getElementById('tab-general');
+
+    if (tab === 'material') {
+        btnMaterial.style.color = "var(--primary, #2b6cb0)";
+        btnMaterial.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
+        btnGeneral.style.color = "#718096";
+        btnGeneral.style.borderBottom = "3px solid transparent";
+    } else {
+        btnGeneral.style.color = "var(--primary, #2b6cb0)";
+        btnGeneral.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
+        btnMaterial.style.color = "#718096";
+        btnMaterial.style.borderBottom = "3px solid transparent";
+    }
+    dibujarContenidoModal();
+};
+
+// 👇 MOTOR DE RENDERIZADO INTERNO PARA LA VENTANA EMERGENTE
+function dibujarContenidoModal() {
+    let tHeaders = document.getElementById('modal-contable-headers');
+    let tBodyModal = document.getElementById('modal-contable-tabla-body');
+    tBodyModal.innerHTML = "";
+
+    // VISTA 1: MUESTRA SÓLO EL DETALLE DEL MATERIAL SELECCIONADO
+    if (window.tabActualModal === 'material') {
+        let datos = window.datosContablesActuales[window.codigoContableSeleccionado];
+        if (!datos) return;
+
+        document.getElementById('modal-contable-titulo').style.display = "block";
+        document.getElementById('modal-contable-titulo').innerText = `CÓDIGO CONTABLE: ${window.codigoContableSeleccionado}`;
+        document.getElementById('modal-contable-sub').innerText = datos.nombre;
+
+        tHeaders.innerHTML = `
+            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left;">PP</th>
+            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: right;">Total Kilos</th>
+        `;
+
+        datos.desgloses.forEach(d => {
+            tBodyModal.innerHTML += `
+                <tr style="border-bottom: 1px solid #edf2f7;">
+                    <td style="padding: 8px 6px;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold;">${d.pp}</span></td>
+                    <td style="padding: 8px 6px; text-align: right; font-weight: bold; color: #38a169;">${fmt(d.kg)} kg</td>
+                </tr>`;
+        });
+
+// VISTA 2: REPORTE GENERAL CONSOLIDADO DE TODO EL STOCK POR PP
+    } else {
+        document.getElementById('modal-contable-titulo').style.display = "none";
+        document.getElementById('modal-contable-sub').innerText = "Resumen consolidado de todos los materiales y lotes en esta bodega";
+
+        // Ajustamos los anchos también en los encabezados (60% - 20% - 20%)
+        tHeaders.innerHTML = `
+            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left; width: 35%;">Cód. Contable / Descripción</th>
+            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: center; width: 25%;">PP</th>
+            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: right; width: 40%;">Kilos</th>
+        `;
+
+        let granSumatoriaKg = 0;
+
+        // Recorremos todos los códigos almacenados en el inventario actual de la bodega
+        for (let cod in window.datosContablesActuales) {
+            let item = window.datosContablesActuales[cod];
+            
+            item.desgloses.forEach((d, index) => {
+                granSumatoriaKg += d.kg;
+                
+                tBodyModal.innerHTML += `
+                    <tr style="border-bottom: 1px solid #edf2f7; background: ${index === 0 ? '#fafafa' : 'transparent'}">
+                        <td style="padding: 8px 6px; line-height: 1.2; width: 55%;">
+                            <b style="font-family: monospace; color: var(--primary, #2b6cb0);">${cod}</b><br>
+                            <span style="font-size: 11px; color: #666;">${item.nombre}</span>
+                        </td>
+                        <td style="padding: 8px 6px; text-align: center; width: 20%;"><span style="background: #e2e8f0; padding: 2px 5px; border-radius: 4px; font-family: monospace;">${d.pp}</span></td>
+                        <td style="padding: 8px 12px 8px 6px; text-align: right; font-weight: bold; color: #2d3748; width: 25%; white-space: nowrap !important;">${fmt(d.kg)} kg</td>
+                    </tr>`;
+            });
+        }
+
+        // Fila final con la GRAN SUMATORIA DE TODO EL INVENTARIO
+        tBodyModal.innerHTML += `
+            <tr style="background: #f7fafc; border-top: 2px solid #cbd5e0; font-weight: bold;">
+                <td colspan="2" style="padding: 10px 6px; color: #2d3748; font-size: 13px;">SUMATORIA GENERAL DE BODEGA:</td>
+                <td style="padding: 10px 12px 10px 6px; text-align: right; color: #e53e3e; font-size: 14px; white-space: nowrap !important;">${fmt(granSumatoriaKg)} kg</td>
+            </tr>`;
+    }
+}
 
         function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
 
@@ -1900,17 +1987,21 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <div id="modal-detalle-contable" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
-        <h3 id="modal-contable-titulo" style="margin-top: 0; color: var(--primary); font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; font-family: sans-serif;">DETALLE DE STOCK</h3>
+    <div style="background: white; padding: 20px; border-radius: 8px; width: 95%; max-width: 600px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
+        
+        <div style="display: flex; border-bottom: 2px solid #edf2f7; margin-bottom: 15px; gap: 10px;">
+            <button id="tab-material" onclick="cambiarTabModal('material')" style="background: none; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; color: var(--primary, #2b6cb0); border-bottom: 3px solid var(--primary, #2b6cb0); font-size: 14px; font-family: sans-serif;">📋 Detalle Material</button>
+            <button id="tab-general" onclick="cambiarTabModal('general')" style="background: none; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; color: #718096; border-bottom: 3px solid transparent; font-size: 14px; font-family: sans-serif;">🌐 Ver Stock General Completo</button>
+        </div>
+
+        <h3 id="modal-contable-titulo" style="margin-top: 0; color: #2d3748; font-size: 16px; margin-bottom: 4px; font-family: sans-serif;">CÓDIGO CONTABLE:</h3>
         <p id="modal-contable-sub" style="font-size: 12px; color: #555; margin-bottom: 15px; font-weight: bold; font-family: sans-serif;"></p>
         
-        <div style="max-height: 250px; overflow-y: auto;">
+        <div style="max-height: 320px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 6px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: sans-serif;">
-                <thead>
-                    <tr style="background: #f4f7fc; text-align: left;">
-                        <th style="padding: 6px; border-bottom: 1px solid #ddd;">PP</th>
-                        <th style="padding: 6px; border-bottom: 1px solid #ddd; text-align: right;">Total Kilos</th>
-                    </tr>
+                <thead style="position: sticky; top: 0; background: #f4f7fc; z-index: 10;">
+                    <tr id="modal-contable-headers">
+                        </tr>
                 </thead>
                 <tbody id="modal-contable-tabla-body">
                     </tbody>
