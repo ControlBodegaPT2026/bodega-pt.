@@ -581,7 +581,7 @@ color: #1f2937;
         </div>
     </div>
 
-</div> <!-- CIERRE DEL CONTENEDOR TOP-GRID -->    <div class="stats-container">
+</div> <div class="stats-container" onclick="abrirSemaforoMovil()" style="cursor: pointer; transition: background 0.2s;" title="En móvil, toca aquí para ver los gráficos detallados">
         <div class="kpi-block">
             <small>OCUPACIÓN TOTAL</small>
             <span class="kpi-val" id="kpi-total">0 / 0</span>
@@ -597,7 +597,7 @@ color: #1f2937;
             <span class="kpi-val" id="kpi-ext">0 / 0</span>
             <span class="pct-badge" id="pct-ext">0%</span>
         </div>
-<div id="mini-grafico" style="font-size:12px; line-height:1.8;"></div>
+        <div id="mini-grafico" style="font-size:12px; line-height:1.8;"></div>
     </div>
 
     <div class="panel" style="margin-bottom: 20px;">
@@ -1381,6 +1381,96 @@ document.getElementById('historial-lista').innerHTML = logs.map(l => {
 
         function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
 
+// ====================================================================================
+// 📊 PASO 2 CORREGIDO: SEMÁFORO MÓVIL CON ANIMACIÓN DE BARRAS DE PROGRESO
+// ====================================================================================
+window.abrirSemaforoMovil = function() {
+    // Detectamos si el operador está usando un móvil
+    if (window.innerWidth <= 768) {
+        let contenedorDestino = document.getElementById('contenido-semaforo-clonado');
+        
+        // Extraemos los nombres dinámicos de las etiquetas actuales
+        let labelPasillos = document.getElementById('label-p')?.innerText || "PASILLOS";
+        let labelPatio = document.getElementById('label-ext')?.innerText || "PATIO";
+
+        // Extraemos los textos de los KPI (Valores y Porcentajes) en pantalla
+        let totalVal = document.getElementById('kpi-total')?.innerText || "0 / 0";
+        let totalPctRaw = document.getElementById('pct-total')?.innerText || "0%";
+        
+        let pVal = document.getElementById('kpi-p')?.innerText || "0 / 0";
+        let pPctRaw = document.getElementById('pct-p')?.innerText || "0%";
+        
+        let extVal = document.getElementById('kpi-ext')?.innerText || "0 / 0";
+        let extPctRaw = document.getElementById('pct-ext')?.innerText || "0%";
+
+        // Función para extraer solo el número del porcentaje
+        let limpiarPorcentaje = (textoRaw) => {
+            let coincidencia = textoRaw.match(/\d+/);
+            return coincidencia ? coincidencia[0] + "%" : "0%";
+        };
+
+        // Procesamos los porcentajes limpios para el CSS
+        let totalPct = limpiarPorcentaje(totalPctRaw);
+        let pPct = limpiarPorcentaje(pPctRaw);
+        let extPct = limpiarPorcentaje(extPctRaw);
+
+        // Función para determinar el color según el porcentaje numérico
+        let obtenerColorBarra = (pctTexto) => {
+            let num = parseInt(pctTexto) || 0;
+            if (num >= 90) return "#e53e3e"; // Rojo
+            if (num >= 70) return "#dd6b20"; // Naranja
+            return "#38a169"; // Verde
+        };
+
+        // 1️⃣ Inyectamos el diseño gráfico pero con anchos iniciales en 0% para preparar la animación
+        contenedorDestino.innerHTML = `
+            <div style="margin-bottom: 20px; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
+                    <span>OCUPACIÓN TOTAL</span>
+                    <span style="color: ${obtenerColorBarra(totalPct)};">${totalVal} (${totalPctRaw})</span>
+                </div>
+                <div style="background: #edf2f7; width: 100%; height: 14px; border-radius: 7px; overflow: hidden;">
+                    <div id="bar-movil-total" style="background: ${obtenerColorBarra(totalPct)}; width: 0%; height: 100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
+                    <span>${labelPasillos}</span>
+                    <span style="color: ${obtenerColorBarra(pPct)};">${pVal} (${pPctRaw})</span>
+                </div>
+                <div style="background: #edf2f7; width: 100%; height: 14px; border-radius: 7px; overflow: hidden;">
+                    <div id="bar-movil-p" style="background: ${obtenerColorBarra(pPct)}; width: 0%; height: 100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 10px; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
+                    <span>${labelPatio}</span>
+                    <span style="color: ${obtenerColorBarra(extPct)};">${extVal} (${extPctRaw})</span>
+                </div>
+                <div style="background: #edf2f7; width: 100%; height: 14px; border-radius: 7px; overflow: hidden;">
+                    <div id="bar-movil-ext" style="background: ${obtenerColorBarra(extPct)}; width: 0%; height: 100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
+                </div>
+            </div>
+        `;
+        
+        // 2️⃣ Desplegamos el modal en pantalla
+        document.getElementById('modal-semaforo-movil').style.display = 'flex';
+
+        // 3️⃣ 🔥 Truco de magia: Esperamos 10ms a que el modal exista visualmente y disparamos el llenado animado
+        setTimeout(() => {
+            if(document.getElementById('bar-movil-total')) document.getElementById('bar-movil-total').style.width = totalPct;
+            if(document.getElementById('bar-movil-p')) document.getElementById('bar-movil-p').style.width = pPct;
+            if(document.getElementById('bar-movil-ext')) document.getElementById('bar-movil-ext').style.width = extPct;
+        }, 10);
+    }
+};
+
+window.cerrarSemaforoMovil = function() {
+    document.getElementById('modal-semaforo-movil').style.display = 'none';
+};
+
 // 👇 VARIABLES LOCALES PARA CONTROLAR EL ESTADO DEL MODAL
 window.codigoContableSeleccionado = "";
 window.tabActualModal = "material";
@@ -1442,27 +1532,27 @@ function dibujarContenidoModal() {
 
         tHeaders.innerHTML = `
             <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left;">PP</th>
-            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: right;">Total Kilos</th>
+            <th style="padding: 8px 36px; border-bottom: 2px solid #ddd; text-align: right;">Total Kilos</th>
         `;
 
         datos.desgloses.forEach(d => {
             tBodyModal.innerHTML += `
                 <tr style="border-bottom: 1px solid #edf2f7;">
                     <td style="padding: 8px 6px;"><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold;">${d.pp}</span></td>
-                    <td style="padding: 8px 6px; text-align: right; font-weight: bold; color: #38a169;">${fmt(d.kg)} kg</td>
+                    <td style="padding: 8px 36px; text-align: right; font-weight: bold; color: #38a169;">${fmt(d.kg)} kg</td>
                 </tr>`;
         });
 
 // VISTA 2: REPORTE GENERAL CONSOLIDADO DE TODO EL STOCK POR PP
     } else {
         document.getElementById('modal-contable-titulo').style.display = "none";
-        document.getElementById('modal-contable-sub').innerText = "Resumen consolidado de todos los materiales y lotes en esta bodega";
+        document.getElementById('modal-contable-sub').innerText = "Resumen de cada PP y material en esta bodega";
 
         // Ajustamos los anchos también en los encabezados (60% - 20% - 20%)
         tHeaders.innerHTML = `
-            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left; width: 35%;">Cód. Contable / Descripción</th>
-            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: center; width: 25%;">PP</th>
-            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: right; width: 40%;">Kilos</th>
+            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left; width: 20%;">Cód. Contable / Material</th>
+            <th style="padding: 8px 36px; border-bottom: 2px solid #ddd; text-align: center; width: 20%;">PP</th>
+            <th style="padding: 8px 30px; border-bottom: 2px solid #ddd; text-align: right; width: 60%;">Kilos</th>
         `;
 
         let granSumatoriaKg = 0;
@@ -1481,7 +1571,7 @@ function dibujarContenidoModal() {
                             <span style="font-size: 11px; color: #666;">${item.nombre}</span>
                         </td>
                         <td style="padding: 8px 6px; text-align: center; width: 20%;"><span style="background: #e2e8f0; padding: 2px 5px; border-radius: 4px; font-family: monospace;">${d.pp}</span></td>
-                        <td style="padding: 8px 12px 8px 6px; text-align: right; font-weight: bold; color: #2d3748; width: 25%; white-space: nowrap !important;">${fmt(d.kg)} kg</td>
+                        <td style="padding: 8px 22px 8px 6px; text-align: right; font-weight: bold; color: #2d3748; width: 25%; white-space: nowrap !important;">${fmt(d.kg)} kg</td>
                     </tr>`;
             });
         }
@@ -1489,7 +1579,7 @@ function dibujarContenidoModal() {
         // Fila final con la GRAN SUMATORIA DE TODO EL INVENTARIO
         tBodyModal.innerHTML += `
             <tr style="background: #f7fafc; border-top: 2px solid #cbd5e0; font-weight: bold;">
-                <td colspan="2" style="padding: 10px 6px; color: #2d3748; font-size: 13px;">SUMATORIA GENERAL DE BODEGA:</td>
+                <td colspan="2" style="padding: 10px 6px; color: #2d3748; font-size: 13px;">STOCK TOTAL DE ESTA BODEGA:</td>
                 <td style="padding: 10px 12px 10px 6px; text-align: right; color: #e53e3e; font-size: 14px; white-space: nowrap !important;">${fmt(granSumatoriaKg)} kg</td>
             </tr>`;
     }
@@ -2010,6 +2100,18 @@ document.addEventListener("DOMContentLoaded", () => {
         
         <div style="text-align: right; margin-top: 15px;">
             <button onclick="cerrarModalContable()" style="background: #718096; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: sans-serif;">Cerrar</button>
+        </div>
+    </div>
+</div>
+<div id="modal-semaforo-movil" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); position: relative; font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
+        
+        <div id="contenido-semaforo-clonado" style="margin-top: 15px; max-height: 380px; overflow-y: auto;">
+            </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="cerrarSemaforoMovil()" style="background: var(--primary, #2b6cb0); color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px;">Entendido / Cerrar</button>
         </div>
     </div>
 </div>
