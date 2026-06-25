@@ -784,15 +784,31 @@ const layoutAdo = [
 ["EX-02", 250]
 ];
 
-// 📦 PASO 1: MAESTRO GENERAL DE PP (AGRUPACIÓN POR CÓDIGO CONTABLE)
-// Aquí puedes ir registrando o modificando tus PP de 6 dígitos mes a mes.
-const maestroProductos = {
-    "37-06-26": { codigo: "PTAB030610", nombre: "Acido Bórico Granular 99,5% - Saca PP 1 MT Logo QB REACH" },
+// 📦 PASO 1: MAESTRO GENERAL DE PP DINÁMICO (SE GUARDA EN LOCALSTORAGE)
+// Si ya hay productos guardados en el navegador, los carga. Si no, inicia con los de ejemplo.
+let maestroProductos = JSON.parse(localStorage.getItem('bodega_maestro')) || {
     "04-06-26": { codigo: "PTAB030315", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 Kg. Logo REACH CHINO" },
-    "04-05-26": { codigo: "PTAB030315", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 Kg. Logo REACH CHINO" },
-    "05-05-26": { codigo: "PTAB031110", nombre: "Acido Bórico Granular 99,5% - Saca PP 1.200 Kg Logo QB REACH" }
-
-
+    "05-06-26": { codigo: "PTAB031110", nombre: "Acido Bórico Granular 99,5% - Saca PP 1.200 Kg Logo QB REACH" },
+    "38-06-26": { codigo: "PTAB300610", nombre: "A. Bórico Recuperado Planta Calcinado- En sacas de 1000 Kgs QB REACH" },
+    "28-06-26": { codigo: "PTAB030328", nombre: "Acido Borico Granular 99.5% - Saco PP 25 Kgs. Logo MCASSAB" },
+    "02-11-25": { codigo: "PTAB111111", nombre: "Acido Borico Granular 99,9% - Saca PP 1,1 MT Logo QB REAC" },
+    "21-11-25": { codigo: "PTAB111110", nombre: "Acido Borico Granular 99,9% Saca PP 1.200 Kg Logo QB REACH" },
+    "20-11-25": { codigo: "PTAB110602", nombre: "Acido Borico Granular 99,9% Saca PP 1 MT Logo QB" },
+    "08-03-26": { codigo: "PTAB031010", nombre: "Acido Bórico Granular 99,5% - Saca PP 1,1 MT Logo QB REACH" },
+    "37-06-26": { codigo: "PTAB030610", nombre: "Acido Bórico Granular 99,5% - Saca PP 1 MT Logo QB REACH" },
+    "38-03-26": { codigo: "PTAB030310", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 kg. Logo QB REACH" },
+    "24-06-26": { codigo: "PTAB040310", nombre: "Acido Bórico Polvo 99,5% - Saco PP 25 Kg Logo QB REACH" },
+    "36-11-25": { codigo: "PTAB158001", nombre: "Ácido Bórico Granular 99,5% - G.I. Saca 2400 Lb (1.088,6Kg) sin Logo" },
+    "34-06-26": { codigo: "PTAB171010", nombre: "Ácido Bórico Granular 99,5% - Saca PP 1,1 MT Logo QB REACH 99,5%" },
+    "34-05-26": { codigo: "PTAB150548", nombre: "Ácido Bórico Granular 99,5% - Sacos PP 50 Lb Logo Borates Plus" },
+    "08-06-26": { codigo: "PTGR211401", nombre: "Granulex 10%B 10% B Granular SACA PP 2000 LB SIN LOGO 10%" },
+    "09-05-26": { codigo: "PTGR210601", nombre: "Granulex 10%B SACA PP 1MT SIN LOGO 10% B" },
+    "00-00-26": { codigo: "PTGR210501", nombre: "Granulex 10%B Saco 50lb Sin Logo" },
+    "26-05-26": { codigo: "PTUL321001", nombre: "Ulexita 30/32% B2O3 - Sacas Blancas 1,1MT Sin logo" },
+    "14-06-26": { codigo: "PTAB101010", nombre: "A. Bórico Recuperado Planta Caja de Mangas – En sacas de 1100 Kgs QB REACH" },
+    "13-06-26": { codigo: "PTAB941010", nombre: "A. Bórico Recuperado Planta Mezcla de Rechazo - Sacas 1100 Kgs QB REACH" },
+    "31-06-26": { codigo: "PTAB170310", nombre: "Ácido Bórico Granular 99,5% - Saco PP 25 Kg. Logo QB REACH 99,5%" }
+ 
     // Cuando llegue un PP nuevo, simplemente pones una coma arriba y agregas la nueva línea aquí abajo.
 };
 
@@ -855,84 +871,147 @@ function accion(tipo) {
     return;
 }
 
-            // 2. CÁLCULO DE BULTOS
-            let pesoBulto = bultoSeleccionado[tipo];
-
-if (!pesoBulto) {
-    notificar("Selecciona un tipo de bulto", "warning");
-    return;
-}
-
-let bultosNuevos = kg / pesoBulto;
-
-            // --- NUEVA MEJORA: RESTRICCIÓN DE CAPACIDAD MÁXIMA ---
-            if (tipo === 'ingreso') {
-                // Buscamos la capacidad máxima en el layout actual
-                let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
-                let ubiData = layout.find(item => Array.isArray(item) && item[0] === ubi);
-                let capMax = ubiData ? ubiData[1] : 0;
-
-                // Calculamos cuántos bultos hay ya en esa ubicación
-                let bultosActuales = 0;
-                if (db[ubi]) {
-                    for (let p in db[ubi]) {
-                        bultosActuales += db[ubi][p].bultos;
-                    }
-                }
-
-                // Verificamos si hay espacio suficiente
-                if (bultosActuales + bultosNuevos > capMax) {
-                    alert(`¡ERROR! Espacio insuficiente en ${ubi}.\nCapacidad máxima: ${capMax}\nEspacio ocupado: ${Math.round(bultosActuales)}\nIntenta ingresar: ${Math.round(bultosNuevos)}`);
-                    return; // Bloquea el ingreso
-                }
-            }
-            // -------------------------------------------------------
-
-            // 3. PROCESAR MOVIMIENTO
-            if (tipo === 'ingreso') {
-                if (!db[ubi]) db[ubi] = {};
-                if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
-                db[ubi][pp].kg += kg;
-                db[ubi][pp].bultos += bultosNuevos;
-            } else {
-                if (!db[ubi] || !db[ubi][pp] || db[ubi][pp].kg < kg) {
-    notificar("No hay stock suficiente", "error");
-    return;
-}
-                let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
-                db[ubi][pp].kg -= kg;
-                db[ubi][pp].bultos -= (kg * ratio);
-                if (db[ubi][pp].kg <= 0) delete db[ubi][pp];
-		if (db[ubi] && Object.keys(db[ubi]).length === 0) {
-                    delete db[ubi];
-                }
-            }
-
-            logs.unshift({ tipo, pp, kg, ubi, fecha: new Date().toLocaleString() });
-            localStorage.setItem('bodega_db', JSON.stringify(db));
-            localStorage.setItem('bodega_logs', JSON.stringify(logs.slice(0, 50)));
-ppInput.value = "";
-document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value = "";
-document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').selectedIndex = 0;
-ppInput.focus();
-
-notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg}kg en ${ubi}`, "success");
-
-autoBackup();
-
-// === PEGA ESTO AQUÍ: SINCRONIZACIÓN CON LA NUBE ===
-dbRef.set({
-    inventario: db,
-    historial: logs
-}).then(() => {
-    console.log("Sincronizado con los operadores exitosamente.");
-}).catch((error) => {
-    console.error("Error al sincronizar:", error);
-});
-// =================================================
-
-            render();
+// ====================================================================
+    // 🚨 DETECTOR AUTOMÁTICO CON DESPLEGABLES (SOLUCIÓN INTERACTIVA MEJORADA)
+    // ====================================================================
+    if (tipo === 'ingreso' && pp && !maestroProductos[pp]) {
+        document.getElementById('txt-pp-nuevo-aviso').innerText = `El PP [${pp}] es nuevo. Seleccione sus datos correspondientes:`;
+        
+        // Extraer nombres y códigos únicos existentes en el maestro para llenar los selectores
+        let nombresExistentes = new Set();
+        let codigosExistentes = new Set();
+        
+        for (let clave in maestroProductos) {
+            if (maestroProductos[clave].nombre) nombresExistentes.add(maestroProductos[clave].nombre);
+            if (maestroProductos[clave].codigo) codigosExistentes.add(maestroProductos[clave].codigo);
         }
+
+        // Convertir a Arrays y ordenar alfabéticamente
+        let arrNombres = Array.from(nombresExistentes).sort();
+        let arrCodigos = Array.from(codigosExistentes).sort();
+
+        let selNombre = document.getElementById('sel-maestro-nombre');
+        let selCodigo = document.getElementById('sel-maestro-codigo');
+
+        // Llenar select de nombres comerciales
+        selNombre.innerHTML = '<option value="">-- Seleccione Nombre Comercial --</option>';
+        arrNombres.forEach(n => selNombre.innerHTML += `<option value="${n}">${n}</option>`);
+        selNombre.innerHTML += '<option value="OTRO">✏️ REGISTRAR UNO NUEVO (TEXTO LIBRE)</option>';
+
+        // Llenar select de códigos contables
+        selCodigo.innerHTML = '<option value="">-- Seleccione Código Contable --</option>';
+        arrCodigos.forEach(c => selCodigo.innerHTML += `<option value="${c}">${c}</option>`);
+        selCodigo.innerHTML += '<option value="OTRO">✏️ REGISTRAR UNO NUEVO (TEXTO LIBRE)</option>';
+
+        // Mostrar el modal elegante
+        document.getElementById('modal-nuevo-maestro').style.display = 'flex';
+
+        // Evento Cancelar
+        document.getElementById('btn-cancelar-maestro').onclick = function() {
+            document.getElementById('modal-nuevo-maestro').style.display = 'none';
+            notificar("Ingreso cancelado por el administardor", "warning");
+        };
+
+        // Evento Guardar
+        document.getElementById('btn-guardar-maestro').onclick = function() {
+            let nSeleccionado = selNombre.value;
+            let cSeleccionado = selCodigo.value;
+
+            if (!nSeleccionado || !cSeleccionado) {
+                alert("Por favor, complete ambas selecciones.");
+                return;
+            }
+
+            // Si eligen "OTRO", les permitimos escribir por única vez (por si llega un producto virgen de fábrica)
+            if (nSeleccionado === "OTRO") {
+                nSeleccionado = prompt("Escriba el NUEVO Nombre Comercial:").toUpperCase().trim();
+                if (!nSeleccionado) return;
+            }
+            if (cSeleccionado === "OTRO") {
+                cSeleccionado = prompt("Escriba el NUEVO Código Contable:").toUpperCase().trim();
+                if (!cSeleccionado) return;
+            }
+
+            // Guardar en memoria de la Solución 1
+            maestroProductos[pp] = { codigo: cSeleccionado, nombre: nSeleccionado };
+            localStorage.setItem('bodega_maestro', JSON.stringify(maestroProductos));
+            
+            document.getElementById('modal-nuevo-maestro').style.display = 'none';
+            notificar(`✅ PP [${pp}] mapeado con éxito`, "success");
+
+            // Ejecutar el resto de la función (Recursividad controlada)
+            continuarProcesarAccion(tipo, pp, kg, ubi, ppInput);
+        };
+        return; // Detiene la ejecución aquí en lo que el operador elige del modal
+    }
+
+    // Si ya existía el PP, fluye de forma normal y directa
+    continuarProcesarAccion(tipo, pp, kg, ubi, ppInput);
+}
+
+// Sub-función auxiliar aislada para procesar el stock tras la selección segura
+function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
+    let pesoBulto = bultoSeleccionado[tipo];
+    if (!pesoBulto) {
+        notificar("Selecciona un tipo de bulto", "warning");
+        return;
+    }
+
+    let bultosNuevos = kg / pesoBulto;
+
+    if (tipo === 'ingreso') {
+        let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+        let ubiData = layout.find(item => Array.isArray(item) && item[0] === ubi);
+        let capMax = ubiData ? ubiData[1] : 0;
+
+        let bultosActuales = 0;
+        if (db[ubi]) {
+            for (let p in db[ubi]) {
+                bultosActuales += db[ubi][p].bultos;
+            }
+        }
+
+        if (bultosActuales + bultosNuevos > capMax) {
+            alert(`¡ERROR! Espacio insuficiente en ${ubi}.\nCapacidad máxima: ${capMax}\nEspacio ocupado: ${Math.round(bultosActuales)}\nIntenta ingresar: ${Math.round(bultosNuevos)}`);
+            return;
+        }
+    }
+
+    if (tipo === 'ingreso') {
+        if (!db[ubi]) db[ubi] = {};
+        if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
+        db[ubi][pp].kg += kg;
+        db[ubi][pp].bultos += bultosNuevos;
+    } else {
+        if (!db[ubi] || !db[ubi][pp] || db[ubi][pp].kg < kg) {
+            notificar("No hay stock suficiente", "error");
+            return;
+        }
+        let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
+        db[ubi][pp].kg -= kg;
+        db[ubi][pp].bultos -= (kg * ratio);
+        if (db[ubi][pp].kg <= 0) delete db[ubi][pp];
+        if (db[ubi] && Object.keys(db[ubi]).length === 0) delete db[ubi];
+    }
+
+    logs.unshift({ tipo, pp, kg, ubi, fecha: new Date().toLocaleString() });
+    localStorage.setItem('bodega_db', JSON.stringify(db));
+    localStorage.setItem('bodega_logs', JSON.stringify(logs.slice(0, 50)));
+    
+    ppInput.value = "";
+    document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value = "";
+    document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').selectedIndex = 0;
+    ppInput.focus();
+
+    notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg}kg en ${ubi}`, "success");
+    autoBackup();
+
+    dbRef.set({ inventario: db, historial: logs }).then(() => {
+        console.log("Sincronizado exitosamente.");
+    }).catch((e) => console.error(e));
+
+    render();
+}
 function renderBultos() {
     const pesos = pesosValidos;
 
@@ -1362,10 +1441,14 @@ setTimeout(() => {
                 tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 10px; color: #777;'>Sin stock</td></tr>";
             }
 
+// ====================================================================================
+// 📊 SISTEMA DE CONTROL DE BODEGA PT - LÓGICA Y RENDERIZADO UNIFICADO
+// ====================================================================================
+
 // MANTENER EL HISTORIAL DE LOGS CON ICONOS BOXICONS
 document.getElementById('historial-lista').innerHTML = logs.map(l => {
-    const iconClass = l.tipo === 'ingreso' ? 'bxs-plus-circle' : 'bxs-minus-circle';
-    const iconColor = l.tipo === 'ingreso' ? 'var(--success)' : 'var(--danger)';
+    const iconClass = l.tipo === 'ingreso' ? 'bxs-plus-circle' : l.tipo === 'salida' ? 'bxs-minus-circle' : 'bx-transfer-alt';
+    const iconColor = l.tipo === 'ingreso' ? 'var(--success)' : l.tipo === 'salida' ? 'var(--danger)' : 'var(--primary, #2b6cb0)';
     
     return `<div style="border-bottom:1px solid #eee; padding:8px 5px; display: flex; align-items: center;">
                 <i class='bx ${iconClass}' style='color:${iconColor}; font-size: 24px; margin-right: 10px;'></i>
@@ -1376,24 +1459,21 @@ document.getElementById('historial-lista').innerHTML = logs.map(l => {
             </div>`;
 }).join('');
 
-            renderBultos();
-        } // <--- Cierre de la función render
+renderBultos();
+} // <--- Cierre original de la función render
 
-        function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
+function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
 
 // ====================================================================================
-// 📊 PASO 2 CORREGIDO: SEMÁFORO MÓVIL CON ANIMACIÓN DE BARRAS DE PROGRESO
+// 📊 SEMÁFORO MÓVIL CON ANIMACIÓN DE BARRAS DE PROGRESO
 // ====================================================================================
 window.abrirSemaforoMovil = function() {
-    // Detectamos si el operador está usando un móvil
     if (window.innerWidth <= 768) {
         let contenedorDestino = document.getElementById('contenido-semaforo-clonado');
         
-        // Extraemos los nombres dinámicos de las etiquetas actuales
         let labelPasillos = document.getElementById('label-p')?.innerText || "PASILLOS";
         let labelPatio = document.getElementById('label-ext')?.innerText || "PATIO";
 
-        // Extraemos los textos de los KPI (Valores y Porcentajes) en pantalla
         let totalVal = document.getElementById('kpi-total')?.innerText || "0 / 0";
         let totalPctRaw = document.getElementById('pct-total')?.innerText || "0%";
         
@@ -1403,26 +1483,22 @@ window.abrirSemaforoMovil = function() {
         let extVal = document.getElementById('kpi-ext')?.innerText || "0 / 0";
         let extPctRaw = document.getElementById('pct-ext')?.innerText || "0%";
 
-        // Función para extraer solo el número del porcentaje
         let limpiarPorcentaje = (textoRaw) => {
             let coincidencia = textoRaw.match(/\d+/);
             return coincidencia ? coincidencia[0] + "%" : "0%";
         };
 
-        // Procesamos los porcentajes limpios para el CSS
         let totalPct = limpiarPorcentaje(totalPctRaw);
         let pPct = limpiarPorcentaje(pPctRaw);
         let extPct = limpiarPorcentaje(extPctRaw);
 
-        // Función para determinar el color según el porcentaje numérico
         let obtenerColorBarra = (pctTexto) => {
             let num = parseInt(pctTexto) || 0;
-            if (num >= 90) return "#e53e3e"; // Rojo
-            if (num >= 70) return "#dd6b20"; // Naranja
-            return "#38a169"; // Verde
+            if (num >= 90) return "#e53e3e"; 
+            if (num >= 70) return "#dd6b20"; 
+            return "#38a169"; 
         };
 
-        // 1️⃣ Inyectamos el diseño gráfico pero con anchos iniciales en 0% para preparar la animación
         contenedorDestino.innerHTML = `
             <div style="margin-bottom: 20px; font-family: sans-serif;">
                 <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
@@ -1455,10 +1531,8 @@ window.abrirSemaforoMovil = function() {
             </div>
         `;
         
-        // 2️⃣ Desplegamos el modal en pantalla
         document.getElementById('modal-semaforo-movil').style.display = 'flex';
 
-        // 3️⃣ 🔥 Truco de magia: Esperamos 10ms a que el modal exista visualmente y disparamos el llenado animado
         setTimeout(() => {
             if(document.getElementById('bar-movil-total')) document.getElementById('bar-movil-total').style.width = totalPct;
             if(document.getElementById('bar-movil-p')) document.getElementById('bar-movil-p').style.width = pPct;
@@ -1471,16 +1545,15 @@ window.cerrarSemaforoMovil = function() {
     document.getElementById('modal-semaforo-movil').style.display = 'none';
 };
 
-// 👇 VARIABLES LOCALES PARA CONTROLAR EL ESTADO DEL MODAL
+// VARIABLES LOCALES PARA CONTROLAR EL ESTADO DEL MODAL
 window.codigoContableSeleccionado = "";
 window.tabActualModal = "material";
 
-// 👇 FUNCION MAESTRA PARA ABRIR EL MODAL (POR DEFECTO EN DETALLE MATERIAL)
+// FUNCION MAESTRA PARA ABRIR EL MODAL DE DETALLE CONTABLE
 window.abrirModalContable = function(codigoContable) {
     window.codigoContableSeleccionado = codigoContable;
-    window.tabActualModal = "material"; // Siempre abre mostrando el material clickeado
+    window.tabActualModal = "material"; 
     
-    // Resetear estilos visuales de las pestañas
     document.getElementById('tab-material').style.color = "var(--primary, #2b6cb0)";
     document.getElementById('tab-material').style.borderBottom = "3px solid var(--primary, #2b6cb0)";
     document.getElementById('tab-general').style.color = "#718096";
@@ -1494,7 +1567,6 @@ window.cerrarModalContable = function() {
     document.getElementById('modal-detalle-contable').style.display = 'none';
 };
 
-// 👇 CAMBIAR ENTRE VISTA INDIVIDUAL Y REPORTE GENERAL DE STOCK
 window.cambiarTabModal = function(tab) {
     window.tabActualModal = tab;
     
@@ -1515,13 +1587,11 @@ window.cambiarTabModal = function(tab) {
     dibujarContenidoModal();
 };
 
-// 👇 MOTOR DE RENDERIZADO INTERNO PARA LA VENTANA EMERGENTE
 function dibujarContenidoModal() {
     let tHeaders = document.getElementById('modal-contable-headers');
     let tBodyModal = document.getElementById('modal-contable-tabla-body');
     tBodyModal.innerHTML = "";
 
-    // VISTA 1: MUESTRA SÓLO EL DETALLE DEL MATERIAL SELECCIONADO
     if (window.tabActualModal === 'material') {
         let datos = window.datosContablesActuales[window.codigoContableSeleccionado];
         if (!datos) return;
@@ -1543,51 +1613,77 @@ function dibujarContenidoModal() {
                 </tr>`;
         });
 
-// VISTA 2: REPORTE GENERAL CONSOLIDADO DE TODO EL STOCK POR PP
     } else {
+        // ====================================================================
+        // 🌐 MODO: VER STOCK GENERAL COMPLETO
+        // ====================================================================
         document.getElementById('modal-contable-titulo').style.display = "none";
-        document.getElementById('modal-contable-sub').innerText = "Resumen de cada PP y material en esta bodega";
+        document.getElementById('modal-contable-sub').innerText = "Detalle de stock por material y PP en esta bodega";
 
-        // Ajustamos los anchos también en los encabezados (60% - 20% - 20%)
         tHeaders.innerHTML = `
-            <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left; width: 20%;">Cód. Contable / Material</th>
-            <th style="padding: 8px 36px; border-bottom: 2px solid #ddd; text-align: center; width: 20%;">PP</th>
-            <th style="padding: 8px 30px; border-bottom: 2px solid #ddd; text-align: right; width: 60%;">Kilos</th>
+            <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
+            <th style="padding: 8px 20px; border-bottom: 2px solid #cbd5e0; text-align: right; background: #edf2f7; width: 120px;">Kilos</th>
         `;
 
         let granSumatoriaKg = 0;
 
-        // Recorremos todos los códigos almacenados en el inventario actual de la bodega
         for (let cod in window.datosContablesActuales) {
             let item = window.datosContablesActuales[cod];
-            
-            item.desgloses.forEach((d, index) => {
+            let subtotalCodigo = 0;
+
+            tBodyModal.innerHTML += `
+                <tr style="background: #f7fafc; border-top: 1px solid #e2e8f0;">
+                    <td colspan="2" style="padding: 8px 10px; font-weight: bold; color: var(--primary, #2b6cb0); font-size: 13px;">
+                        <span style="font-family: monospace; background: #ebf8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bee3f8; margin-right: 5px;">${cod}</span> ${item.nombre}
+                    </td>
+                </tr>`;
+
+            item.desgloses.forEach(d => {
+                subtotalCodigo += d.kg;
                 granSumatoriaKg += d.kg;
-                
+
                 tBodyModal.innerHTML += `
-                    <tr style="border-bottom: 1px solid #edf2f7; background: ${index === 0 ? '#fafafa' : 'transparent'}">
-                        <td style="padding: 8px 6px; line-height: 1.2; width: 55%;">
-                            <b style="font-family: monospace; color: var(--primary, #2b6cb0);">${cod}</b><br>
-                            <span style="font-size: 11px; color: #666;">${item.nombre}</span>
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 6px 10px 6px 35px; color: #4a5568;">
+                            🔹 PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 12px; margin-left: 5px;">${d.pp}</span>
                         </td>
-                        <td style="padding: 8px 6px; text-align: center; width: 20%;"><span style="background: #e2e8f0; padding: 2px 5px; border-radius: 4px; font-family: monospace;">${d.pp}</span></td>
-                        <td style="padding: 8px 22px 8px 6px; text-align: right; font-weight: bold; color: #2d3748; width: 25%; white-space: nowrap !important;">${fmt(d.kg)} kg</td>
+                        <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
+                            ${fmt(d.kg)} kg
+                        </td>
                     </tr>`;
             });
+
+            tBodyModal.innerHTML += `
+                <tr style="border-bottom: 2px solid #cbd5e0;">
+                    <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 12px; text-align: right;">
+                        SUBTOTAL ${cod}:
+                    </td>
+                    <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 13px; background: #fbfbfb;">
+                        ${fmt(subtotalCodigo)} kg
+                    </td>
+                </tr>`;
         }
 
-        // Fila final con la GRAN SUMATORIA DE TODO EL INVENTARIO
+        // 🧠 DETECTOR DINÁMICO DEL NOMBRE DE LA BODEGA ACTIVA
+        // Si bodegaActual es 'principal' pone 'BODEGA PRINCIPAL', si no, lo pasa a mayúsculas ('ADOQUINES')
+        let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
+            ? 'BODEGA PRINCIPAL' 
+            : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
+
+        // 🔄 CAMBIO: Fila de cierre con el nombre de la bodega interactivo
         tBodyModal.innerHTML += `
-            <tr style="background: #f7fafc; border-top: 2px solid #cbd5e0; font-weight: bold;">
-                <td colspan="2" style="padding: 10px 6px; color: #2d3748; font-size: 13px;">STOCK TOTAL DE ESTA BODEGA:</td>
-                <td style="padding: 10px 12px 10px 6px; text-align: right; color: #e53e3e; font-size: 14px; white-space: nowrap !important;">${fmt(granSumatoriaKg)} kg</td>
+            <tr style="background: #fff5f5; border-top: 3px double #e53e3e; font-weight: bold;">
+                <td style="padding: 12px 10px; color: #c53030; font-size: 13px; text-align: right;">
+                    🔴 STOCK TOTAL ${nombreBodegaFinal}:
+                </td>
+                <td style="padding: 12px 20px; text-align: right; color: #e53e3e; font-size: 14px; font-family: monospace;">
+                    ${fmt(granSumatoriaKg)} kg
+                </td>
             </tr>`;
     }
 }
 
-        function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
-
-// 👇 PEGA ESTO AQUÍ
+// NOTIFICACIONES FLOTANTES VISUALES
 function notificar(msg, tipo = "info") {
     const colores = {
         success: "#38a169",
@@ -1628,31 +1724,35 @@ function notificar(msg, tipo = "info") {
         setTimeout(() => n.remove(), 300);
     }, 3000);
 }
+
+// FORMATEO DINÁMICO DE MÁSCARA (00-00-00)
 function formatearMascara(input, esBusqueda = false) {
-    // 1. Dejar solo los números (elimina letras, símbolos o guiones erróneos)
     let valor = input.value.replace(/\D/g, '');
     
-    // 2. Insertar los guiones automáticamente en las posiciones 2 y 4
     if (valor.length > 2 && valor.length <= 4) {
         valor = valor.slice(0, 2) + '-' + valor.slice(2);
     } else if (valor.length > 4) {
         valor = valor.slice(0, 2) + '-' + valor.slice(2, 4) + '-' + valor.slice(4, 6);
     }
     
-    // 3. Devolver el valor formateado al cuadro de texto en tiempo real
     input.value = valor;
     
-    // 4. Si la casilla es la de BUSCAR, ejecuta la función de filtrado del mapa
+    // Si el usuario escribe un PP completo de 6 dígitos en el modal de movimiento, se sugiere información
+    if (input.id === 'mov_pp' && valor.length === 8) {
+        sugerirDatosPorPP(valor);
+    }
+    
     if (esBusqueda) {
         buscar(); 
     }
 }
+
+// BUSCADOR INTERACTIVO Y RESALTADO DE TARJETAS
 function buscar() {
     let q = document.getElementById('busqueda').value.trim();
     let resContenedor = document.getElementById('res_busqueda');
-    let todasLasCards = document.querySelectorAll('.card-ubi'); // Seleccionamos todas las tarjetas del mapa
+    let todasLasCards = document.querySelectorAll('.card-ubi'); 
     
-    // Si no hay búsqueda, limpiamos el mapa y el texto
     if(!q) { 
         resContenedor.innerText = "Esperando búsqueda..."; 
         todasLasCards.forEach(c => c.classList.remove('ubi-off', 'ubi-highlight'));
@@ -1663,7 +1763,6 @@ function buscar() {
     let encontrado = false;
     let totalKg = 0;
 
-    // 1. Lógica de búsqueda y suma
     for(let ubi in db) {
         if(db[ubi][q]) {
             encontrado = true;
@@ -1676,16 +1775,14 @@ function buscar() {
         }
     }
 
-    // 2. Lógica de FILTRO EN EL MAPA
     todasLasCards.forEach(card => {
-        // Obtenemos el ID de la ubicación desde el primer div de la tarjeta
         let idUbi = card.dataset.id; 
 
         if (db[idUbi] && db[idUbi][q]) {
             card.classList.remove('ubi-off');
-            card.classList.add('ubi-highlight'); // Resalta si tiene el PP
+            card.classList.add('ubi-highlight'); 
         } else {
-            card.classList.add('ubi-off'); // Se apaga si no lo tiene
+            card.classList.add('ubi-off'); 
             card.classList.remove('ubi-highlight');
         }
     });
@@ -1700,6 +1797,8 @@ function buscar() {
         resContenedor.innerText = "No encontrado";
     }
 }
+
+// SELECTOR MENU DROPDOWN
 function toggleMenu() {
     let menu = document.getElementById("menuDropdown");
     menu.classList.toggle("show");
@@ -1715,58 +1814,72 @@ document.addEventListener("click", function(e) {
         menu.classList.remove("show");
     }
 });
+
+// FUNCIÓN DESHACER ÚLTIMO MOVIMIENTO (LOCAL & FIREBASE)
 function deshacer() {
     if (logs.length === 0) return alert("No hay movimientos para deshacer");
 
     const ultimoLog = logs[0]; 
     const { tipo, pp, kg, ubi } = ultimoLog;
 
-    // 1. LÓGICA DE REVERSIÓN DE STOCK
     if (tipo === 'ingreso') {
         if (db[ubi] && db[ubi][pp]) {
-            // Calculamos el ratio actual para descontar bultos proporcionalmente
             let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
             db[ubi][pp].kg -= kg;
             db[ubi][pp].bultos -= (kg * ratio);
             
-            // Si el stock llega a cero o menos por decimales, eliminamos la entrada
             if (db[ubi][pp].kg <= 0.1) delete db[ubi][pp];
         }
     } else if (tipo === 'salida') {
         if (!db[ubi]) db[ubi] = {};
         if (!db[ubi][pp]) db[ubi][pp] = { kg: 0, bultos: 0 };
         
-        // Buscamos el peso del bulto original comparando con la lista de pesos válidos
         let pesoBulto = pesosValidos.find(p => Math.abs((kg / p) - Math.round(kg / p)) < 0.01) || 1000;
         
         db[ubi][pp].kg += kg;
         db[ubi][pp].bultos += (kg / pesoBulto);
+    } else if (tipo === 'transferencia') {
+        // Soporte añadido para deshacer traspasos de forma exacta rebotando el flujo origen/destino
+        let partes = ubi.split(" ➡️ ");
+        let origOriginal = partes[0];
+        let destOriginal = partes[1];
+
+        if (db[destOriginal] && db[destOriginal][pp]) {
+            let ratioDest = db[destOriginal][pp].bultos / db[destOriginal][pp].kg;
+            let bultosRevertir = kg * ratioDest;
+            db[destOriginal][pp].kg -= kg;
+            db[destOriginal][pp].bultos -= bultosRevertir;
+            if (db[destOriginal][pp].kg <= 0.1) delete db[destOriginal][pp];
+            if (Object.keys(db[destOriginal]).length === 0) delete db[destOriginal];
+        }
+        if (!db[origOriginal]) db[origOriginal] = {};
+        if (!db[origOriginal][pp]) db[origOriginal][pp] = { kg: 0, bultos: 0 };
+        let pesoBulto = pesosValidos.find(p => Math.abs((kg / p) - Math.round(kg / p)) < 0.01) || 1000;
+        db[origOriginal][pp].kg += kg;
+        db[origOriginal][pp].bultos += (kg / pesoBulto);
     }
 
-    // 2. ACTUALIZACIÓN LOCAL
-    logs.shift(); // Quitamos el primer registro del historial
+    logs.shift(); 
     localStorage.setItem('bodega_db', JSON.stringify(db));
     localStorage.setItem('bodega_logs', JSON.stringify(logs));
 
-    // 3. ☁️ SINCRONIZACIÓN AUTOMÁTICA CON LA NUBE (Firebase)
-    // Usamos dbRef.set para que todos los operadores vean el cambio de inmediato
-    dbRef.set({
-        inventario: db,
-        historial: logs
-    }).then(() => {
-        console.log("Nube actualizada tras deshacer movimiento.");
-    }).catch((error) => {
-        console.error("Error al sincronizar con la nube:", error);
-    });
+    if (typeof dbRef !== 'undefined' && dbRef.set) {
+        dbRef.set({
+            inventario: db,
+            historial: logs
+        }).then(() => {
+            console.log("Nube actualizada tras deshacer movimiento.");
+        }).catch((error) => {
+            console.error("Error al sincronizar con la nube:", error);
+        });
+    }
 
-    // 4. ACTUALIZACIÓN VISUAL Y ALERTAS
-    render(); // Redibujamos el mapa y las tablas
-    
-    // Mantenemos tu alerta original tal como pediste
+    render(); 
     alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
 }
+
+// EXPORTACIÓN A EXCEL DATA PLANA
 function exportarExcel() {
-    // 1. Crear una lista de datos plana para el Excel
     let datosExcel = [];
     
     for (let ubi in db) {
@@ -1783,18 +1896,16 @@ function exportarExcel() {
 
     if (datosExcel.length === 0) return alert("No hay stock para exportar");
 
-    // 2. Convertir datos a hoja de Excel
     const hoja = XLSX.utils.json_to_sheet(datosExcel);
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, "Stock_Bodega");
 
-    // 3. Descargar el archivo
     const fecha = new Date().toISOString().slice(0,10);
     XLSX.writeFile(libro, `Stock_Bodega_${fecha}.xlsx`);
-document.getElementById('busqueda').value = "";
+    document.getElementById('busqueda').value = "";
 }
 
-// 💾 BACKUP MANUAL
+// RESPALDO MANUAL JSON
 function crearBackup() {
     const backup = {
         db: db,
@@ -1815,7 +1926,7 @@ function crearBackup() {
     notificar("Backup descargado correctamente", "success");
 }
 
-// 📥 RESTAURAR BACKUP
+// RESTAURACIÓN DE BACKUPS MANUALES
 function restaurarBackup(archivo) {
     const reader = new FileReader();
 
@@ -1824,7 +1935,6 @@ function restaurarBackup(archivo) {
             const backup = JSON.parse(e.target.result);
 
             if (backup.db && backup.logs) {
-
                 db = backup.db;
                 logs = backup.logs;
 
@@ -1832,19 +1942,18 @@ function restaurarBackup(archivo) {
                 localStorage.setItem('bodega_logs', JSON.stringify(logs));
 
                 render();
-
                 notificar("Backup restaurado correctamente", "success");
             } else {
                 notificar("Backup incompleto", "error");
             }
-
         } catch (err) {
             notificar("Archivo inválido", "error");
         }
     };
-
     reader.readAsText(archivo);
 }
+
+// COPIA DE SEGURIDAD AUTOMÁTICA EN LOCALSTORAGE (MÁXIMO 10 COPIAS)
 function autoBackup() {
     const backup = {
         db: db,
@@ -1853,35 +1962,55 @@ function autoBackup() {
     };
 
     let backups = JSON.parse(localStorage.getItem("bodega_backups")) || [];
+    backups.unshift(backup); 
 
-    backups.unshift(backup); // guarda al inicio
-
-    // 🔥 mantener solo los últimos 10 backups
     if (backups.length > 10) {
         backups = backups.slice(0, 10);
     }
 
-localStorage.setItem("bodega_backups", JSON.stringify(backups));
-
+    localStorage.setItem("bodega_backups", JSON.stringify(backups));
     console.log("💾 Auto-backup guardado");
 }
 
-// === AQUÍ ES EL CAMBIO CRÍTICO ===
-verificarAcceso(); // Primero bloqueamos/permitimos según el link
-render();          // Luego dibujamos la página
-// ================================
-// =================================================================
-// 🚀 MÓDULO LOGÍSTICO INTERCONECTADO: CORREGIDO Y VERIFICADO
-// =================================================================
+// INTERRUPTOR DE SEGURIDAD Y ARRANQUE DE PÁGINA
+verificarAcceso(); 
+render();          
 
+// ====================================================================================
+// 🚀 MÓDULO LOGÍSTICO INTERCONECTADO Y DETECTOR DE DATOS ASOCIADOS
+// ====================================================================================
 let bultoSeleccionadoMovimiento = null;
+
+// Función de inteligencia para sugerir los nombres o códigos asociados al PP en el modal
+function sugerirDatosPorPP(ppABuscar) {
+    let encontrado = false;
+    if (window.datosContablesActuales) {
+        for (let cod in window.datosContablesActuales) {
+            let item = window.datosContablesActuales[cod];
+            let tienePP = item.desgloses.some(d => d.pp === ppABuscar);
+            if (tienePP) {
+                notificar(`Asociado a Código: ${cod} (${item.nombre})`, "info");
+                encontrado = true;
+                break;
+            }
+        }
+    }
+    if (!encontrado) {
+        // Búsqueda secundaria directo en el inventario actual
+        for (let ubi in db) {
+            if (db[ubi][ppABuscar]) {
+                console.log(`PP detectado previamente en ubicación: ${ubi}`);
+                break;
+            }
+        }
+    }
+}
 
 function abrirModalMovimiento() {
     document.getElementById('mov_pp').value = '';
     document.getElementById('mov_kg').value = '';
     bultoSeleccionadoMovimiento = null;
     
-    // 1. Cargar selector de bultos usando tus 'pesosValidos' globales
     const selectBulto = document.getElementById('bultos_movimiento');
     if (selectBulto) {
         selectBulto.innerHTML = '<option value="">Seleccione bulto</option>';
@@ -1893,7 +2022,6 @@ function abrirModalMovimiento() {
         };
     }
 
-    // 2. Cargar selectores unificados con divisiones por bodega
     const selectOrigen = document.getElementById('mov_origen');
     const selectDestino = document.getElementById('mov_destino');
     
@@ -1917,7 +2045,6 @@ function abrirModalMovimiento() {
         selectDestino.innerHTML = opcionesHTML;
     }
 
-    // Mostrar ventana modal forzando el diseño flex centrado
     document.getElementById('modal-movimiento').style.display = 'flex';
 }
 
@@ -1925,7 +2052,6 @@ function cerrarModalMovimiento() {
     document.getElementById('modal-movimiento').style.display = 'none';
 }
 
-// Réplica exacta y funcional de tu detector automático de bultos
 function autoSeleccionarBultoMovimiento() {
     let kgInput = document.getElementById("mov_kg");
     if (!kgInput) return;
@@ -1976,13 +2102,11 @@ function ejecutarMovimientoInterno() {
 
     let bultosTraspaso = kg / bultoSeleccionadoMovimiento;
 
-    // Validar Stock Origen
     if (!db[origen] || !db[origen][pp] || db[origen][pp].kg < kg) {
         notificar(`No hay stock suficiente en ${origen}`, "error");
         return;
     }
 
-    // Buscar capacidad máxima del destino en los dos layouts
     let ubiData = layoutPrin.find(item => Array.isArray(item) && item[0] === destino);
     if (!ubiData) {
         ubiData = layoutAdo.find(item => Array.isArray(item) && item[0] === destino);
@@ -2001,7 +2125,6 @@ function ejecutarMovimientoInterno() {
         return;
     }
 
-    // Procesar Base de Datos
     let ratioOrigen = db[origen][pp].bultos / db[origen][pp].kg;
     db[origen][pp].kg -= kg;
     db[origen][pp].bultos -= (kg * ratioOrigen);
@@ -2013,7 +2136,6 @@ function ejecutarMovimientoInterno() {
     db[destino][pp].kg += kg;
     db[destino][pp].bultos += bultosTraspaso;
 
-    // Historial Logs
     logs.unshift({ 
         tipo: "transferencia", 
         pp, 
@@ -2028,7 +2150,6 @@ function ejecutarMovimientoInterno() {
     notificar(`TRASPASO OK: ${pp} movido de ${origen} a ${destino}`, "success");
     autoBackup();
 
-    // Sincronizar Firebase Cloud
     if (typeof dbRef !== 'undefined' && dbRef.set) {
         dbRef.set({
             inventario: db,
@@ -2044,36 +2165,42 @@ function ejecutarMovimientoInterno() {
     cerrarModalMovimiento();
 }
 
-setInterval(autoBackup, 300000); // cada 5 minutos
+// Bucle en segundo plano para respaldar cada 5 minutos
+setInterval(autoBackup, 300000); 
 
-// 🚀 PASO 2 PEGADO AQUÍ: Lógica interactiva de Zoom para los Casilleros
+// CONTROLADOR INTERACTIVO DE LÓGICA DE INTERFAZ (ZOOM Y DETECTOR DE PP)
 document.addEventListener("DOMContentLoaded", () => {
+    
+    // 1. Escuchador para formatear la máscara y buscar el código contable en vivo
+    const inputMovPP = document.getElementById('mov_pp');
+    if (inputMovPP) {
+        inputMovPP.addEventListener('input', function() {
+            // Llama a la función de la máscara pasando 'false' porque no es el buscador principal
+            formatearMascara(this, false); 
+        });
+    }
+
+    // 2. Lógica de Zoom para los Casilleros (Tu código original)
     document.addEventListener("click", (e) => {
-        // Buscamos si el clic/toque fue en una tarjeta de ubicación
         const tarjeta = e.target.closest(".card-ubi");
 
         if (tarjeta) {
-            // Si la tarjeta ya tenía zoom, se lo quitamos
             if (tarjeta.classList.contains("zoom-active")) {
                 tarjeta.classList.remove("zoom-active");
             } else {
-                // Quitamos el zoom de cualquier otra tarjeta abierta antes
                 document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
                     el.classList.remove("zoom-active");
                 });
-                // Le aplicamos el zoom a la tarjeta seleccionada
                 tarjeta.classList.add("zoom-active");
             }
             e.stopPropagation();
         } else {
-            // Si el operador toca en cualquier otra parte, cerramos todos los zooms
             document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
                 el.classList.remove("zoom-active");
             });
         }
     });
 });
-
 </script>
 
 <div id="modal-detalle-contable" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
@@ -2112,6 +2239,28 @@ document.addEventListener("DOMContentLoaded", () => {
         
         <div style="text-align: center; margin-top: 20px;">
             <button onclick="cerrarSemaforoMovil()" style="background: var(--primary, #2b6cb0); color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px;">Entendido / Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-nuevo-maestro" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10005; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 25px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; text-align: center;">📢 DETECTADO PP NUEVO</h3>
+        <p id="txt-pp-nuevo-aviso" style="font-size: 13px; color: #4a5568; text-align: center; margin-bottom: 20px; font-weight: bold;"></p>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">NOMBRE COMERCIAL:</label>
+            <select id="sel-maestro-nombre" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px;"></select>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">CÓDIGO CONTABLE:</label>
+            <select id="sel-maestro-codigo" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px;"></select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-cancelar-maestro" style="flex: 1; background: #718096; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">Cancelar Ingreso</button>
+            <button id="btn-guardar-maestro" style="flex: 1; background: var(--success, #38a169); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">Asignar y Continuar</button>
         </div>
     </div>
 </div>
