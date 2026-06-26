@@ -460,7 +460,7 @@ color: #1f2937;
 }
 
 .card-ubi.zoom-active {
-    transform: scale(2.0) !important; /* 🚀 AHORA EL DOBLE DE GRANDE (200%) */
+    transform: scale(2.2) !important; /* 🚀 AHORA EL DOBLE DE GRANDE (200%) */
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important; /* Sombra un poco más profunda por el tamaño */
     z-index: 9999 !important; /* Máxima prioridad para que nada lo tape */
     position: relative !important;
@@ -472,8 +472,13 @@ color: #1f2937;
 
 /* 🔥 Extra: Hace que las letras y números de adentro se mantengan nítidos al agrandarse */
 .card-ubi.zoom-active * {
-    font-size: 95% !important; 
+    font-size: 90% !important; 
 }
+
+/* ================================================================= */
+/* 🔄 ANIMACIONES DE MOVIMIENTO SUTIL PARA LAS FLECHAS DE ENTRADA    */
+/* ================================================================= */
+@keyframes bounceX {
 /* ================================================================= */
 /* 🔄 ANIMACIONES DE MOVIMIENTO SUTIL PARA LAS FLECHAS DE ENTRADA    */
 /* ================================================================= */
@@ -1645,8 +1650,8 @@ function dibujarContenidoModal() {
 
                 tBodyModal.innerHTML += `
                     <tr style="border-bottom: 1px solid #edf2f7;">
-                        <td style="padding: 6px 10px 6px 35px; color: #4a5568;">
-                            🔹 PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
+                        <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
+                          🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
                         </td>
                         <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
                             ${fmt(d.kg)} kg
@@ -2181,26 +2186,31 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 2. Lógica de Zoom para los Casilleros (Tu código original)
-    document.addEventListener("click", (e) => {
-        const tarjeta = e.target.closest(".card-ubi");
+// Lógica de Zoom para los Casilleros (Optimizada para pantalla completa)
+document.addEventListener("click", (e) => {
+    const tarjeta = e.target.closest(".card-ubi");
 
-        if (tarjeta) {
-            if (tarjeta.classList.contains("zoom-active")) {
-                tarjeta.classList.remove("zoom-active");
-            } else {
-                document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
-                    el.classList.remove("zoom-active");
-                });
-                tarjeta.classList.add("zoom-active");
-            }
-            e.stopPropagation();
+    if (tarjeta) {
+        // Si el operador toca una tarjeta...
+        if (tarjeta.classList.contains("zoom-active")) {
+            // Si ya estaba expandida y la vuelve a tocar, se cierra
+            tarjeta.classList.remove("zoom-active");
         } else {
+            // Si toca una nueva, primero cerramos cualquier otra abierta
             document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
                 el.classList.remove("zoom-active");
             });
+            // Maximizamos la tarjeta actual al centro de la pantalla
+            tarjeta.classList.add("zoom-active");
         }
-    });
+        e.stopPropagation();
+    } else {
+        // 🔥 Si toca en cualquier parte vacía del fondo, cerramos el zoom de inmediato
+        document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
+            el.classList.remove("zoom-active");
+        });
+    }
+});
 });
 </script>
 
