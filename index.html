@@ -837,115 +837,116 @@ function cambiarBodega(tipo) {
 }
 
 function accion(tipo) {
-// Si no es administrador por URL, pedimos clave
+    // Si no es administrador por URL, pedimos clave
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('rol') !== 'admin') {
         const pass = prompt("Introduce la clave de autorización para modificar stock:");
-        if (pass !== "Qb2049Qb") { // 
+        if (pass !== "Qb2049Qb") { 
             alert("Clave incorrecta. No tienes permiso para esta acción.");
             return;
         }
     }
 
-            let ppInput = document.getElementById(tipo === 'ingreso' ? 'pp_in' : 'pp_out');
-            let pp = ppInput.value.trim();
-            let kg = parseFloat(document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value);
-            let ubi = document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').value;
+    let ppInput = document.getElementById(tipo === 'ingreso' ? 'pp_in' : 'pp_out');
+    let pp = ppInput.value.trim();
+    let kg = parseFloat(document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value);
+    let ubi = document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').value;
 
-// 🛑 NUEVA VALIDACIÓN: Detener el proceso si no se seleccionó ubicación
-            if (!ubi || ubi === "") {
-                notificar("Por favor, seleccione una ubicación válida", "warning");
-                return;
-            }
+    if (!ubi || ubi === "") {
+        notificar("Por favor, seleccione una ubicación válida", "warning");
+        return;
+    }
 
-            // 1. REGLA DE FORMATO PP
-            const formatoPP = /^\d{2}-\d{2}-\d{2}$/;
-            if (!formatoPP.test(pp)) {
-                notificar("Formato de PP incorrecto (00-00-00)", "error");
-                ppInput.focus();
-                return;
-            }
+    const formatoPP = /^\d{2}-\d{2}-\d{2}$/;
+    if (!formatoPP.test(pp)) {
+        notificar("Formato de PP incorrecto (00-00-00)", "error");
+        ppInput.focus();
+        return;
+    }
 
-            if (!pp || isNaN(kg) || kg <= 0) {
-    notificar("Datos incompletos", "error");
-    return;
-}
+    if (!pp || isNaN(kg) || kg <= 0) {
+        notificar("Datos incompletos", "error");
+        return;
+    }
 
-// ====================================================================
-    // 🚨 DETECTOR AUTOMÁTICO CON DESPLEGABLES (SOLUCIÓN INTERACTIVA MEJORADA)
+    // ====================================================================
+    // 🚨 DETECTOR CON UN SOLO DESPLEGABLE CON PAREJAS INSEPARABLES
     // ====================================================================
     if (tipo === 'ingreso' && pp && !maestroProductos[pp]) {
-        document.getElementById('txt-pp-nuevo-aviso').innerText = `El PP [${pp}] es nuevo. Seleccione sus datos correspondientes:`;
+        document.getElementById('txt-pp-nuevo-aviso').innerText = `PP [${pp}] es nueva. Asigne el producto correspondiente:`;
         
-        // Extraer nombres y códigos únicos existentes en el maestro para llenar los selectores
-        let nombresExistentes = new Set();
-        let codigosExistentes = new Set();
+        // Creamos un mapa de combinaciones únicas (Código + Nombre) para evitar duplicados en la lista
+        let productosUnicos = {};
         
         for (let clave in maestroProductos) {
-            if (maestroProductos[clave].nombre) nombresExistentes.add(maestroProductos[clave].nombre);
-            if (maestroProductos[clave].codigo) codigosExistentes.add(maestroProductos[clave].codigo);
+            let prod = maestroProductos[clave];
+            if (prod.codigo && prod.nombre) {
+                // Usamos el código como llave para asegurar que la pareja sea única
+                productosUnicos[prod.codigo] = prod.nombre;
+            }
         }
 
-        // Convertir a Arrays y ordenar alfabéticamente
-        let arrNombres = Array.from(nombresExistentes).sort();
-        let arrCodigos = Array.from(codigosExistentes).sort();
+        let selProducto = document.getElementById('sel-maestro-producto');
+        selProducto.innerHTML = '<option value="">Seleccione Código Contable</option>';
 
-        let selNombre = document.getElementById('sel-maestro-nombre');
-        let selCodigo = document.getElementById('sel-maestro-codigo');
+        // Llenar el selector único con la estructura: [CÓDIGO] Nombre Comercial
+        for (let cod in productosUnicos) {
+            selProducto.innerHTML += `<option value="${cod}|${productosUnicos[cod]}">[${cod}] ${productosUnicos[cod]}</option>`;
+        }
+        
+        // Opción por si de verdad llega un producto virgen de fábrica
+        selProducto.innerHTML += '<option value="OTRO">✏️ REGISTRAR UN NUEVO MATERIAL TOTALMENTE DESCONOCIDO</option>';
 
-        // Llenar select de nombres comerciales
-        selNombre.innerHTML = '<option value="">-- Seleccione Nombre Comercial --</option>';
-        arrNombres.forEach(n => selNombre.innerHTML += `<option value="${n}">${n}</option>`);
-        selNombre.innerHTML += '<option value="OTRO">✏️ REGISTRAR UNO NUEVO (TEXTO LIBRE)</option>';
-
-        // Llenar select de códigos contables
-        selCodigo.innerHTML = '<option value="">-- Seleccione Código Contable --</option>';
-        arrCodigos.forEach(c => selCodigo.innerHTML += `<option value="${c}">${c}</option>`);
-        selCodigo.innerHTML += '<option value="OTRO">✏️ REGISTRAR UNO NUEVO (TEXTO LIBRE)</option>';
-
-        // Mostrar el modal elegante
         document.getElementById('modal-nuevo-maestro').style.display = 'flex';
 
         // Evento Cancelar
         document.getElementById('btn-cancelar-maestro').onclick = function() {
             document.getElementById('modal-nuevo-maestro').style.display = 'none';
-            notificar("Ingreso cancelado por el administardor", "warning");
+            notificar("Ingreso cancelado por el administrador", "warning");
         };
 
         // Evento Guardar
         document.getElementById('btn-guardar-maestro').onclick = function() {
-            let nSeleccionado = selNombre.value;
-            let cSeleccionado = selCodigo.value;
+            let seleccion = selProducto.value;
 
-            if (!nSeleccionado || !cSeleccionado) {
-                alert("Por favor, complete ambas selecciones.");
+            if (!seleccion) {
+                alert("Por favor, seleccione una opción válida de la lista.");
                 return;
             }
 
-            // Si eligen "OTRO", les permitimos escribir por única vez (por si llega un producto virgen de fábrica)
-            if (nSeleccionado === "OTRO") {
-                nSeleccionado = prompt("Escriba el NUEVO Nombre Comercial:").toUpperCase().trim();
-                if (!nSeleccionado) return;
-            }
-            if (cSeleccionado === "OTRO") {
-                cSeleccionado = prompt("Escriba el NUEVO Código Contable:").toUpperCase().trim();
-                if (!cSeleccionado) return;
+            let finalCodigo = "";
+            let finalNombre = "";
+
+            if (seleccion === "OTRO") {
+                // Si es un producto completamente nuevo en la empresa, pide ambos por texto libre
+                finalNombre = prompt("Escriba el NUEVO Nombre Comercial:").toUpperCase().trim();
+                if (!finalNombre) return;
+
+                finalCodigo = prompt("Escriba el NUEVO Código Contable:").toUpperCase().trim();
+                if (!finalCodigo) return;
+            } else {
+                // Rompemos el string "CODIGO|NOMBRE" para recuperar los datos exactos e inseparables
+                let partes = seleccion.split('|');
+                finalCodigo = partes[0];
+                finalNombre = partes[1];
             }
 
-            // Guardar en memoria de la Solución 1
-            maestroProductos[pp] = { codigo: cSeleccionado, nombre: nSeleccionado };
+            // Guardamos la relación perfecta en tu maestro para este PP nuevo
+            maestroProductos[pp] = { 
+                codigo: finalCodigo, 
+                nombre: finalNombre 
+            };
             localStorage.setItem('bodega_maestro', JSON.stringify(maestroProductos));
             
             document.getElementById('modal-nuevo-maestro').style.display = 'none';
-            notificar(`✅ PP [${pp}] mapeado con éxito`, "success");
+            notificar(`✅ PP [${pp}] mapeado a ${finalCodigo}`, "success");
 
-            // Ejecutar el resto de la función (Recursividad controlada)
+            // Continuamos el flujo normal
             continuarProcesarAccion(tipo, pp, kg, ubi, ppInput);
         };
-        return; // Detiene la ejecución aquí en lo que el operador elige del modal
+        return; // Detiene la función mientras el operador interactúa con el modal
     }
 
-    // Si ya existía el PP, fluye de forma normal y directa
     continuarProcesarAccion(tipo, pp, kg, ubi, ppInput);
 }
 
@@ -1655,10 +1656,10 @@ function dibujarContenidoModal() {
 
             tBodyModal.innerHTML += `
                 <tr style="border-bottom: 2px solid #cbd5e0;">
-                    <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 12px; text-align: right;">
+                    <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
                         SUBTOTAL ${cod}:
                     </td>
-                    <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 13px; background: #fbfbfb;">
+                    <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 15px; background: #fbfbfb;">
                         ${fmt(subtotalCodigo)} kg
                     </td>
                 </tr>`;
@@ -2244,18 +2245,13 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 
 <div id="modal-nuevo-maestro" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10005; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 25px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); font-family: sans-serif;">
-        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; text-align: center;">📢 DETECTADO PP NUEVO</h3>
+    <div style="background: white; padding: 25px; border-radius: 12px; width: 92%; max-width: 480px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; text-align: center;">📢 PP NUEVA DETECTADA</h3>
         <p id="txt-pp-nuevo-aviso" style="font-size: 13px; color: #4a5568; text-align: center; margin-bottom: 20px; font-weight: bold;"></p>
         
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">NOMBRE COMERCIAL:</label>
-            <select id="sel-maestro-nombre" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px;"></select>
-        </div>
-
         <div style="margin-bottom: 25px;">
-            <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">CÓDIGO CONTABLE:</label>
-            <select id="sel-maestro-codigo" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px;"></select>
+            <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">CÓDIGO CONTABLE / MATERIAL</label>
+            <select id="sel-maestro-producto" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; font-family: monospace;"></select>
         </div>
 
         <div style="display: flex; gap: 10px;">
