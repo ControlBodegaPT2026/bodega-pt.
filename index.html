@@ -453,26 +453,9 @@ color: #1f2937;
             text-align: center !important;
             white-space: nowrap;
         }
-/* 🚀 EFECTO ZOOM PARA TARJETAS EN MÓVIL */
+/* 🚀 EFECTO ZOOM DESACTIVADO (Se mantiene limpio para Modales) */
 .card-ubi {
-    /* Aseguramos que la tarjeta tenga una transición suave al agrandarse */
-    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s ease, z-index 0.5s ease !important;
-}
-
-.card-ubi.zoom-active {
-    transform: scale(2.2) !important; /* 🚀 AHORA EL DOBLE DE GRANDE (200%) */
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important; /* Sombra un poco más profunda por el tamaño */
-    z-index: 9999 !important; /* Máxima prioridad para que nada lo tape */
-    position: relative !important;
-    border: 1.5px solid #fff !important; /* Borde blanco sutil para resaltar */
-    
-    /* Opcional pero recomendado: Asegura que los textos internos también escalen perfecto */
-    text-shadow: none !important; 
-}
-
-/* 🔥 Extra: Hace que las letras y números de adentro se mantengan nítidos al agrandarse */
-.card-ubi.zoom-active * {
-    font-size: 90% !important; 
+    transition: box-shadow 0.2s ease !important;
 }
 
 /* ================================================================= */
@@ -623,7 +606,7 @@ color: #1f2937;
             <button type="button" onclick="limpiarBuscador()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #cbd5e0; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; z-index: 5;">×</button>
         </div>
         
-        <div id="res_busqueda" style="font-size: 13px; color: var(--primary);">Esperando búsqueda...</div>
+        <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
     </div>
     <!-- Tarjeta 4: Stock por PP (Nueva ubicación) -->
     <div class="card-action">
@@ -744,7 +727,7 @@ color: #1f2937;
         }
 
 // ====================================================================
-// 🎙️ SISTEMA NATIVO DE VOZ (VERSION ULTRA-ESTABLE SIN ERRORES)
+// 🎙️ SISTEMA NATIVO DE VOZ (VERSION ULTRA-ESTABLE ESTILO WHATSAPP)
 // ====================================================================
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let reconocimientoVoz = null;
@@ -757,19 +740,35 @@ if (SpeechRecognition) {
     reconocimientoVoz.continuous = false; 
     reconocimientoVoz.interimResults = false;
 
-    // Cuando empieza a escuchar
+    // Cuando empieza a escuchar (MODO GRABACIÓN ROJO)
     reconocimientoVoz.onstart = () => {
         estaEscuchando = true;
         fuePorVoz = true; 
-        document.getElementById('btnMicrofono').classList.add('mic-escuchando');
+        
+        // 🔥 CAMBIO DE COLOR EN VIVO: Fondo rojo suave e icono rojo
+        let btnMic = document.getElementById('btnMicrofono');
+        if (btnMic) {
+            btnMic.style.background = "#ffe3e3"; 
+            btnMic.style.color = "#e53e3e";      
+            btnMic.innerHTML = "<i class='bx bx-microphone-off'></i>"; // Icono de detener
+        }
+
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.placeholder = "Escuchando... habla ahora";
     };
 
-// Cuando termina de escuchar
+    // Cuando termina de escuchar (REGRESA A MODO WHATSAPP NEUTRO)
     reconocimientoVoz.onend = () => {
         estaEscuchando = false;
-        document.getElementById('btnMicrofono').classList.remove('mic-escuchando');
+        
+        // 🔥 REGRESAR AL GRIS WHATSAPP ORIGINAL
+        let btnMic = document.getElementById('btnMicrofono');
+        if (btnMic) {
+            btnMic.style.background = "#f0f2f5"; 
+            btnMic.style.color = "#54656f";      
+            btnMic.innerHTML = "<i class='bx bx-microphone'></i>"; // Icono de micro normal
+        }
+
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.placeholder = "Escribe tu consulta aquí o habla...";
     };
@@ -2358,43 +2357,94 @@ function ejecutarMovimientoInterno() {
 // Bucle en segundo plano para respaldar cada 5 minutos
 setInterval(autoBackup, 300000); 
 
-// CONTROLADOR INTERACTIVO DE LÓGICA DE INTERFAZ (ZOOM Y DETECTOR DE PP)
+// CONTROLADOR INTERACTIVO DE LÓGICA DE INTERFAZ (MODALES DE ALTA PRECISIÓN)
 document.addEventListener("DOMContentLoaded", () => {
     
     // 1. Escuchador para formatear la máscara y buscar el código contable en vivo
     const inputMovPP = document.getElementById('mov_pp');
     if (inputMovPP) {
         inputMovPP.addEventListener('input', function() {
-            // Llama a la función de la máscara pasando 'false' porque no es el buscador principal
             formatearMascara(this, false); 
         });
     }
 
-// Lógica de Zoom para los Casilleros (Optimizada para pantalla completa)
-document.addEventListener("click", (e) => {
-    const tarjeta = e.target.closest(".card-ubi");
+    // 📍 2. CONTROLADOR DE CLICKS EN EL LAYOUT (Abre ventana flotante limpia)
+    document.addEventListener("click", (e) => {
+        const tarjeta = e.target.closest(".card-ubi");
 
-    if (tarjeta) {
-        // Si el operador toca una tarjeta...
-        if (tarjeta.classList.contains("zoom-active")) {
-            // Si ya estaba expandida y la vuelve a tocar, se cierra
-            tarjeta.classList.remove("zoom-active");
-        } else {
-            // Si toca una nueva, primero cerramos cualquier otra abierta
-            document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
-                el.classList.remove("zoom-active");
-            });
-            // Maximizamos la tarjeta actual al centro de la pantalla
-            tarjeta.classList.add("zoom-active");
+        if (tarjeta) {
+            e.stopPropagation();
+
+            // Intentamos obtener el ID único de la celda (ej: "A1", "C2")
+            let id = tarjeta.id || tarjeta.getAttribute('data-id') || tarjeta.getAttribute('data-ubi');
+            
+            // Si el elemento no tiene ID directo, intentamos extraerlo del primer texto corto que tenga dentro
+            if (!id) {
+                let matchTexto = (tarjeta.innerText || "").match(/^([A-Z]\d{1,2})/);
+                id = matchTexto ? matchTexto[1] : null;
+            }
+
+            if (!id) return; // Si no hay ID válido, cancelamos
+
+            // Intentamos extraer el atributo de capacidad máxima, si no existe le damos un valor por defecto
+            let cap = tarjeta.getAttribute('data-cap') || 0;
+
+            let modalSemaforo = document.getElementById('modal-semaforo-movil');
+            let contenidoClonado = document.getElementById('contenido-semaforo-clonado');
+            
+            if (modalSemaforo && contenidoClonado) {
+                // Buscamos el inventario actual de este casillero en la base de datos central (db)
+                let infoUbicacion = (typeof db !== 'undefined') ? db[id] : null;
+                let htmlDetalle = "";
+
+                // Encabezado estético de la ventana flotante
+                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: #f4f7fc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <span style="font-size: 18px; font-weight: bold; color: var(--primary, #2b6cb0);">📍 UBICACIÓN: ${id.toUpperCase()}</span>
+                                    ${cap ? `<div style="font-size: 11px; color: #718096; margin-top: 3px; font-weight: bold;">Capacidad Máxima: ${cap} Bultos</div>` : ''}
+                                </div>`;
+
+                if (infoUbicacion && Object.keys(infoUbicacion).length > 0) {
+                    // Desglosamos cada lote PP que viva en este espacio
+                    for (let pp in infoUbicacion) {
+                        let datosLote = infoUbicacion[pp];
+                        let kgLote = datosLote.kg || 0;
+                        let bultosLote = datosLote.bultos || 0;
+
+                        // Buscamos el nombre del material en tu maestro global en la nube
+                        let infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[pp] : null)
+                                       || (window.maestroProductos ? window.maestroProductos[pp] : null);
+                        
+                        let nombreMat = infoMaestro && infoMaestro.nombre ? infoMaestro.nombre : "PP sin registro en maestro";
+                        let skuMat = infoMaestro && infoMaestro.codigo ? `[${infoMaestro.codigo}]` : "";
+
+                        // Tarjeta independiente y ordenada para cada lote
+                        htmlDetalle += `
+                        <div style="background: #ffffff; border: 1px solid #edf2f7; padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); text-align: left;">
+                            <div style="font-size: 13px; font-weight: bold; color: #2d3748; margin-bottom: 4px;">📦 PP ${pp}</div>
+                            <div style="font-size: 12px; color: #4a5568; line-height: 1.4; margin-bottom: 8px;">🏷️ ${nombreMat} <span style="font-family: monospace; font-weight: bold; color: #718096;">${skuMat}</span></div>
+                            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #edf2f7; padding-top: 8px; font-size: 12px;">
+                                <span>Kilos: <b style="color: #2b6cb0;">${typeof fmt === 'function' ? fmt(kgLote) : kgLote.toLocaleString()} kg</b></span>
+                                <span>Bultos: <b style="color: #38a169;">${Math.round(bultosLote)} un.</b></span>
+                            </div>
+                        </div>`;
+                    }
+                } else {
+                    // Si el casillero seleccionado está vacío
+                    htmlDetalle += `
+                    <div style="text-align: center; padding: 35px 10px; color: #a0aec0;">
+                        <div style="font-size: 36px; margin-bottom: 5px;">💨</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #718096;">Ubicación libre</div>
+                        <div style="font-size: 12px;">No registra stock activo en Firebase.</div>
+                    </div>`;
+                }
+
+                // Cargamos la estructura y abrimos la ventana flotante en la pantalla
+                contenidoClonado.innerHTML = htmlDetalle;
+                modalSemaforo.style.display = 'flex';
+            }
         }
-        e.stopPropagation();
-    } else {
-        // 🔥 Si toca en cualquier parte vacía del fondo, cerramos el zoom de inmediato
-        document.querySelectorAll(".card-ubi.zoom-active").forEach(el => {
-            el.classList.remove("zoom-active");
-        });
-    }
-});
+    });
+
 });
 
 // ====================================================================
@@ -2438,7 +2488,7 @@ btnChat.addEventListener('click', () => {
                 asistenteHablar(respuesta); 
                 fuePorVoz = false; // Reseteamos para la siguiente consulta
             }
-        }, 400);
+        }, 1300);
     }
 
     btnEnviar.addEventListener('click', procesarEnvioUsuario);
@@ -2476,7 +2526,7 @@ function agregarMensajeChat(texto, emisor) {
         }
 
 // ====================================================================
-// 2. 📍 UBICACIÓN EXACTA CORREGIDA (Ej: "Ubicación A1")
+// 2. 📍 UBICACIÓN EXACTA GLOBAL POR LOTE PP (Suma todas las bodegas)
 // ====================================================================
 let formatoPP = /(\d{2}-\d{2}-\d{2})/;
 let coincidenciaPP = consulta.match(formatoPP);
@@ -2484,59 +2534,45 @@ let coincidenciaPP = consulta.match(formatoPP);
 if (coincidenciaPP) {
     let ppBuscado = coincidenciaPP[1];
     
-    // A) Obtener datos del maestro
+    // A) Obtener datos del maestro global sincronizado
     let infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[ppBuscado] : null) 
                    || (window.maestroProductos ? window.maestroProductos[ppBuscado] : null);
                    
-    // B) Escaneo del mapa filtrando por tarjetas únicas
-    let ubicacionesEncontradas = [];
-    
-    document.querySelectorAll('.card-ubi').forEach(tarjeta => {
-        // Clonamos el texto y quitamos saltos extraños para buscar limpio
-        let textoTarjeta = tarjeta.innerText || "";
-        
-        if (textoTarjeta.includes(ppBuscado)) {
-            // 🔥 TRUCO: Intentamos obtener el ID de la tarjeta (ej: "A1", "B4") 
-            // Si no tiene ID limpio, buscamos cualquier texto de 2 o 3 caracteres en mayúsculas (ej: A1, A10)
-            let nombreUbi = tarjeta.id || tarjeta.getAttribute('data-ubi') || tarjeta.getAttribute('data-id');
-            
-            if (!nombreUbi) {
-                // Si no tiene atributos, buscamos el primer texto corto dentro de la tarjeta
-                let matchTexto = textoTarjeta.match(/^([A-Z]\d{1,2})/);
-                nombreUbi = matchTexto ? matchTexto[1] : "N/D";
-            }
-            
-            // Extraer los kilos de este lote específico para no repetir el código PP
-            let lineas = textoTarjeta.split('\n');
-            let kgDeEsteLote = "";
-            lineas.forEach(linea => {
-                if (linea.includes(ppBuscado) && linea.toLowerCase().includes('kg')) {
-                    // Extrae solo los números y la palabra kg (ej: "1.350 kg")
-                    let matchKg = linea.match(/([\d\.,]+\s*kg)/i);
-                    kgDeEsteLote = matchKg ? matchKg[1] : "";	
-                }
-            });
+    let nombreProducto = infoMaestro && infoMaestro.nombre ? infoMaestro.nombre : "Producto no registrado en maestro";
+    let codigoContable = infoMaestro && infoMaestro.codigo ? `[${infoMaestro.codigo}]` : "";
 
-            let formatoLinea = `📍 **Ubicación ${nombreUbi.toUpperCase()}** ${kgDeEsteLote ? `(${kgDeEsteLote})` : ''}`;
-            
-            // Evitamos duplicar la misma ubicación si el script lee sub-nodos
-            if (!ubicacionesEncontradas.includes(formatoLinea)) {
-                ubicacionesEncontradas.push(formatoLinea);
+    let ubicacionesEncontradas = [];
+    let subtotalKg = 0;
+    let subtotalBultos = 0;
+    let encontrado = false;
+
+    // B) Escaneo directo de la base de datos real en la nube (Ambas bodegas incluidas)
+    if (typeof db !== 'undefined') {
+        for (let ubi in db) {
+            if (db[ubi] && db[ubi][ppBuscado]) {
+                encontrado = true;
+                let datosLote = db[ubi][ppBuscado];
+                let kgLote = datosLote.kg || 0;
+                let bultosLote = datosLote.bultos || 0;
+
+                subtotalKg += kgLote;
+                subtotalBultos += bultosLote;
+
+                let kgFormateados = typeof fmt === 'function' ? fmt(kgLote) : kgLote.toLocaleString();
+                ubicacionesEncontradas.push(` 📍 **Ubicación ${ubi.toUpperCase()}** ➔ ${kgFormateados} kg (${Math.round(bultosLote)} bultos)`);
             }
         }
-    });
+    }
 
-    // C) Construir la respuesta final
-    let nombreProducto = infoMaestro ? infoMaestro.nombre : "Producto no registrado en maestro";
-    let codigoContable = infoMaestro ? `[${infoMaestro.codigo}]` : "";
-
-    let respuestaFinal = `📦 **Resultado para el PP ${ppBuscado}:**\n`;
-    respuestaFinal += `• **Material:** ${codigoContable} ${nombreProducto}\n\n`;
-
-    if (ubicacionesEncontradas.length > 0) {
-        respuestaFinal += `🔍 **Ubicación física actual:**\n` + ubicacionesEncontradas.join('\n');
+    // C) Construir la respuesta final unificada
+    let respuestaFinal = `📊 **Información General: PP ${ppBuscado}**\n`;
+    respuestaFinal += `🏷️ **Material:** ${nombreProducto} ${codigoContable}\n`;
+    
+    if (encontrado) {
+        respuestaFinal += `• **Total acumulado:** ${subtotalKg.toLocaleString()} kg (${Math.round(subtotalBultos)} bultos) en el inventario global.\n\n`;
+        respuestaFinal += `🔍 **Ubicaciones donde se encuentra:**\n` + ubicacionesEncontradas.join('\n');
     } else {
-        respuestaFinal += `💨 **Ubicación:** No logré encontrar este PP en ningún casillero de la bodega activa en este momento.`;
+        respuestaFinal += `💨 El lote **PP ${ppBuscado}** no registra stock actual en ninguna de las bodegas del sistema.`;
     }
 
     return respuestaFinal;
@@ -2602,7 +2638,7 @@ if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes(
                             subtotal += kilos;
 
                             let kilosFormateados = typeof fmt === 'function' ? fmt(kilos) : kilos.toLocaleString();
-                            lineasUbicaciones.push(` 📍 **Ubicación ${ubi.toUpperCase()}** ➔ Lote PP ${p_lote} (${kilosFormateados} kg)`);
+                            lineasUbicaciones.push(` 📍 **Ubicación ${ubi.toUpperCase()}** ➔ PP ${p_lote} (${kilosFormateados} kg)`);
                         }
                     }
                 }
@@ -2610,12 +2646,12 @@ if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes(
 
             if (encontrado) {
                 respuesta += `📊 **Resultados para: ${nombreDisplay} [${codigoDisplay}]**\n`;
-                respuesta += `• Total acumulado: **${subtotal.toLocaleString()} kg** en la bodega activa.\n\n`;
-                respuesta += `🔍 **Desglose de Lotes y Ubicaciones:**\n`;
+                respuesta += `• Total acumulado: **${subtotal.toLocaleString()} kg** en ambas bodegas.\n\n`;
+                respuesta += `🔍 **Desglose de Ubicación por PP:**\n`;
                 respuesta += lineasUbicaciones.join('\n') + '\n';
                 return respuesta;
             } else {
-                return `💨 No detecté stock disponible para el alias o material "${codigoObjetivo || q}" en la bodega activa actual.`;
+                return `💨 No detecté stock disponible para el material "${codigoObjetivo || q}" en la bodega activa actual.`;
             }
         }
         // 4. Saludos o Respuestas Genéricas
@@ -2623,7 +2659,7 @@ if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes(
             return "¡Hola! Estoy listo para ayudarte con los datos de inventario. Dime qué material o código PP quieres consultar.";
         }
 
-        return "No entendí del todo tu consulta. Prueba preguntándome por: 'stock total', el número de un 'PP' específico o palabras clave como 'borico'.";
+        return "No entendí del todo tu consulta. Prueba preguntándome por: 'stock total' o el número de una 'PP' específica.";
     }
 });
 </script>
@@ -2699,12 +2735,16 @@ if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes(
         </div>
     </div>
     
-    <div style="padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: white; align-items: center;">
+<div style="padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: white; align-items: center;">
         <input type="text" id="input-mensaje-chat" placeholder="Escribe tu consulta aquí o habla..." style="flex: 1; padding: 10px; border: 1px solid #cbd5e0; border-radius: 20px; font-size: 13px; outline: none; box-sizing: border-box; height: 38px;">
         
-        <button type="button" id="btnMicrofono" onclick="alternarMicrofono()" style="background: #e2e8f0; border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; padding: 0;">🎙️</button>
-        
-        <button id="btn-enviar-chat" style="background: #38a169; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 0;">✈️</button>
+        <button type="button" id="btnMicrofono" onclick="alternarMicrofono()" style="background: #f0f2f5; border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 20px; display: flex; align-items: center; justify-content: center; color: #54656f; cursor: pointer; transition: all 0.2s;">
+            <i class='bx bx-microphone'></i>
+        </button>
+
+        <button type="button" id="btn-enviar-chat" style="background: var(--primary, #2b6cb0); border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 18px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: transform 0.2s;">
+            <i class='bx bx-send' style="transform: rotate(-45deg) translate(2px, -1px);"></i>
+        </button>
     </div>
 </div>
 </body>
