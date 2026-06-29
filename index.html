@@ -618,12 +618,12 @@ color: #1f2937;
         <h3>🔍 Buscar</h3>
         
         <div style="position: relative; width: 100%; margin-bottom: 10px; display: block;">
-            <input type="text" id="busqueda" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)" style="width: 100%; padding: 10px 35px 10px 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; height: 40px; font-size: 16px;">
+            <input type="text" id="busqueda" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)" style="width: 100%; padding: 10px 35px 10px 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; height: 40px; font-size: 14px;">
             
             <button type="button" onclick="limpiarBuscador()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #cbd5e0; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; z-index: 5;">×</button>
         </div>
         
-        <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
+        <div id="res_busqueda" style="font-size: 13px; color: var(--primary);">Esperando búsqueda...</div>
     </div>
     <!-- Tarjeta 4: Stock por PP (Nueva ubicación) -->
     <div class="card-action">
@@ -766,7 +766,7 @@ if (SpeechRecognition) {
         if (campoInput) campoInput.placeholder = "Escuchando... habla ahora";
     };
 
-    // Cuando termina de escuchar
+// Cuando termina de escuchar
     reconocimientoVoz.onend = () => {
         estaEscuchando = false;
         document.getElementById('btnMicrofono').classList.remove('mic-escuchando');
@@ -774,18 +774,16 @@ if (SpeechRecognition) {
         if (campoInput) campoInput.placeholder = "Escribe tu consulta aquí o habla...";
     };
 
-    // Cuando procesa con éxito lo que dijiste por micrófono
+    // Cuando procesa con éxito lo que dijiste por micrófono (CORREGIDO DIRECTO)
     reconocimientoVoz.onresult = (event) => {
         const textoEscuchado = event.results[0][0].transcript;
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) {
             campoInput.value = textoEscuchado;
             
-            // Forzamos el envío automático ya que detectó la voz
-            let btnEnviar = document.getElementById('btn-enviar-chat');
-            if (btnEnviar) {
-                btnEnviar.click(); 
-            }
+            // 🔥 TRUCO MÁXIMO: Simulamos un "Enter" en el teclado para despertar tu función interna
+            let eventoEnter = new KeyboardEvent('keypress', { key: 'Enter', bubbles: true });
+            campoInput.dispatchEvent(eventoEnter);
         }
     };
 }
@@ -801,10 +799,15 @@ function alternarMicrofono() {
     } else {
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.value = "";
-        reconocimientoVoz.start();
+        
+        // Intentamos iniciar el reconocimiento nativo
+        try {
+            reconocimientoVoz.start();
+        } catch (e) {
+            console.log("El micrófono ya estaba iniciado o hubo un reintento.");
+        }
     }
 }
-
 // FUNCIÓN PARA QUE EL ASISTENTE LEA LA RESPUESTA EN VOZ ALTA
 function asistenteHablar(textoAI) {
     if ('speechSynthesis' in window) {
@@ -842,21 +845,28 @@ function asistenteHablar(textoAI) {
 
         // Inicializar la conexión con la nube
         firebase.initializeApp(firebaseConfig);
-        const dbRef = firebase.database().ref('bodega_pt');
+const dbRef = firebase.database().ref('bodega_pt');
+const maestroRef = firebase.database().ref('maestro_productos'); // 🔥 Escuchador del nuevo nodo global
 
-        // Escuchar cambios para que los operadores vean tu layout
-        dbRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // Sincronizamos las variables globales de tu bodega
-                db = data.inventario;
-                logs = data.historial;
-                
-                // Redibujamos todo el layout en la pantalla del operador
-                render(); 
-                verificarAcceso();
-            }
-        });
+dbRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        db = data.inventario;
+        logs = data.historial;
+        render();
+        verificarAcceso();
+    }
+});
+
+// 🔥 DESCARGA Y SINCRONIZACIÓN AUTOMÁTICA EN TODOS LOS MÓVILES
+maestroRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        maestroProductos = data; // Actualiza el diccionario local con lo que hay en la nube
+        if (typeof render === 'function') render(); // Fuerza a la pantalla a redibujarse con los nombres correctos
+    }
+});
+
 function verificarAcceso() {
     const urlParams = new URLSearchParams(window.location.search);
     const rol = urlParams.get('rol');
@@ -1083,12 +1093,19 @@ function accion(tipo) {
                 finalNombre = partes[1];
             }
 
-            // Guardamos la relación perfecta en tu maestro para este PP nuevo
+// Guardamos la relación perfecta en tu maestro para este PP nuevo
             maestroProductos[pp] = { 
                 codigo: finalCodigo, 
                 nombre: finalNombre 
             };
             localStorage.setItem('bodega_maestro', JSON.stringify(maestroProductos));
+            
+            // 🔥 TRUCO DE SINCRONIZACIÓN MÁXIMA: Empujamos el maestro completo a Firebase en vivo
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                firebase.database().ref('maestro_productos').set(maestroProductos)
+                    .then(() => console.log("Maestro de productos sincronizado globalmente con éxito."))
+                    .catch((err) => console.error("Error sincronizando el maestro en Firebase:", err));
+            }
             
             document.getElementById('modal-nuevo-maestro').style.display = 'none';
             notificar(`✅ PP [${pp}] mapeado a ${finalCodigo}`, "success");
@@ -2548,30 +2565,34 @@ if (coincidenciaPP) {
             }
         }
 
-        if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes('material')) {
+if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes('material')) {
             let respuesta = "";
             let encontrado = false;
 
-            // Buscamos el producto en el maestro para obtener su nombre oficial
-            let infoMaestro = null;
-            if (codigoObjetivo) {
-                infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[codigoObjetivo] : null) 
-                           || (window.maestroProductos ? window.maestroProductos[codigoObjetivo] : null);
+            // 🔥 CORRECCIÓN DEL NOMBRE: Buscamos el nombre descriptivo real en datosContablesActuales
+            let nombreDisplay = "Material Solicitado";
+            if (codigoObjetivo && window.datosContablesActuales && window.datosContablesActuales[codigoObjetivo]) {
+                nombreDisplay = window.datosContablesActuales[codigoObjetivo].nombre;
+            } else {
+                // Si se buscó por palabra clave general ("borico") intentamos pescar el primer nombre que coincida
+                for (let cod in window.datosContablesActuales) {
+                    if (window.datosContablesActuales[cod].nombre.toLowerCase().includes('borico') || window.datosContablesActuales[cod].nombre.toLowerCase().includes('ácido')) {
+                        nombreDisplay = window.datosContablesActuales[cod].nombre;
+                        codigoObjetivo = cod; // Seteamos el código real encontrado
+                        break;
+                    }
+                }
             }
 
-            let nombreDisplay = infoMaestro ? infoMaestro.nombre : (codigoObjetivo || "Material Solicitado");
             let codigoDisplay = codigoObjetivo || "N/A";
-
             let subtotal = 0;
             let lineasUbicaciones = [];
 
-            // 🔥 RECORREMOS TU OBJETO REAL 'db' UBICACIÓN POR UBICACIÓN
+            // RECORREMOS TU OBJETO REAL 'db' UBICACIÓN POR UBICACIÓN
             if (typeof db !== 'undefined') {
                 for (let ubi in db) {
                     for (let p_lote in db[ubi]) {
                         
-                        // Buscamos si el lote corresponde al código contable consultado
-                        // Verificamos en el maestro si ese PP pertenece al código objetivo
                         let maestroPP = (typeof maestroProductos !== 'undefined' ? maestroProductos[p_lote] : null)
                                      || (window.maestroProductos ? window.maestroProductos[p_lote] : null);
                         
@@ -2580,9 +2601,7 @@ if (coincidenciaPP) {
                             let kilos = db[ubi][p_lote].kg || 0;
                             subtotal += kilos;
 
-                            // Formateamos los kilos de forma limpia (ej: 1.350)
                             let kilosFormateados = typeof fmt === 'function' ? fmt(kilos) : kilos.toLocaleString();
-
                             lineasUbicaciones.push(` 📍 **Ubicación ${ubi.toUpperCase()}** ➔ Lote PP ${p_lote} (${kilosFormateados} kg)`);
                         }
                     }
