@@ -479,9 +479,10 @@ color: #1f2937;
 /* 🔄 ANIMACIONES DE MOVIMIENTO SUTIL PARA LAS FLECHAS DE ENTRADA    */
 /* ================================================================= */
 @keyframes bounceX {
-/* ================================================================= */
-/* 🔄 ANIMACIONES DE MOVIMIENTO SUTIL PARA LAS FLECHAS DE ENTRADA    */
-/* ================================================================= */
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(-55%); }
+}
+
 @keyframes bounceX {
     0%, 100% { transform: translateX(-50%); }
     50% { transform: translateX(-55%); }
@@ -495,6 +496,59 @@ color: #1f2937;
 @keyframes bounceY {
     0%, 100% { transform: translateY(-50%); }
     50% { transform: translateY(-55%); }
+}
+
+/* 🔍 INTERMEZZA AQUÍ: BOTÓN LIMPIAR (X) PARA EL CAMPO DE BÚSQUEDA */
+.input-busqueda-contenedor {
+    position: relative;
+    width: 100%;
+}
+
+#busqueda {
+    padding-right: 35px !important; 
+}
+
+#busqueda::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.btn-limpiar-busqueda {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #cbd5e0;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.btn-limpiar-busqueda:hover {
+    background: #a0aec0;
+}
+
+/* 🎙️ ESTILO PARA EL MICRÓFONO EN MOTO ESCUCHA */
+.mic-escuchando {
+    background: #e53e3e !important; /* Rojo de alerta cuando graba */
+    color: white !important;
+    animation: parpadeoMic 1.2s infinite ease-in-out;
+    box-shadow: 0 0 10px rgba(229, 62, 62, 0.5);
+}
+
+@keyframes parpadeoMic {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
 }
 </style>
 </head>
@@ -560,15 +614,17 @@ color: #1f2937;
         <button class="btn-action btn-salida" onclick="accion('salida')">Retirar</button>
     </div>
 
-    <!-- Tarjeta 3: Buscar -->
-    <div class="card-action">
+<div class="card-action">
         <h3>🔍 Buscar</h3>
-<div class="input-box" style="margin-bottom: 10px;">
-    <input id="busqueda" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)">
-</div>
+        
+        <div style="position: relative; width: 100%; margin-bottom: 10px; display: block;">
+            <input type="text" id="busqueda" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)" style="width: 100%; padding: 10px 35px 10px 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; height: 40px; font-size: 16px;">
+            
+            <button type="button" onclick="limpiarBuscador()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #cbd5e0; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; z-index: 5;">×</button>
+        </div>
+        
         <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
     </div>
-
     <!-- Tarjeta 4: Stock por PP (Nueva ubicación) -->
     <div class="card-action">
         <h3 style="margin-top:0;">📦 Stock por PP</h3>
@@ -679,6 +735,97 @@ color: #1f2937;
     </div>
 </div>
     <script>
+// 🔥 FUNCIÓN INTERACTIVA PARA EL BOTÓN DE LIMPIAR (X)
+        function limpiarBuscador() {
+            let inputBusq = document.getElementById('busqueda');
+            inputBusq.value = ""; 
+            buscar();            
+            inputBusq.focus();   
+        }
+
+// ====================================================================
+// 🎙️ SISTEMA NATIVO DE VOZ (VERSION ULTRA-ESTABLE SIN ERRORES)
+// ====================================================================
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let reconocimientoVoz = null;
+let estaEscuchando = false;
+let fuePorVoz = false; // Bandera clave para saber si activar el altavoz
+
+if (SpeechRecognition) {
+    reconocimientoVoz = new SpeechRecognition();
+    reconocimientoVoz.lang = 'es-ES'; 
+    reconocimientoVoz.continuous = false; 
+    reconocimientoVoz.interimResults = false;
+
+    // Cuando empieza a escuchar
+    reconocimientoVoz.onstart = () => {
+        estaEscuchando = true;
+        fuePorVoz = true; 
+        document.getElementById('btnMicrofono').classList.add('mic-escuchando');
+        let campoInput = document.getElementById('input-mensaje-chat');
+        if (campoInput) campoInput.placeholder = "Escuchando... habla ahora";
+    };
+
+    // Cuando termina de escuchar
+    reconocimientoVoz.onend = () => {
+        estaEscuchando = false;
+        document.getElementById('btnMicrofono').classList.remove('mic-escuchando');
+        let campoInput = document.getElementById('input-mensaje-chat');
+        if (campoInput) campoInput.placeholder = "Escribe tu consulta aquí o habla...";
+    };
+
+    // Cuando procesa con éxito lo que dijiste por micrófono
+    reconocimientoVoz.onresult = (event) => {
+        const textoEscuchado = event.results[0][0].transcript;
+        let campoInput = document.getElementById('input-mensaje-chat');
+        if (campoInput) {
+            campoInput.value = textoEscuchado;
+            
+            // Forzamos el envío automático ya que detectó la voz
+            let btnEnviar = document.getElementById('btn-enviar-chat');
+            if (btnEnviar) {
+                btnEnviar.click(); 
+            }
+        }
+    };
+}
+
+// Alternar encendido/apagado del micrófono
+function alternarMicrofono() {
+    if (!reconocimientoVoz) {
+        alert("Tu navegador o celular no soporta el reconocimiento de voz integrado.");
+        return;
+    }
+    if (estaEscuchando) {
+        reconocimientoVoz.stop();
+    } else {
+        let campoInput = document.getElementById('input-mensaje-chat');
+        if (campoInput) campoInput.value = "";
+        reconocimientoVoz.start();
+    }
+}
+
+// FUNCIÓN PARA QUE EL ASISTENTE LEA LA RESPUESTA EN VOZ ALTA
+function asistenteHablar(textoAI) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+
+        let textoLimpio = textoAI.replace(/\*\*/g, ''); 
+        textoLimpio = textoLimpio.replace(/📍/g, 'Ubicación ');
+        textoLimpio = textoLimpio.replace(/➔/g, ' contiene ');
+        textoLimpio = textoLimpio.replace(/•/g, ' ');
+        textoLimpio = textoLimpio.replace(/<br>/g, ' ');
+        textoLimpio = textoLimpio.replace(/📊/g, '');
+        textoLimpio = textoLimpio.replace(/🔍/g, '');
+
+        let configuracionLectura = new SpeechSynthesisUtterance(textoLimpio);
+        configuracionLectura.lang = 'es-ES';
+        configuracionLectura.rate = 1.1; 
+        configuracionLectura.pitch = 1.0; 
+
+        window.speechSynthesis.speak(configuracionLectura);
+    }
+}
 // ==========================================
         // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
         // ==========================================
@@ -1753,7 +1900,7 @@ function formatearMascara(input, esBusqueda = false) {
     }
 }
 
-// BUSCADOR INTERACTIVO Y RESALTADO DE TARJETAS
+// BUSCADOR INTERACTIVO Y RESALTADO DE TARJETAS (CON MATERIAL INCLUIDO)
 function buscar() {
     let q = document.getElementById('busqueda').value.trim();
     let resContenedor = document.getElementById('res_busqueda');
@@ -1768,6 +1915,18 @@ function buscar() {
     let resultadosHTML = "";
     let encontrado = false;
     let totalKg = 0;
+
+    // 🔥 BUSCAMOS LA INFORMACIÓN EN EL MAESTRO DE PRODUCTOS
+    let infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[q] : null) 
+                   || (window.maestroProductos ? window.maestroProductos[q] : null);
+
+    if (infoMaestro) {
+        // Creamos un encabezado elegante con el Código y el Nombre del Material
+        resultadosHTML += `
+            <div style="background: #f7fafc; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #2b6cb0; margin-bottom: 10px; font-family: sans-serif; font-size: 13px; color: #2d3748; line-height: 1.4;">
+                📦 <b>Material:</b> [${infoMaestro.codigo}] ${infoMaestro.nombre}
+            </div>`;
+    }
 
     for(let ubi in db) {
         if(db[ubi][q]) {
@@ -1794,6 +1953,14 @@ function buscar() {
     });
     
     if (encontrado) {
+        // Si no se encontró en el maestro pero sí tiene lotes físicos, ponemos un aviso amigable
+        if (!infoMaestro) {
+            resultadosHTML = `
+                <div style="background: #fffaf0; padding: 6px 12px; border-radius: 6px; border-left: 4px solid #dd6b20; margin-bottom: 10px; font-family: sans-serif; font-size: 13px; color: #dd6b20;">
+                    ⚠️ Lote sin registro en el maestro de productos.
+                </div>` + resultadosHTML;
+        }
+
         resultadosHTML += `
             <div style="border-top: 2px solid #333; margin-top: 8px; padding-top: 5px; font-family: monospace; font-size: 14px; font-weight: bold; color: #d32f2f;">
                 TOTAL GENERAL: ${fmt(totalKg)} kg
@@ -2225,16 +2392,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const cuerpoMensajes = document.getElementById('cuerpo-mensajes-chat');
 
     // Abrir / Cerrar Ventana
-    btnChat.addEventListener('click', () => {
-        ventanaChat.style.display = ventanaChat.style.display === 'none' ? 'flex' : 'none';
-        if(ventanaChat.style.display === 'flex') inputChat.focus();
-    });
+btnChat.addEventListener('click', () => {
+    ventanaChat.style.display = ventanaChat.style.display === 'none' ? 'flex' : 'none';
+    // ❌ Eliminamos la línea inputChat.focus(); para evitar que se levante el teclado del celular de golpe
+});
     btnCerrar.addEventListener('click', () => { ventanaChat.style.display = 'none'; });
 
-    // Enviar Mensaje
+// Enviar Mensaje (ACTUALIZADO CON DISCRIMINACIÓN DE VOZ/TEXTO)
     function procesarEnvioUsuario() {
         let texto = inputChat.value.trim();
         if (!texto) return;
+
+        // Si el operador escribió manualmente con el teclado, NO debe hablar de vuelta
+        if (document.activeElement === inputChat) {
+            fuePorVoz = false;
+        }
 
         agregarMensajeChat(texto, 'usuario');
         inputChat.value = "";
@@ -2243,23 +2415,34 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
             let respuesta = analizarConsultaBodega(texto);
             agregarMensajeChat(respuesta, 'asistente');
+            
+            // 🔥 CONDICIÓN INTELIGENTE: Solo habla si la consulta entró por el micrófono
+            if (fuePorVoz) {
+                asistenteHablar(respuesta); 
+                fuePorVoz = false; // Reseteamos para la siguiente consulta
+            }
         }, 400);
     }
 
     btnEnviar.addEventListener('click', procesarEnvioUsuario);
     inputChat.addEventListener('keypress', (e) => { if (e.key === 'Enter') procesarEnvioUsuario(); });
 
-    function agregarMensajeChat(texto, emisor) {
-        let msgDiv = document.createElement('div');
-        if (emisor === 'usuario') {
-            msgDiv.style.cssText = "background: #e2e8f0; color: #2d3748; padding: 8px 12px; border-radius: 8px; align-self: flex-end; max-width: 85%; word-break: break-word;";
-        } else {
-            msgDiv.style.cssText = "background: #ebf8ff; color: #2b6cb0; padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 85%; word-break: break-word;";
-        }
-        msgDiv.innerHTML = texto.replace(/\n/g, '<br>');
-        cuerpoMensajes.appendChild(msgDiv);
-        cuerpoMensajes.scrollTop = cuerpoMensajes.scrollHeight; // Auto scroll abajo
+function agregarMensajeChat(texto, emisor) {
+    let msgDiv = document.createElement('div');
+    if (emisor === 'usuario') {
+        msgDiv.style.cssText = "background: #e2e8f0; color: #2d3748; padding: 8px 12px; border-radius: 8px; align-self: flex-end; max-width: 85%; word-break: break-word;";
+    } else {
+        msgDiv.style.cssText = "background: #ebf8ff; color: #2b6cb0; padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 85%; word-break: break-word;";
     }
+    
+    // 🔥 EL TRUCO: Primero procesamos los saltos de línea y luego convertimos los ** en etiquetas <strong>
+    let textoProcesado = texto.replace(/\n/g, '<br>');
+    textoProcesado = textoProcesado.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    msgDiv.innerHTML = textoProcesado;
+    cuerpoMensajes.appendChild(msgDiv);
+    cuerpoMensajes.scrollTop = cuerpoMensajes.scrollHeight; // Auto scroll abajo
+}
 
     // 🕵️ LÓGICA DE DETECCIÓN INTELIGENTE DE DATOS EN TIEMPO REAL
     function analizarConsultaBodega(consulta) {
@@ -2313,7 +2496,7 @@ if (coincidenciaPP) {
                 if (linea.includes(ppBuscado) && linea.toLowerCase().includes('kg')) {
                     // Extrae solo los números y la palabra kg (ej: "1.350 kg")
                     let matchKg = linea.match(/([\d\.,]+\s*kg)/i);
-                    kgDeEsteLote = matchKg ? matchKg[1] : "";
+                    kgDeEsteLote = matchKg ? matchKg[1] : "";	
                 }
             });
 
@@ -2347,13 +2530,17 @@ if (coincidenciaPP) {
         // Definimos el diccionario de nombres cortos (Apodo: Código Contable)
         const aliasProductos = {
             "chino": "PTAB030315",
+            "saco chino": "PTAB030315",
             "sacas de 1200 gi": "PTAB031110",
+            "sacas 1200 gi": "PTAB031110",
+            "sacas 1100 rechazo granular": "PTAB101010",
+            "sacas 1100 rechazo polvo": "PTAB941010",
+                              
             "calcinado": "PTAB030317"   // Ejemplo de otro producto
-        };
+};
 
         let codigoObjetivo = null;
 
-        // Revisamos si el usuario usó alguno de los nombres cortos/apodos
         for (let apodo in aliasProductos) {
             if (q.includes(apodo)) {
                 codigoObjetivo = aliasProductos[apodo];
@@ -2361,36 +2548,57 @@ if (coincidenciaPP) {
             }
         }
 
-        // Si detectó un alias o si menciona palabras genéricas como 'borico' o 'acido'
         if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes('material')) {
-            let respuesta = "📊 **Resultados de Stock por Material:**\n";
+            let respuesta = "";
             let encontrado = false;
 
-            for (let cod in window.datosContablesActuales) {
-                let item = window.datosContablesActuales[cod];
-                
-                // Filtramos: Si encontramos el código directo del alias, o si coincide el nombre técnico
-                if (cod === codigoObjetivo || (!codigoObjetivo && (item.nombre.toLowerCase().includes('borico') || item.nombre.toLowerCase().includes('ácido')))) {
-                    encontrado = true;
-                    let subtotal = 0;
-                    
-                    // Sumamos los kilos de este material sumando lo que hay en el desglose
-                    item.desgloses.forEach(d => subtotal += d.kg);
-                    
-                    respuesta += `• **[${cod}]** ${item.nombre}:\n  Total: **${subtotal.toLocaleString()} kg** en la bodega activa.\n\n`;
-                    
-                    // Además, le decimos en qué ubicaciones físicas exactas verlos en el mapa
-                    document.querySelectorAll('.card-ubi').forEach(tarjeta => {
-                        if (tarjeta.innerText.includes(cod) || (codigoObjetivo && tarjeta.innerText.includes(item.nombre))) {
-                            let ubi = tarjeta.id || "N/D";
-                            respuesta += `   ↳ 📍 *Ubicación ${ubi.toUpperCase()}*\n`;
+            // Buscamos el producto en el maestro para obtener su nombre oficial
+            let infoMaestro = null;
+            if (codigoObjetivo) {
+                infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[codigoObjetivo] : null) 
+                           || (window.maestroProductos ? window.maestroProductos[codigoObjetivo] : null);
+            }
+
+            let nombreDisplay = infoMaestro ? infoMaestro.nombre : (codigoObjetivo || "Material Solicitado");
+            let codigoDisplay = codigoObjetivo || "N/A";
+
+            let subtotal = 0;
+            let lineasUbicaciones = [];
+
+            // 🔥 RECORREMOS TU OBJETO REAL 'db' UBICACIÓN POR UBICACIÓN
+            if (typeof db !== 'undefined') {
+                for (let ubi in db) {
+                    for (let p_lote in db[ubi]) {
+                        
+                        // Buscamos si el lote corresponde al código contable consultado
+                        // Verificamos en el maestro si ese PP pertenece al código objetivo
+                        let maestroPP = (typeof maestroProductos !== 'undefined' ? maestroProductos[p_lote] : null)
+                                     || (window.maestroProductos ? window.maestroProductos[p_lote] : null);
+                        
+                        if (maestroPP && maestroPP.codigo === codigoObjetivo) {
+                            encontrado = true;
+                            let kilos = db[ubi][p_lote].kg || 0;
+                            subtotal += kilos;
+
+                            // Formateamos los kilos de forma limpia (ej: 1.350)
+                            let kilosFormateados = typeof fmt === 'function' ? fmt(kilos) : kilos.toLocaleString();
+
+                            lineasUbicaciones.push(` 📍 **Ubicación ${ubi.toUpperCase()}** ➔ Lote PP ${p_lote} (${kilosFormateados} kg)`);
                         }
-                    });
+                    }
                 }
             }
-            return encontrado ? respuesta : "No detecté stock disponible para ese material en esta bodega.";
-        }
 
+            if (encontrado) {
+                respuesta += `📊 **Resultados para: ${nombreDisplay} [${codigoDisplay}]**\n`;
+                respuesta += `• Total acumulado: **${subtotal.toLocaleString()} kg** en la bodega activa.\n\n`;
+                respuesta += `🔍 **Desglose de Lotes y Ubicaciones:**\n`;
+                respuesta += lineasUbicaciones.join('\n') + '\n';
+                return respuesta;
+            } else {
+                return `💨 No detecté stock disponible para el alias o material "${codigoObjetivo || q}" en la bodega activa actual.`;
+            }
+        }
         // 4. Saludos o Respuestas Genéricas
         if (q.includes('hola') || q.includes('buenos dias')) {
             return "¡Hola! Estoy listo para ayudarte con los datos de inventario. Dime qué material o código PP quieres consultar.";
@@ -2430,7 +2638,7 @@ if (coincidenciaPP) {
 </div>
 <div id="modal-semaforo-movil" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); position: relative; font-family: sans-serif;">
-        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
+        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 38px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
         
         <div id="contenido-semaforo-clonado" style="margin-top: 15px; max-height: 380px; overflow-y: auto;">
             </div>
@@ -2466,14 +2674,18 @@ if (coincidenciaPP) {
         <span>🤖 Asistente de Bodega QB</span>
         <button id="btn-cerrar-chat" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
     </div>
-    <div id="cuerpo-mensajes-chat" style="flex: 1; padding: 15px; overflow-y: auto; background: #f7fafc; font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
+<div id="cuerpo-mensajes-chat" style="flex: 1; padding: 15px; overflow-y: auto; background: #f7fafc; font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
         <div style="background: #ebf8ff; color: #2b6cb0; padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 85%;">
             ¡Hola! Soy tu asistente virtual. Pregúntame sobre el stock, códigos de productos o ubicaciones. 📊
         </div>
     </div>
-    <div style="padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: white;">
-        <input type="text" id="input-mensaje-chat" placeholder="Escribe tu consulta aquí..." style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; outline: none;">
-        <button id="btn-enviar-chat" style="background: #38a169; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">Enviar</button>
+    
+    <div style="padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: white; align-items: center;">
+        <input type="text" id="input-mensaje-chat" placeholder="Escribe tu consulta aquí o habla..." style="flex: 1; padding: 10px; border: 1px solid #cbd5e0; border-radius: 20px; font-size: 13px; outline: none; box-sizing: border-box; height: 38px;">
+        
+        <button type="button" id="btnMicrofono" onclick="alternarMicrofono()" style="background: #e2e8f0; border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; padding: 0;">🎙️</button>
+        
+        <button id="btn-enviar-chat" style="background: #38a169; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 0;">✈️</button>
     </div>
 </div>
 </body>
