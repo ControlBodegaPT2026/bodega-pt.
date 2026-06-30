@@ -551,20 +551,20 @@ color: #1f2937;
                     ⚙
                 </button>
 
-                <div id="menuDropdown" class="menu-dropdown">
-                    <div id="btn-movimiento-interno" class="admin-only" style="display: none;" onclick="abrirModalMovimiento(); toggleMenu();">
-                        <span>🔄</span> Movimiento Interno
-                    </div>
-                    
-                   <div id="btn-tarea-admin-menu" class="admin-only" style="display: none;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
-                    <span>📋</span> Tarea del Día
-                   </div>
+<div id="menuDropdown" class="menu-dropdown">
+    <div id="btn-movimiento-interno" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirModalMovimiento(); toggleMenu();">
+        <span>🔄</span> Movimiento Interno
+    </div>
+    
+    <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
+        <span>📋</span> Tarea del Día
+    </div>
 
-                    <div onclick="exportarExcel()"><span>📊</span> Exportar</div>
-                    <div onclick="crearBackup()"><span>💾</span> Backup</div>
-                    <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
-                    <div onclick="document.getElementById('inputBackup').click()"><span>📥</span> Restaurar</div>
-                </div>
+    <div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px;"><span>📊</span> Exportar</div>
+    <div onclick="crearBackup()" style="display: flex; align-items: center; gap: 8px;"><span>💾</span> Backup</div>
+    <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
+    <div onclick="document.getElementById('inputBackup').click()" style="display: flex; align-items: center; gap: 8px;"><span>📥</span> Restaurar</div>
+</div>
             </div>
         </div>
 </div>
@@ -915,8 +915,8 @@ function verificarAcceso() {
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
         
         // Muestra las opciones dentro del menú con el diseño nativo de tus dropdowns
-        if (btnMov) btnMov.style.setProperty('display', 'block', 'important'); 
-        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'block', 'important'); // 🔥 Muestra Tarea al Admin
+if (btnMov) btnMov.style.setProperty('display', 'flex', 'important'); 
+if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'flex', 'important');
         console.log("Acceso: ADMINISTRADOR");
     } else {
         // OPERADOR: Habilitar contenedor principal pero ocultar selectivamente
