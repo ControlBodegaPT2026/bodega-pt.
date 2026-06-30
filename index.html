@@ -1014,7 +1014,7 @@ const layoutAdo = [
 let maestroProductos = JSON.parse(localStorage.getItem('bodega_maestro')) || {
     "04-06-26": { codigo: "PTAB030315", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 Kg. Logo REACH CHINO" },
     "05-06-26": { codigo: "PTAB031110", nombre: "Acido Bórico Granular 99,5% - Saca PP 1.200 Kg Logo QB REACH" },
-    "38-06-26": { codigo: "PTAB300610", nombre: "A. Bórico Recuperado Planta Calcinado- En sacas de 1000 Kgs QB REACH" },
+    "38-05-26": { codigo: "PTAB300610", nombre: "A. Bórico Recuperado Planta Calcinado- En sacas de 1000 Kgs QB REACH" },
     "28-06-26": { codigo: "PTAB030328", nombre: "Acido Borico Granular 99.5% - Saco PP 25 Kgs. Logo MCASSAB" },
     "02-11-25": { codigo: "PTAB111111", nombre: "Acido Borico Granular 99,9% - Saca PP 1,1 MT Logo QB REAC" },
     "21-11-25": { codigo: "PTAB111110", nombre: "Acido Borico Granular 99,9% Saca PP 1.200 Kg Logo QB REACH" },
@@ -1026,9 +1026,9 @@ let maestroProductos = JSON.parse(localStorage.getItem('bodega_maestro')) || {
     "36-11-25": { codigo: "PTAB158001", nombre: "Ácido Bórico Granular 99,5% - G.I. Saca 2400 Lb (1.088,6Kg) sin Logo" },
     "34-06-26": { codigo: "PTAB171010", nombre: "Ácido Bórico Granular 99,5% - Saca PP 1,1 MT Logo QB REACH 99,5%" },
     "34-05-26": { codigo: "PTAB150548", nombre: "Ácido Bórico Granular 99,5% - Sacos PP 50 Lb Logo Borates Plus" },
-    "08-06-26": { codigo: "PTGR211401", nombre: "Granulex 10%B 10% B Granular SACA PP 2000 LB SIN LOGO 10%" },
-    "09-05-26": { codigo: "PTGR210601", nombre: "Granulex 10%B SACA PP 1MT SIN LOGO 10% B" },
-    "00-00-26": { codigo: "PTGR210501", nombre: "Granulex 10%B Saco 50lb Sin Logo" },
+    "88-06-26": { codigo: "PTGR211401", nombre: "Granulex 10%B 10% B Granular SACA PP 2000 LB SIN LOGO 10%" },
+    "89-05-26": { codigo: "PTGR210601", nombre: "Granulex 10%B SACA PP 1MT SIN LOGO 10% B" },
+    "81-03-26": { codigo: "PTGR210501", nombre: "Granulex 10%B Saco 50lb Sin Logo" },
     "26-05-26": { codigo: "PTUL321001", nombre: "Ulexita 30/32% B2O3 - Sacas Blancas 1,1MT Sin logo" },
     "14-06-26": { codigo: "PTAB101010", nombre: "A. Bórico Recuperado Planta Caja de Mangas – En sacas de 1100 Kgs QB REACH" },
     "13-06-26": { codigo: "PTAB941010", nombre: "A. Bórico Recuperado Planta Mezcla de Rechazo - Sacas 1100 Kgs QB REACH" },
@@ -2500,7 +2500,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="text-align: center; padding: 35px 10px; color: #a0aec0;">
                         <div style="font-size: 36px; margin-bottom: 5px;">💨</div>
                         <div style="font-size: 13px; font-weight: bold; color: #718096;">Ubicación libre</div>
-                        <div style="font-size: 12px;">No registra stock activo en Firebase.</div>
+                        <div style="font-size: 12px;">No registra stock.</div>
                     </div>`;
                 }
 
@@ -2647,26 +2647,29 @@ if (coincidenciaPP) {
         // ====================================================================
         // Definimos el diccionario de nombres cortos (Apodo: Código Contable)
         const aliasProductos = {
-            "chino": "PTAB030315",
-            "saco chino": "PTAB030315",
-            "sacas de 1200 gi": "PTAB031110",
-            "sacas 1200 gi": "PTAB031110",
-            "sacas 1100 rechazo granular": "PTAB101010",
-            "sacas 1100 rechazo polvo": "PTAB941010",
-                              
-            "calcinado": "PTAB030317"   // Ejemplo de otro producto
+    "PTAB030315": ["chino", "saco chino", "sacos chinos", "borico chino"],
+    "PTAB031110": ["sacas de 1200 gi", "sacas 1200 gi", "1200 gi"],
+    "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "caja manga rechazo"],
+    "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "sobremalla rechazo"],
+    "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
+
+    "PTAB030317": ["calcinado", "borico calcinado"]
 };
 
         let codigoObjetivo = null;
 
-        for (let apodo in aliasProductos) {
-            if (q.includes(apodo)) {
-                codigoObjetivo = aliasProductos[apodo];
-                break;
+        // 🔥 NUEVO BUCLE OPTIMIZADO: Recorre el nuevo diccionario basado en Arreglos de Alias
+        for (let codigo in aliasProductos) {
+            // .some() revisa si al menos uno de los apodos de la lista está en la consulta 'q'
+            let coincide = aliasProductos[codigo].some(apodo => q.includes(apodo));
+            
+            if (coincide) {
+                codigoObjetivo = codigo; // Guarda el código contable de inmediato
+                break; // Detiene el bucle porque ya encontramos el material correcto
             }
         }
 
-if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes('material')) {
+        if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes('material')) {
             let respuesta = "";
             let encontrado = false;
 
