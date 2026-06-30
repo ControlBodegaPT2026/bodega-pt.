@@ -556,6 +556,10 @@ color: #1f2937;
                         <span>🔄</span> Movimiento Interno
                     </div>
                     
+                   <div id="btn-tarea-admin-menu" class="admin-only" style="display: none;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
+                    <span>📋</span> Tarea del Día
+                   </div>
+
                     <div onclick="exportarExcel()"><span>📊</span> Exportar</div>
                     <div onclick="crearBackup()"><span>💾</span> Backup</div>
                     <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
@@ -829,23 +833,46 @@ function asistenteHablar(textoAI) {
     }
 }
 // ==========================================
-        // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBbOwLETmyMK18eMewiQ3oy7AZA-P3zECU",
-            authDomain: "bodega-pt.firebaseapp.com",
-            databaseURL: "https://bodega-pt-default-rtdb.firebaseio.com",
-            projectId: "bodega-pt",
-            storageBucket: "bodega-pt.firebasestorage.app",
-            messagingSenderId: "758347970477",
-            appId: "1:758347970477:web:b7449710b36ad126499324",
-            measurementId: "G-CWEKBMBG1K"
-        };
+// 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
+// ==========================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBbOwLETmyMK18eMewiQ3oy7AZA-P3zECU",
+    authDomain: "bodega-pt.firebaseapp.com",
+    databaseURL: "https://bodega-pt-default-rtdb.firebaseio.com",
+    projectId: "bodega-pt",
+    storageBucket: "bodega-pt.firebasestorage.app",
+    messagingSenderId: "758347970477",
+    appId: "1:758347970477:web:b7449710b36ad126499324",
+    measurementId: "G-CWEKBMBG1K"
+};
 
-        // Inicializar la conexión con la nube
-        firebase.initializeApp(firebaseConfig);
+// Inicializar la conexión con la nube
+firebase.initializeApp(firebaseConfig);
 const dbRef = firebase.database().ref('bodega_pt');
 const maestroRef = firebase.database().ref('maestro_productos'); // 🔥 Escuchador del nuevo nodo global
+
+// 📋 🔥 ESCUCHADOR EN TIEMPO REAL PARA LA TAREA DEL DÍA
+dbRef.child('tareas_del_dia').on('value', (snapshot) => {
+    let tarea = snapshot.val();
+    let modalOp = document.getElementById('modal-tarea-operador');
+    let txtPantalla = document.getElementById('texto-tarea-pantalla');
+    let txtAdminActiva = document.getElementById('txt-admin-activa');
+    let areaAdminActiva = document.getElementById('area-tarea-activa');
+
+    if (tarea && tarea.trim() !== "") {
+        // Si hay una tarea guardada en Firebase, salta el modal del Operador de golpe
+        if (txtPantalla) txtPantalla.innerText = tarea;
+        if (modalOp) modalOp.style.display = 'flex';
+        
+        // Actualizamos también el panel interno del Administrador
+        if (txtAdminActiva) txtAdminActiva.innerText = tarea;
+        if (areaAdminActiva) areaAdminActiva.style.display = 'block';
+    } else {
+        // Si no hay tarea o fue borrada, se cierra todo automáticamente
+        if (modalOp) modalOp.style.display = 'none';
+        if (areaAdminActiva) areaAdminActiva.style.display = 'none';
+    }
+});
 
 dbRef.on('value', (snapshot) => {
     const data = snapshot.val();
@@ -877,6 +904,7 @@ function verificarAcceso() {
     const panelHistorial = document.getElementById('panel-historial-contenedor');
     const menuOpciones = document.querySelectorAll('.menu-opciones');
     const btnMov = document.getElementById('btn-movimiento-interno');
+    const btnTareaMenu = document.getElementById('btn-tarea-admin-menu'); // 🔥 Nueva referencia de la tarea
 
     if (rol === 'admin') {
         // ADMIN: Ver todo completo
@@ -886,8 +914,9 @@ function verificarAcceso() {
         if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
         
-        // Muestra la opción dentro del menú con el diseño nativo de tus dropdowns
+        // Muestra las opciones dentro del menú con el diseño nativo de tus dropdowns
         if (btnMov) btnMov.style.setProperty('display', 'block', 'important'); 
+        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'block', 'important'); // 🔥 Muestra Tarea al Admin
         console.log("Acceso: ADMINISTRADOR");
     } else {
         // OPERADOR: Habilitar contenedor principal pero ocultar selectivamente
@@ -901,9 +930,10 @@ function verificarAcceso() {
         if (panelHistorial) panelHistorial.style.setProperty('display', 'none', 'important');
         menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
         
-        // Asegura ocultar la opción de movimiento interno por completo
+        // Asegura ocultar las opciones exclusivas de administración por completo
         if (btnMov) btnMov.style.setProperty('display', 'none', 'important'); 
-
+        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'none', 'important'); // 🔐 Oculta Tarea al Operario
+        
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
             if (!texto.includes('PRINCIPAL') && !texto.includes('ADOQUINES')) {
@@ -913,7 +943,41 @@ function verificarAcceso() {
         console.log("Acceso: OPERADOR (Con Buscador y Stock PP)");
     }
 }
-        const pesosValidos = [1350, 1100, 1200, 1000, 1088.6, 907.2, 1224.72, 875];
+
+// 📋 FUNCIONES DE CONTROL PARA EL PANEL DE ADMINISTRACIÓN DE TAREAS
+function abrirConfigTareaAdmin() {
+    document.getElementById('txt-nueva-tarea').value = '';
+    document.getElementById('modal-admin-tarea').style.display = 'flex';
+}
+
+function guardarTareaAdmin() {
+    let texto = document.getElementById('txt-nueva-tarea').value.trim();
+    if (!texto) {
+        alert("Por favor, escribe una instrucción antes de guardar.");
+        return;
+    }
+
+    // Guardamos directo en el subnodo de Firebase
+    dbRef.child('tareas_del_dia').set(texto)
+        .then(() => {
+            alert("🚀 Instrucción publicada con éxito en todas las pantallas.");
+            document.getElementById('modal-admin-tarea').style.display = 'none';
+        })
+        .catch(err => console.error("Error guardando tarea:", err));
+}
+
+function completarTareaAdmin() {
+    if (confirm("¿Estás seguro de marcar esta tarea como Completada? Se borrará de las pantallas de todos los operadores.")) {
+        dbRef.child('tareas_del_dia').set(null)
+            .then(() => {
+                alert("✅ Tarea finalizada. Pantallas despejadas.");
+                document.getElementById('modal-admin-tarea').style.display = 'none';
+            })
+            .catch(err => console.error("Error borrando tarea:", err));
+    }
+}
+
+const pesosValidos = [1350, 1100, 1200, 1000, 1088.6, 907.2, 1224.72, 875];
 let bultoSeleccionado = {
     ingreso: null,
     salida: null
@@ -1827,7 +1891,7 @@ function dibujarContenidoModal() {
                     <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
                         SUBTOTAL ${cod}:
                     </td>
-                    <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 15px; background: #fbfbfb;">
+                    <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 14px; background: #fbfbfb;">
                         ${fmt(subtotalCodigo)} kg
                     </td>
                 </tr>`;
@@ -1842,7 +1906,7 @@ function dibujarContenidoModal() {
         // 🔄 CAMBIO: Fila de cierre con el nombre de la bodega interactivo
         tBodyModal.innerHTML += `
             <tr style="background: #fff5f5; border-top: 3px double #e53e3e; font-weight: bold;">
-                <td style="padding: 12px 10px; color: #c53030; font-size: 13px; text-align: right;">
+                <td style="padding: 12px 10px; color: #c53030; font-size: 14px; text-align: right;">
                     🔴 STOCK TOTAL ${nombreBodegaFinal}:
                 </td>
                 <td style="padding: 12px 20px; text-align: right; color: #e53e3e; font-size: 14px; font-family: monospace;">
@@ -1973,7 +2037,7 @@ function buscar() {
         if (!infoMaestro) {
             resultadosHTML = `
                 <div style="background: #fffaf0; padding: 6px 12px; border-radius: 6px; border-left: 4px solid #dd6b20; margin-bottom: 10px; font-family: sans-serif; font-size: 13px; color: #dd6b20;">
-                    ⚠️ Lote sin registro en el maestro de productos.
+                    ⚠️ PP sin registro en el maestro de productos.
                 </div>` + resultadosHTML;
         }
 
@@ -2368,7 +2432,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 📍 2. CONTROLADOR DE CLICKS EN EL LAYOUT (Abre ventana flotante limpia)
+// 📍 2. CONTROLADOR DE CLICKS EN EL LAYOUT (Abre ventana flotante adaptando el color del bloque)
     document.addEventListener("click", (e) => {
         const tarjeta = e.target.closest(".card-ubi");
 
@@ -2378,50 +2442,53 @@ document.addEventListener("DOMContentLoaded", () => {
             // Intentamos obtener el ID único de la celda (ej: "A1", "C2")
             let id = tarjeta.id || tarjeta.getAttribute('data-id') || tarjeta.getAttribute('data-ubi');
             
-            // Si el elemento no tiene ID directo, intentamos extraerlo del primer texto corto que tenga dentro
             if (!id) {
                 let matchTexto = (tarjeta.innerText || "").match(/^([A-Z]\d{1,2})/);
                 id = matchTexto ? matchTexto[1] : null;
             }
 
-            if (!id) return; // Si no hay ID válido, cancelamos
+            if (!id) return; 
 
-            // Intentamos extraer el atributo de capacidad máxima, si no existe le damos un valor por defecto
             let cap = tarjeta.getAttribute('data-cap') || 0;
+
+            // 🔥 TRUCO MÁGICO: Capturamos el color de fondo real que tiene la tarjeta en pantalla
+            let colorBloque = window.getComputedStyle(tarjeta).backgroundColor || "#f4f7fc";
 
             let modalSemaforo = document.getElementById('modal-semaforo-movil');
             let contenidoClonado = document.getElementById('contenido-semaforo-clonado');
             
             if (modalSemaforo && contenidoClonado) {
-                // Buscamos el inventario actual de este casillero en la base de datos central (db)
                 let infoUbicacion = (typeof db !== 'undefined') ? db[id] : null;
                 let htmlDetalle = "";
 
-                // Encabezado estético de la ventana flotante
-                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: #f4f7fc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                    <span style="font-size: 18px; font-weight: bold; color: var(--primary, #2b6cb0);">📍 UBICACIÓN: ${id.toUpperCase()}</span>
-                                    ${cap ? `<div style="font-size: 11px; color: #718096; margin-top: 3px; font-weight: bold;">Capacidad Máxima: ${cap} Bultos</div>` : ''}
+// 🔥 SOLUCIÓN DE ALTA VIVOSIDAD (Color intenso, brillante y limpio)
+                let colorTextoCabecera = "#1a202c"; 
+                let colorSubtexto = "#4a5568";      
+
+                // 🌟 EL NUEVO TRUCO MÁGICO: Mezclamos con luz blanca translúcida arriba y abajo para encender el brillo natural del semáforo sin ensuciarlo
+                let fondoIntenso = `linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 100%), ${colorBloque}`;
+
+                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: ${fondoIntenso}; padding: 14px; border-radius: 8px; border: 2px solid rgba(0, 0, 0, 0.22); box-shadow: 0 4px 6px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5);">
+                                    <span style="font-size: 18px; font-weight: 800; color: ${colorTextoCabecera}; text-shadow: 1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9), 1px -1px 0px rgba(255,255,255,0.9), -1px 1px 0px rgba(255,255,255,0.9);">📍 UBICACIÓN: ${id.toUpperCase()}</span>
+                                    ${cap ? `<div style="font-size: 11px; color: ${colorSubtexto}; margin-top: 4px; font-weight: bold; text-shadow: 1px 1px 0px rgba(255,255,255,0.6);">Capacidad Máxima: ${cap} Bultos</div>` : ''}
                                 </div>`;
 
                 if (infoUbicacion && Object.keys(infoUbicacion).length > 0) {
-                    // Desglosamos cada lote PP que viva en este espacio
                     for (let pp in infoUbicacion) {
                         let datosLote = infoUbicacion[pp];
                         let kgLote = datosLote.kg || 0;
                         let bultosLote = datosLote.bultos || 0;
 
-                        // Buscamos el nombre del material en tu maestro global en la nube
                         let infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[pp] : null)
                                        || (window.maestroProductos ? window.maestroProductos[pp] : null);
                         
                         let nombreMat = infoMaestro && infoMaestro.nombre ? infoMaestro.nombre : "PP sin registro en maestro";
                         let skuMat = infoMaestro && infoMaestro.codigo ? `[${infoMaestro.codigo}]` : "";
 
-                        // Tarjeta independiente y ordenada para cada lote
                         htmlDetalle += `
-                        <div style="background: #ffffff; border: 1px solid #edf2f7; padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); text-align: left;">
-                            <div style="font-size: 13px; font-weight: bold; color: #2d3748; margin-bottom: 4px;">📦 PP ${pp}</div>
-                            <div style="font-size: 12px; color: #4a5568; line-height: 1.4; margin-bottom: 8px;">🏷️ ${nombreMat} <span style="font-family: monospace; font-weight: bold; color: #718096;">${skuMat}</span></div>
+                        <div style="background: #ffffff; border: 1px solid #edf2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); text-align: left; border-left: 5px solid ${colorBloque};">
+                            <div style="font-size: 13px; font-weight: bold; color: #2d3748; margin-bottom: 4px;"> PP ${pp}</div>
+                            <div style="font-size: 12px; color: #4a5568; line-height: 1.4; margin-bottom: 8px;"> ${nombreMat} <span style="font-family: monospace; font-weight: bold; color: #718096;">${skuMat}</span></div>
                             <div style="display: flex; justify-content: space-between; border-top: 1px dashed #edf2f7; padding-top: 8px; font-size: 12px;">
                                 <span>Kilos: <b style="color: #2b6cb0;">${typeof fmt === 'function' ? fmt(kgLote) : kgLote.toLocaleString()} kg</b></span>
                                 <span>Bultos: <b style="color: #38a169;">${Math.round(bultosLote)} un.</b></span>
@@ -2429,7 +2496,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>`;
                     }
                 } else {
-                    // Si el casillero seleccionado está vacío
                     htmlDetalle += `
                     <div style="text-align: center; padding: 35px 10px; color: #a0aec0;">
                         <div style="font-size: 36px; margin-bottom: 5px;">💨</div>
@@ -2438,7 +2504,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>`;
                 }
 
-                // Cargamos la estructura y abrimos la ventana flotante en la pantalla
                 contenidoClonado.innerHTML = htmlDetalle;
                 modalSemaforo.style.display = 'flex';
             }
@@ -2656,10 +2721,10 @@ if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes(
         }
         // 4. Saludos o Respuestas Genéricas
         if (q.includes('hola') || q.includes('buenos dias')) {
-            return "¡Hola! Estoy listo para ayudarte con los datos de inventario. Dime qué material o código PP quieres consultar.";
+            return "¡Hola! Estoy listo para ayudarte con los datos de inventario. Dime qué material o PP quieres consultar.";
         }
 
-        return "No entendí del todo tu consulta. Prueba preguntándome por: 'stock total' o el número de una 'PP' específica.";
+        return "No entendí tu consulta. Prueba preguntándome por: 'stock total', el número de una 'PP' o cuanto hay de chino.";
     }
 });
 </script>
@@ -2747,5 +2812,36 @@ if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes(
         </button>
     </div>
 </div>
+
+<div id="modal-tarea-operador" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+    <div style="background: white; width: 100%; max-width: 450px; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: fadeUp 0.3s ease;">
+        <div style="background: #e53e3e; color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 18px;">
+            <i class='bx bx-error-circle' style="font-size: 22px;"></i> INSTRUCCIÓN DE JEFATURA
+        </div>
+        <div style="padding: 10px; box-sizing: border-box;">
+            <p id="texto-tarea-pantalla" style="font-size: 15px; color: #2d3748; line-height: 1.5; margin: 0 0 20px 0; font-weight: 500; white-space: pre-line; text-align: left;"></p>
+            <button onclick="document.getElementById('modal-tarea-operador').style.display='none'" style="width: 100%; background: #2b6cb0; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+                ¡Copiado!
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-admin-tarea" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+    <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); box-sizing: border-box;">
+        <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #2d3748; display: flex; align-items: center; gap: 6px;"><i class='bx bx-edit' style="color:#2b6cb0;"></i> Asignar Tarea del Día</h3>
+        <textarea id="txt-nueva-tarea" placeholder="Ej: Descargar PP 05-05-26 en pasillo central..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 13px; outline: none; resize: none; box-sizing: border-box; margin-bottom: 15px;"></style></textarea>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="document.getElementById('modal-admin-tarea').style.display='none'" style="flex: 1; background: #e2e8f0; color: #4a5568; border: none; padding: 10px; border-radius: 6px; font-size: 13px; cursor: pointer;">Cancelar</button>
+            <button onclick="guardarTareaAdmin()" style="flex: 1; background: #38a169; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">Guardar Tarea</button>
+        </div>
+        <div id="area-tarea-activa" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: none; text-align: left;">
+            <div style="font-size: 11px; font-weight: bold; color: #718096; margin-bottom: 5px;">TAREA ACTIVA ACTUALMENTE:</div>
+            <div id="txt-admin-activa" style="font-size: 12px; color: #4a5568; background: #f7fafc; padding: 8px; border-radius: 6px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;"></div>
+            <button onclick="completarTareaAdmin()" style="width: 100%; background: #e53e3e; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">❌ Tarea Completada (Borrar)</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
