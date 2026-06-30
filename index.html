@@ -2634,7 +2634,7 @@ if (coincidenciaPP) {
     respuestaFinal += `🏷️ **Material:** ${nombreProducto} ${codigoContable}\n`;
     
     if (encontrado) {
-        respuestaFinal += `• **Total acumulado:** ${subtotalKg.toLocaleString()} kg (${Math.round(subtotalBultos)} bultos) en el inventario global.\n\n`;
+        respuestaFinal += `• **Total acumulado:** ${subtotalKg.toLocaleString()} kg (${Math.round(subtotalBultos)} bultos) en el inventario general.\n\n`;
         respuestaFinal += `🔍 **Ubicaciones donde se encuentra:**\n` + ubicacionesEncontradas.join('\n');
     } else {
         respuestaFinal += `💨 El lote **PP ${ppBuscado}** no registra stock actual en ninguna de las bodegas del sistema.`;
@@ -2648,46 +2648,53 @@ if (coincidenciaPP) {
         // Definimos el diccionario de nombres cortos (Apodo: Código Contable)
         const aliasProductos = {
     "PTAB030315": ["chino", "saco chino", "sacos chinos", "borico chino"],
-    "PTAB031110": ["sacas de 1200 gi", "sacas 1200 gi", "1200 gi"],
-    "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "caja manga rechazo"],
-    "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "sobremalla rechazo"],
+    "PTAB031110": ["sacas de 1200 gi", "sacas 1200 gi", "1200 gi", "sacas 1200 granular", "sacas 1200 kg gi"],
+    "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "rechazo caja manga", "caja manga rechazo"],
+    "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "rechazo sobremalla", "sobremalla rechazo"],
     "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
+    "PTAB030328": ["saco mcassab", "sacos mcassab", "mcassab", "macasa"],
 
-    "PTAB030317": ["calcinado", "borico calcinado"]
+"PTAB030317": ["calcinado", "borico calcinado"]
 };
 
         let codigoObjetivo = null;
 
-        // 🔥 NUEVO BUCLE OPTIMIZADO: Recorre el nuevo diccionario basado en Arreglos de Alias
+        // 1. PRIORIDAD ENTRANTE: Buscar primero en tu diccionario de alias estrictos
         for (let codigo in aliasProductos) {
-            // .some() revisa si al menos uno de los apodos de la lista está en la consulta 'q'
             let coincide = aliasProductos[codigo].some(apodo => q.includes(apodo));
-            
             if (coincide) {
-                codigoObjetivo = codigo; // Guarda el código contable de inmediato
-                break; // Detiene el bucle porque ya encontramos el material correcto
+                codigoObjetivo = codigo; 
+                break; // 🛡️ Si lo encuentra aquí, ya tenemos el código contable real.
             }
         }
 
-        if (codigoObjetivo || q.includes('borico') || q.includes('acido') || q.includes('material')) {
-            let respuesta = "";
-            let encontrado = false;
+        // 2. RED DE SEGURIDAD GENERAL: Solo si NO se encontró un alias, buscamos por palabras clave generales
+        let nombreDisplay = "Material Solicitado";
+        let activarBusqueda = false;
 
-            // 🔥 CORRECCIÓN DEL NOMBRE: Buscamos el nombre descriptivo real en datosContablesActuales
-            let nombreDisplay = "Material Solicitado";
-            if (codigoObjetivo && window.datosContablesActuales && window.datosContablesActuales[codigoObjetivo]) {
+        if (codigoObjetivo) {
+            // Si el alias ya definió el código, activamos la búsqueda directo para ese SKU
+            activarBusqueda = true;
+            if (window.datosContablesActuales && window.datosContablesActuales[codigoObjetivo]) {
                 nombreDisplay = window.datosContablesActuales[codigoObjetivo].nombre;
-            } else {
-                // Si se buscó por palabra clave general ("borico") intentamos pescar el primer nombre que coincida
-                for (let cod in window.datosContablesActuales) {
-                    if (window.datosContablesActuales[cod].nombre.toLowerCase().includes('borico') || window.datosContablesActuales[cod].nombre.toLowerCase().includes('ácido')) {
-                        nombreDisplay = window.datosContablesActuales[cod].nombre;
-                        codigoObjetivo = cod; // Seteamos el código real encontrado
-                        break;
-                    }
+            }
+        } else if (q.includes('borico') || q.includes('acido') || q.includes('material') || q.includes('bórico')) {
+            // SÓLO si codigoObjetivo es null, entramos a buscar el primer bórico/ácido que pille en el maestro
+            activarBusqueda = true;
+            for (let cod in window.datosContablesActuales) {
+                let nombreMat = window.datosContablesActuales[cod].nombre.toLowerCase();
+                if (nombreMat.includes('borico') || nombreMat.includes('ácido') || nombreMat.includes('acido')) {
+                    nombreDisplay = window.datosContablesActuales[cod].nombre;
+                    codigoObjetivo = cod; 
+                    break;
                 }
             }
+        }
 
+        // 3. EJECUCIÓN DEL REPORTE DE STOCK
+        if (activarBusqueda) {
+            let respuesta = "";
+            let encontrado = false;
             let codigoDisplay = codigoObjetivo || "N/A";
             let subtotal = 0;
             let lineasUbicaciones = [];
