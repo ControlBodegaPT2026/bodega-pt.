@@ -198,6 +198,38 @@
         transition: all 0.3s ease;
 
 }
+
+/* ====================================================================
+       🎬 ANIMACIONES PARA EL MODAL DEL SEMÁFORO (ENTRADA SUAVE PREMIUM)
+       ==================================================================== */
+    
+    /* 1. Transición gradual para el fondo oscuro */
+    .modal-fade-in {
+        animation: fadeInBg 0.55s ease-out forwards;
+    }
+
+    /* 2. Deslizamiento y escalado elástico para el cuadro blanco */
+    .modal-slide-up {
+        animation: slideUpContent 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* 📐 Definición de las trayectorias */
+    @keyframes fadeInBg {
+        from { background-color: rgba(0, 0, 0, 0); }
+        to { background-color: rgba(0, 0, 0, 0.5); }
+    }
+
+    @keyframes slideUpContent {
+        from {
+            opacity: 0;
+            transform: translateY(25px) scale(0.97); /* Inicia un poco abajo y compacto */
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1); /* Se acomoda en su posición real */
+        }
+    }
+
 .bultos-selector {
     display: flex;
     flex-wrap: wrap;
@@ -2449,7 +2481,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!id) return; 
 
-            let cap = tarjeta.getAttribute('data-cap') || 0;
+let cap = tarjeta.getAttribute('data-cap') || 0;
 
             // 🔥 TRUCO MÁGICO: Capturamos el color de fondo real que tiene la tarjeta en pantalla
             let colorBloque = window.getComputedStyle(tarjeta).backgroundColor || "#f4f7fc";
@@ -2461,15 +2493,46 @@ document.addEventListener("DOMContentLoaded", () => {
                 let infoUbicacion = (typeof db !== 'undefined') ? db[id] : null;
                 let htmlDetalle = "";
 
-// 🔥 SOLUCIÓN DE ALTA VIVOSIDAD (Color intenso, brillante y limpio)
-                let colorTextoCabecera = "#1a202c"; 
+                // 🎨 CONFIGURACIÓN DE COLORES DE TEXTO (Legibilidad garantizada)
+                let colorTextoCabecera = "#1a202c"; // Gris oscuro/negro para que resalte
                 let colorSubtexto = "#4a5568";      
 
-                // 🌟 EL NUEVO TRUCO MÁGICO: Mezclamos con luz blanca translúcida arriba y abajo para encender el brillo natural del semáforo sin ensuciarlo
-                let fondoIntenso = `linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 100%), ${colorBloque}`;
+                // 🔍 ASIGNADOR DE SEMÁFORO ULTRA-PRECISO
+                let colorBordeFuerte = "#cbd5e0"; // Gris por defecto
+                
+                let clasesTarjeta = tarjeta.className.toLowerCase();
+                let colorTextoLimpio = colorBloque.toLowerCase();
 
-                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: ${fondoIntenso}; padding: 14px; border-radius: 8px; border: 2px solid rgba(0, 0, 0, 0.22); box-shadow: 0 4px 6px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5);">
-                                    <span style="font-size: 18px; font-weight: 800; color: ${colorTextoCabecera}; text-shadow: 1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9), 1px -1px 0px rgba(255,255,255,0.9), -1px 1px 0px rgba(255,255,255,0.9);">📍 UBICACIÓN: ${id.toUpperCase()}</span>
+                // 1️⃣ FILTRO POR TEXTO O CLASES DIRECTAS
+                if (clasesTarjeta.includes('rojo') || clasesTarjeta.includes('danger') || clasesTarjeta.includes('red')) {
+                    colorBordeFuerte = "#dc2626"; // Rojo vivo
+                } else if (clasesTarjeta.includes('amarillo') || clasesTarjeta.includes('warning') || clasesTarjeta.includes('yellow')) {
+                    colorBordeFuerte = "#d97706"; // Amarillo Oro
+                } else if (clasesTarjeta.includes('verde') || clasesTarjeta.includes('success') || clasesTarjeta.includes('green')) {
+                    colorBordeFuerte = "#16a34a"; // Verde fuerte
+                } 
+                // 2️⃣ FILTRO POR ANÁLISIS MATEMÁTICO DEL RGB (Si falla el filtro de arriba)
+                else {
+                    let rgbValores = colorBloque.match(/\d+/g);
+                    if (rgbValores && rgbValores.length >= 3) {
+                        let r = parseInt(rgbValores[0]);
+                        let g = parseInt(rgbValores[1]);
+                        let b = parseInt(rgbValores[2]);
+
+                        // En JS, el amarillo puro tiene tanto Rojo como Verde altos (R y G > 150)
+                        if (r > 180 && g > 150) {
+                            colorBordeFuerte = "#d97706"; // 🟡 Amarillo Oro Estricto
+                        } else if (r > 150 && g < 120) {
+                            colorBordeFuerte = "#dc2626"; // 🔴 Rojo Alerta Estricto
+                        } else if (g > 120 && r < 150) {
+                            colorBordeFuerte = "#16a34a"; // 🟢 Verde Fuerte Estricto
+                        }
+                    }
+                }
+
+                // 🌟 APLICACIÓN FINAL: Fondo suave original + Borde de 3px SÓLIDO y FUERTE según el semáforo
+                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: ${colorBloque}; padding: 14px; border-radius: 8px; border: 3px solid ${colorBordeFuerte}; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box;">
+                                    <span style="font-size: 18px; font-weight: 800; color: ${colorTextoCabecera}; text-shadow: 1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9);">📍 UBICACIÓN: ${id.toUpperCase()}</span>
                                     ${cap ? `<div style="font-size: 11px; color: ${colorSubtexto}; margin-top: 4px; font-weight: bold; text-shadow: 1px 1px 0px rgba(255,255,255,0.6);">Capacidad Máxima: ${cap} Bultos</div>` : ''}
                                 </div>`;
 
@@ -2504,7 +2567,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>`;
                 }
 
+// --- AQUÍ CONECTAMOS LAS ANIMACIONES AL FINAL DE TU BLOQUE INTERACTIVO ---
+                
+                // 1. Inyectamos el HTML de la ubicación como siempre
                 contenidoClonado.innerHTML = htmlDetalle;
+
+                // 2. 🛡️ LIMPIEZA PREVENTIVA: Removemos las clases si es que ya se usaron antes
+                modalSemaforo.classList.remove('modal-fade-in');
+                contenidoClonado.classList.remove('modal-slide-up');
+
+                // 🔥 TRUCO TÉCNICO (Reflow): Obligamos al navegador a reiniciar el contador de la animación
+                void modalSemaforo.offsetWidth;
+
+                // 3. 🎬 ACTIVAMOS LAS ANIMACIONES: Le agregamos las clases de movimiento gradual
+                modalSemaforo.classList.add('modal-fade-in');
+                contenidoClonado.classList.add('modal-slide-up');
+
+                // 4. Lo hacemos visible en pantalla
                 modalSemaforo.style.display = 'flex';
             }
         }
@@ -2646,13 +2725,16 @@ if (coincidenciaPP) {
         // 3. 🏷️ BUSQUEDA POR MATERIALES O ALIAS CORTOS (¡MEJORADO!)
         // ====================================================================
         // Definimos el diccionario de nombres cortos (Apodo: Código Contable)
-        const aliasProductos = {
+        const  aliasProductos = {
     "PTAB030315": ["chino", "saco chino", "sacos chinos", "borico chino"],
     "PTAB031110": ["sacas de 1200 gi", "sacas 1200 gi", "1200 gi", "sacas 1200 granular", "sacas 1200 kg gi"],
     "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "rechazo caja manga", "caja manga rechazo"],
     "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "rechazo sobremalla", "sobremalla rechazo"],
     "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
     "PTAB030328": ["saco mcassab", "sacos mcassab", "mcassab", "macasa"],
+    "PTGR210601": ["granulex 1000 kilos", "sacas de 1000 kilos granulex"],
+    "PTGR211401": ["granulex 2000 libras", "sacas de 2000 lb granulex"],
+
 
 "PTAB030317": ["calcinado", "borico calcinado"]
 };
@@ -2721,7 +2803,7 @@ if (coincidenciaPP) {
 
             if (encontrado) {
                 respuesta += `📊 **Resultados para: ${nombreDisplay} [${codigoDisplay}]**\n`;
-                respuesta += `• Total acumulado: **${subtotal.toLocaleString()} kg** en ambas bodegas.\n\n`;
+                respuesta += `• Total acumulado: **${subtotal.toLocaleString()} kg** en el stock total.\n\n`;
                 respuesta += `🔍 **Desglose de Ubicación por PP:**\n`;
                 respuesta += lineasUbicaciones.join('\n') + '\n';
                 return respuesta;
@@ -2806,7 +2888,7 @@ if (coincidenciaPP) {
     </div>
 <div id="cuerpo-mensajes-chat" style="flex: 1; padding: 15px; overflow-y: auto; background: #f7fafc; font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
         <div style="background: #ebf8ff; color: #2b6cb0; padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 85%;">
-            ¡Hola! Soy tu asistente virtual. Pregúntame sobre el stock, códigos de productos o ubicaciones. 📊
+            ¡Hola! Soy tu asistente virtual. Pregúntame sobre el stock, material o ubicaciones. 📊
         </div>
     </div>
     
