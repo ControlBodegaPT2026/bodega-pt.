@@ -565,6 +565,57 @@ color: #1f2937;
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.1); opacity: 0.8; }
 }
+
+/* 📱 CORRECCIÓN TAMAÑO DE LETRA ASISTENTE EN CELULARES */
+#input-mensaje-chat { 
+    font-size: 14px !important; 
+}
+
+/* 📱 ADAPTACIÓN DEL DESTELLO TÁCTIL EN CÍRCULO PERFECTO PARA TODOS LOS BOTONES REDONDOS */
+#btn-chat-asistente, 
+#btn-enviar-chat, 
+#btnMicrofono,
+[id*="btn-enviar"], 
+[id*="Microfono"] { 
+    border-radius: 50% !important;
+    overflow: hidden !important; /* 🔥 Corta el destello cuadrado sobrante */
+    -webkit-clip-path: circle(50% at 50% 50%) !important; /* Enmascara el tap de forma circular */
+    clip-path: circle(50% at 50% 50%) !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.15) !important; /* Mantiene el efecto gris sutil */
+}
+
+/* 🌊 ANIMACIÓN DE HUNDIMIENTO PRESTADO PARA TODOS LOS BOTONES DE ACCIÓN Y CIERRE EN MODALES */
+#btn-cerrar-chat,
+#btn-cancelar-maestro,
+#btn-guardar-maestro,
+[id*="modal"] button,
+div[style*="position: fixed"] button {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Efecto al pasar el mouse (Notebook) */
+#btn-cerrar-chat:hover,
+#btn-cancelar-maestro:hover,
+#btn-guardar-maestro:hover,
+[id*="modal"] button:hover,
+div[style*="position: fixed"] button:hover {
+    transform: scale(1.03) !important; /* Se estira ligeramente de forma elegante */
+}
+
+/* Efecto Clic / Tap en celular (¡Se hunde con fuerza!) */
+#btn-cerrar-chat:active,
+#btn-cancelar-maestro:active,
+#btn-guardar-maestro:active,
+[id*="modal"] button:active,
+div[style*="position: fixed"] button:active {
+    transform: scale(0.93) !important; /* Se encoge imitando un botón real */
+    filter: brightness(0.9) !important; /* Se oscurece un poco para dar feedback */
+}
+
+</style>
+</head>
+<body>
+
 </style>
 </head>
 <body>
@@ -1879,7 +1930,7 @@ function dibujarContenidoModal() {
         });
 
     } else {
-        // ====================================================================
+// ====================================================================
         // 🌐 MODO: VER STOCK GENERAL COMPLETO
         // ====================================================================
         document.getElementById('modal-contable-titulo').style.display = "none";
@@ -1896,10 +1947,11 @@ function dibujarContenidoModal() {
             let item = window.datosContablesActuales[cod];
             let subtotalCodigo = 0;
 
+            // 🔥 SE CORRIGE EL INTERLINEADO (line-height: 1.5) Y ALINEACIÓN VERTICAL CREADA PARA TEXTOS LARGOS
             tBodyModal.innerHTML += `
-                <tr style="background: #f7fafc; border-top: 1px solid #e2e8f0;">
-                    <td colspan="2" style="padding: 8px 10px; font-weight: bold; color: var(--primary, #2b6cb0); font-size: 13px;">
-                        <span style="font-family: monospace; background: #ebf8ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bee3f8; margin-right: 5px;">${cod}</span> ${item.nombre}
+                <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
+                    <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
+                        <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 11px; vertical-align: middle; line-height: 1;">${cod}</span><span style="vertical-align: middle;">${item.nombre}</span>
                     </td>
                 </tr>`;
 
@@ -2531,7 +2583,7 @@ let cap = tarjeta.getAttribute('data-cap') || 0;
                 }
 
                 // 🌟 APLICACIÓN FINAL: Fondo suave original + Borde de 3px SÓLIDO y FUERTE según el semáforo
-                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: ${colorBloque}; padding: 14px; border-radius: 8px; border: 3px solid ${colorBordeFuerte}; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box;">
+                htmlDetalle += `<div style="text-align: center; margin-bottom: 15px; background: ${colorBloque}; padding: 14px; border-radius: 6px; border: 3px solid ${colorBordeFuerte}; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box;">
                                     <span style="font-size: 18px; font-weight: 800; color: ${colorTextoCabecera}; text-shadow: 1px 1px 0px rgba(255,255,255,0.9), -1px -1px 0px rgba(255,255,255,0.9);">📍 UBICACIÓN: ${id.toUpperCase()}</span>
                                     ${cap ? `<div style="font-size: 11px; color: ${colorSubtexto}; margin-top: 4px; font-weight: bold; text-shadow: 1px 1px 0px rgba(255,255,255,0.6);">Capacidad Máxima: ${cap} Bultos</div>` : ''}
                                 </div>`;
@@ -2545,11 +2597,12 @@ let cap = tarjeta.getAttribute('data-cap') || 0;
                         let infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[pp] : null)
                                        || (window.maestroProductos ? window.maestroProductos[pp] : null);
                         
-                        let nombreMat = infoMaestro && infoMaestro.nombre ? infoMaestro.nombre : "PP sin registro en maestro";
+let nombreMat = infoMaestro && infoMaestro.nombre ? infoMaestro.nombre : "PP sin registro en maestro";
                         let skuMat = infoMaestro && infoMaestro.codigo ? `[${infoMaestro.codigo}]` : "";
 
+                        // 🔥 TRUCO: Cambiamos ${colorBloque} por ${colorBordeFuerte} en el border-left
                         htmlDetalle += `
-                        <div style="background: #ffffff; border: 1px solid #edf2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); text-align: left; border-left: 5px solid ${colorBloque};">
+                        <div style="background: #ffffff; border: 1px solid #edf2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); text-align: left; border-left: 3px solid ${colorBordeFuerte};">
                             <div style="font-size: 13px; font-weight: bold; color: #2d3748; margin-bottom: 4px;"> PP ${pp}</div>
                             <div style="font-size: 12px; color: #4a5568; line-height: 1.4; margin-bottom: 8px;"> ${nombreMat} <span style="font-family: monospace; font-weight: bold; color: #718096;">${skuMat}</span></div>
                             <div style="display: flex; justify-content: space-between; border-top: 1px dashed #edf2f7; padding-top: 8px; font-size: 12px;">
