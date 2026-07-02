@@ -498,11 +498,6 @@ color: #1f2937;
     50% { transform: translateX(-55%); }
 }
 
-@keyframes bounceX {
-    0%, 100% { transform: translateX(-50%); }
-    50% { transform: translateX(-55%); }
-}
-
 @keyframes bounceXDer {
     0%, 100% { transform: translateX(-50%); }
     50% { transform: translateX(-45%); }
@@ -612,9 +607,37 @@ div[style*="position: fixed"] button:active {
     filter: brightness(0.9) !important; /* Se oscurece un poco para dar feedback */
 }
 
-</style>
-</head>
-<body>
+/* 🚨 CLASE PARA DESTACAR PRODUCTOS ANTIGUOS (+5 MESES) EN EL LAYOUT */
+.alerta-fifo-layout {
+    background-color: #fffaf0 !important; /* Fondo crema/naranja muy suave */
+    border-left: 5px solid #dd6b20 !important; /* Una barra naranja gruesa al lado izquierdo */
+    position: relative;
+}
+
+/* El texto de la PP antigua brillará en rojo/naranja con un indicador */
+.pp-antigua-texto {
+    color: #e53e3e !important; 
+    font-weight: bold !important;
+    animation: pulsoAlertaFIFO 2s infinite ease-in-out;
+}
+
+/* Pequeño recordatorio flotante tipo etiqueta */
+.badge-fifo {
+    background: #dd6b20;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes pulsoAlertaFIFO {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; } /* Hace un parpadeo suave, no molesto pero visible */
+}
 
 </style>
 </head>
@@ -1569,6 +1592,17 @@ if (id.startsWith('EX')) {
                                 <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
                             </div>`;
                     }
+// 🕒 CONTROL FIFO ACTIVO PARA EL LAYOUT DE CELDAS
+                    let analisisFIFO = verificarAlertaFIFO(detallePP); // Analiza la PP de la celda
+                    let estiloAlertaFIFO = "";
+                    let textoBadgeFIFO = "";
+
+                    if (analisisFIFO.alerta) {
+                        // Inyectamos un fondo sutil de advertencia y borde naranja a la celda vieja
+                        card.style.borderLeft = "4px solid #dd6b20";
+                        card.style.backgroundColor = "#fffaf0";
+                        textoBadgeFIFO = `<div style="background:#dd6b20; color:white; font-size:8px; font-weight:bold; padding:2px; border-radius:3px; margin-top:2px; text-align:center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ ANTIGUO: ${analisisFIFO.meses} MESES</div>`;
+                    }
 
                     // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO (Se concatena la flecha al final)
                     card.innerHTML = `
@@ -1579,8 +1613,9 @@ if (id.startsWith('EX')) {
                             <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
                             <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
                             <div style="background: rgba(255,255,255,0.6); border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
-                                ${detallePP || "Vacío"}
+                                <span class="${analisisFIFO.alerta ? 'pp-antigua-texto' : ''}">${detallePP || "Vacío"}</span>
                             </div>
+                            ${textoBadgeFIFO}
                         </div>`;
                     
                     currentGrid.appendChild(card);
@@ -1761,15 +1796,20 @@ setTimeout(() => {
 // 📊 SISTEMA DE CONTROL DE BODEGA PT - LÓGICA Y RENDERIZADO UNIFICADO
 // ====================================================================================
 
-// MANTENER EL HISTORIAL DE LOGS CON ICONOS BOXICONS
+// MANTENER EL HISTORIAL DE LOGS CON ICONOS BOXICONS Y SEÑALIZACIÓN FIFO
 document.getElementById('historial-lista').innerHTML = logs.map(l => {
     const iconClass = l.tipo === 'ingreso' ? 'bxs-plus-circle' : l.tipo === 'salida' ? 'bxs-minus-circle' : 'bx-transfer-alt';
     const iconColor = l.tipo === 'ingreso' ? 'var(--success)' : l.tipo === 'salida' ? 'var(--danger)' : 'var(--primary, #2b6cb0)';
     
-    return `<div style="border-bottom:1px solid #eee; padding:8px 5px; display: flex; align-items: center;">
+    // Validar antigüedad en el historial
+    let fifoLog = verificarAlertaFIFO(l.pp);
+    let alertarStyle = fifoLog.alerta ? 'background-color: #fffaf0; border-left: 3px solid #dd6b20;' : 'border-bottom:1px solid #eee;';
+    let badgeFIFO = fifoLog.alerta ? ` <span style="background:#dd6b20; color:white; font-size:9px; padding:1px 4px; border-radius:3px; font-weight:bold;">⚠️ FIFO ${fifoLog.meses}M</span>` : '';
+
+    return `<div style="${alertarStyle} padding:8px 5px; display: flex; align-items: center;">
                 <i class='bx ${iconClass}' style='color:${iconColor}; font-size: 24px; margin-right: 10px;'></i>
                 <div style="flex-grow: 1;">
-                    <b>${l.pp}</b> - ${l.kg}kg en <b>${l.ubi}</b> 
+                    <b class="${fifoLog.alerta ? 'pp-antigua-texto' : ''}">${l.pp}</b>${badgeFIFO} - ${l.kg}kg en <b>${l.ubi}</b> 
                     <small style="display: block; color: #777;">${l.fecha}</small>
                 </div>
             </div>`;
@@ -2041,6 +2081,42 @@ function notificar(msg, tipo = "info") {
         setTimeout(() => n.remove(), 300);
     }, 3000);
 }
+
+function verificarAlertaFIFO(codigoPP) {
+    // Si no hay texto, si es "Vacío" o si es la excepción, ignorar sin errores
+    if (!codigoPP || typeof codigoPP !== 'string' || codigoPP.toLowerCase().includes("vacío") || codigoPP.includes("00-00-26")) {
+        return { alerta: false, meses: 0 };
+    }
+
+    // Dejar solo números puros
+    let ppLimpia = codigoPP.replace(/[^0-9]/g, "");
+
+    // Si después de limpiar no quedan al menos 6 números (tipo + mes + año), no es una PP válida para analizar
+    if (ppLimpia.length < 6) {
+        return { alerta: false, meses: 0 };
+    }
+
+    // Extraer Mes y Año seguro
+    let mesProd = parseInt(ppLimpia.substring(2, 4), 10);
+    let anioProd = parseInt("20" + ppLimpia.substring(4, 6), 10);
+
+    if (isNaN(mesProd) || isNaN(anioProd) || mesProd < 1 || mesProd > 12) {
+        return { alerta: false, meses: 0 };
+    }
+
+    let fechaActual = new Date();
+    let mesActual = fechaActual.getMonth() + 1;
+    let anioActual = fechaActual.getFullYear();
+
+    let diferenciaMeses = ((anioActual - anioProd) * 12) + (mesActual - mesProd);
+
+    if (diferenciaMeses >= 5) {
+        return { alerta: true, meses: diferenciaMeses };
+    }
+
+    return { alerta: false, meses: diferenciaMeses };
+}
+
 
 // FORMATEO DINÁMICO DE MÁSCARA (00-00-00)
 function formatearMascara(input, esBusqueda = false) {
