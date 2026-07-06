@@ -665,7 +665,9 @@ div[style*="position: fixed"] button:active {
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
-
+<button class="btn-menu" onclick="verReporteFIFO()">
+    <i class='bx bx-time-five' style="margin-right: 8px; color: #dd6b20;"></i> Reporte FIFO (+5M)
+</button>
     <div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px;"><span>📊</span> Exportar</div>
     <div onclick="crearBackup()" style="display: flex; align-items: center; gap: 8px;"><span>💾</span> Backup</div>
     <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
@@ -1592,19 +1594,31 @@ if (id.startsWith('EX')) {
                                 <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
                             </div>`;
                     }
-// 🕒 CONTROL FIFO ACTIVO PARA EL LAYOUT DE CELDAS
-                    let analisisFIFO = verificarAlertaFIFO(detallePP); // Analiza la PP de la celda
-                    let estiloAlertaFIFO = "";
-                    let textoBadgeFIFO = "";
-
-                    if (analisisFIFO.alerta) {
-                        // Inyectamos un fondo sutil de advertencia y borde naranja a la celda vieja
-                        card.style.borderLeft = "4px solid #dd6b20";
-                        card.style.backgroundColor = "#fffaf0";
-                        textoBadgeFIFO = `<div style="background:#dd6b20; color:white; font-size:8px; font-weight:bold; padding:2px; border-radius:3px; margin-top:2px; text-align:center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ ANTIGUO: ${analisisFIFO.meses} MESES</div>`;
+// 🕒 CONTROL FIFO SUBTIL: SÓLO TEXTO, SIN CAMBIAR COLORES DE FONDO
+                    let alertaEncontrada = false;
+                    let mesesMaximos = 0;
+                    
+                    if (detallePP && typeof detallePP === 'string') {
+                        let ppsEncontradas = detallePP.match(/\d{2}-\d{2}-\d{2}/g);
+                        if (ppsEncontradas && ppsEncontradas.length > 0) {
+                            for (let pp of ppsEncontradas) {
+                                let resultadoPP = verificarAlertaFIFO(pp);
+                                if (resultadoPP.alerta) {
+                                    alertaEncontrada = true;
+                                    if (resultadoPP.meses > mesesMaximos) {
+                                        mesesMaximos = resultadoPP.meses;
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO (Se concatena la flecha al final)
+                    // Si hay alerta, creamos un texto diminuto que no deforma la tarjeta
+                    let textoMiniFIFO = alertaEncontrada 
+                        ? `<div style="color: #dd6b20; font-size: 9px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
+                        : "";
+
+                    // CONTENIDO DE LA TARJETA (Mantiene tus estilos originales intactos)
                     card.innerHTML = `
                         ${flechaHTML}
                         <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${id}</div>
@@ -1612,10 +1626,12 @@ if (id.startsWith('EX')) {
                             <div>${Math.round(usados)}/${cap} bultos</div>
                             <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
                             <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
-                            <div style="background: rgba(255,255,255,0.6); border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
-                                <span class="${analisisFIFO.alerta ? 'pp-antigua-texto' : ''}">${detallePP || "Vacío"}</span>
+                            
+                            <div style="background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px; margin-top: 4px; font-size: 11px; text-align: left; font-weight: bold;">
+                                ${detallePP || "Vacío"}
                             </div>
-                            ${textoBadgeFIFO}
+                            
+                            ${textoMiniFIFO}
                         </div>`;
                     
                     currentGrid.appendChild(card);
@@ -2863,9 +2879,14 @@ if (coincidenciaPP) {
     "PTAB030328": ["saco mcassab", "sacos mcassab", "mcassab", "macasa"],
     "PTGR210601": ["granulex 1000 kilos", "sacas de 1000 kilos granulex"],
     "PTGR211401": ["granulex 2000 libras", "sacas de 2000 lb granulex"],
+    "PTAB030610": ["sacas 1000 kilos gi", "sacas gi", "sacas granular gi"],
+    "PTAB040310": ["saco polvo gi", "saco 25 kilos polvo", "polvo gi"],
+    "PTAB170310": ["saco bajo en sulfato", "sacos bajo en sulfato"],
 
 
-"PTAB030317": ["calcinado", "borico calcinado"]
+    "PTAB300610": ["sacas 1000 kilos calcinado", "sacas calcinado", "calcinado"]
+
+
 };
 
         let codigoObjetivo = null;
