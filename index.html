@@ -665,7 +665,9 @@ div[style*="position: fixed"] button:active {
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
-
+<button class="btn-menu" onclick="verReporteFIFO()">
+    <i class='bx bx-time-five' style="margin-right: 8px; color: #dd6b20;"></i> Reporte FIFO (+5M)
+</button>
     <div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px;"><span>📊</span> Exportar</div>
     <div onclick="crearBackup()" style="display: flex; align-items: center; gap: 8px;"><span>💾</span> Backup</div>
     <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
@@ -1592,19 +1594,31 @@ if (id.startsWith('EX')) {
                                 <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
                             </div>`;
                     }
-// 🕒 CONTROL FIFO ACTIVO PARA EL LAYOUT DE CELDAS
-                    let analisisFIFO = verificarAlertaFIFO(detallePP); // Analiza la PP de la celda
-                    let estiloAlertaFIFO = "";
-                    let textoBadgeFIFO = "";
-
-                    if (analisisFIFO.alerta) {
-                        // Inyectamos un fondo sutil de advertencia y borde naranja a la celda vieja
-                        card.style.borderLeft = "4px solid #dd6b20";
-                        card.style.backgroundColor = "#fffaf0";
-                        textoBadgeFIFO = `<div style="background:#dd6b20; color:white; font-size:8px; font-weight:bold; padding:2px; border-radius:3px; margin-top:2px; text-align:center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ ANTIGUO: ${analisisFIFO.meses} MESES</div>`;
+// 🕒 CONTROL FIFO SUBTIL: SÓLO TEXTO, SIN CAMBIAR COLORES DE FONDO
+                    let alertaEncontrada = false;
+                    let mesesMaximos = 0;
+                    
+                    if (detallePP && typeof detallePP === 'string') {
+                        let ppsEncontradas = detallePP.match(/\d{2}-\d{2}-\d{2}/g);
+                        if (ppsEncontradas && ppsEncontradas.length > 0) {
+                            for (let pp of ppsEncontradas) {
+                                let resultadoPP = verificarAlertaFIFO(pp);
+                                if (resultadoPP.alerta) {
+                                    alertaEncontrada = true;
+                                    if (resultadoPP.meses > mesesMaximos) {
+                                        mesesMaximos = resultadoPP.meses;
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    // CONTENIDO DE LA TARJETA CON FORMATO SOLICITADO (Se concatena la flecha al final)
+                    // Si hay alerta, creamos un texto diminuto que no deforma la tarjeta
+                    let textoMiniFIFO = alertaEncontrada 
+                        ? `<div style="color: #dd6b20; font-size: 9px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
+                        : "";
+
+                    // CONTENIDO DE LA TARJETA (Mantiene tus estilos originales intactos)
                     card.innerHTML = `
                         ${flechaHTML}
                         <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${id}</div>
@@ -1612,10 +1626,11 @@ if (id.startsWith('EX')) {
                             <div>${Math.round(usados)}/${cap} bultos</div>
                             <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
                             <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
-                            <div style="background: rgba(255,255,255,0.6); border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
-                                <span class="${analisisFIFO.alerta ? 'pp-antigua-texto' : ''}">${detallePP || "Vacío"}</span>
+                            <div style="background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 11px; text-align: left;">
+                                ${detallePP || "Vacío"}
                             </div>
-                            ${textoBadgeFIFO}
+                            
+                            ${textoMiniFIFO}
                         </div>`;
                     
                     currentGrid.appendChild(card);
@@ -2869,6 +2884,8 @@ if (coincidenciaPP) {
 
 
     "PTAB300610": ["sacas 1000 kilos calcinado", "sacas calcinado", "calcinado"]
+
+
 };
 
         let codigoObjetivo = null;
@@ -2951,7 +2968,160 @@ if (coincidenciaPP) {
         return "No entendí tu consulta. Prueba preguntándome por: 'stock total', el número de una 'PP' o cuanto hay de chino.";
     }
 });
+// ====================================================================================
+// 📊 FUNCIÓN PARA GENERAR EL REPORTE EJECUTIVO FIFO (+5 MESES)
+// ====================================================================================
+function verReporteFIFO() {
+    // 1. Abrir la ventana modal flotante
+    let seccionFIFO = document.getElementById('seccion-reporte-fifo');
+    if (seccionFIFO) {
+        seccionFIFO.style.display = 'flex';
+    }
+
+    let tbody = document.getElementById('tbody-reporte-fifo');
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    let listaCriticos = [];
+
+    // 2. Escanear celdas para extraer Kilos y Ubicaciones físicas en tiempo real
+    let tarjetas = document.querySelectorAll('[id^="celda-"], .grid-item, .card, [style*="grid"] > div, div');
+    let datosPorPP = {};
+
+    tarjetas.forEach(tarjeta => {
+        let textoTarjeta = tarjeta.innerHTML || "";
+        if (textoTarjeta.length > 2000) return; // Omitir contenedores globales masivos
+
+        let ppsEncontradas = textoTarjeta.match(/\d{2}-\d{2}-\d{2}/g);
+        
+        if (ppsEncontradas && ppsEncontradas.length > 0) {
+            ppsEncontradas.forEach(pp => {
+                // Intentar rescatar el ID o nombre visible de la celda (ej: D1, P2)
+                let ubicacionId = tarjeta.id ? tarjeta.id.replace('celda-', '').toUpperCase() : "";
+                
+                // Si el ID del elemento no ayuda, buscamos un texto corto en mayúsculas dentro de la tarjeta
+                if (!ubicacionId || ubicacionId.length > 5) {
+                    let matchId = textoTarjeta.match(/>\s*([A-Z0-9]{1,4})\s*</);
+                    ubicacionId = matchId ? matchId[1] : "Bodega";
+                }
+
+                // Capturar el peso (Kilos/Bultos)
+                let matchKilos = textoTarjeta.match(/(\d{1,3}(?:\.\d{3})+)/);
+                let pesoLimpio = matchKilos ? matchKilos[1] + " kg" : "";
+
+                // Guardar registro de lo encontrado en esta tarjeta
+                if (!datosPorPP[pp]) {
+                    datosPorPP[pp] = { ubi: ubicacionId, kg: pesoLimpio };
+                } else {
+                    // Si ya existía la PP pero no tenía peso, se lo asignamos
+                    if (!datosPorPP[pp].kg && pesoLimpio) datosPorPP[pp].kg = pesoLimpio;
+                }
+            });
+        }
+    });
+
+    // 3. Cruzar con maestroProductos
+    if (typeof maestroProductos !== 'undefined') {
+        for (let pp in maestroProductos) {
+            let analisis = verificarAlertaFIFO(pp);
+
+            if (analisis.alerta) {
+                let infoProd = maestroProductos[pp];
+                let rastreoVisual = datosPorPP[pp] || { ubi: "Ubi. Gral", kg: "" };
+                
+                // Si no se capturaron kilos en el mapa, usamos el estimado del saco/empaque
+                let cantidadFinal = rastreoVisual.kg;
+                if (!cantidadFinal) {
+                    let nombreLower = (infoProd.nombre || "").toLowerCase();
+                    let matchSaco = nombreLower.match(/(\d{1,3}(?:\.\d{3})|\d+)\s*(?:kg|mt)/);
+                    cantidadFinal = matchSaco ? matchSaco[1] + " kg" : "1.200 kg";
+                }
+
+                listaCriticos.push({
+                    codigoContable: infoProd.codigo || "SIN-COD",
+                    ubicacion: rastreoVisual.ubi,
+                    pp: pp,
+                    meses: analisis.meses,
+                    cantidad: cantidadFinal
+                });
+            }
+        }
+    }
+
+    // 4. ORDENAR ESTRICTAMENTE POR CÓDIGO CONTABLE
+    listaCriticos.sort((a, b) => a.codigoContable.localeCompare(b.codigoContable, undefined, { numeric: true, sensitivity: 'base' }));
+
+    // Actualizar el número de alertas en el escudo superior
+    let contadorBadge = document.getElementById('contador-criticos-fifo');
+    if (contadorBadge) contadorBadge.innerText = `${listaCriticos.length} Ítems`;
+
+    // 5. Si está limpio, mostrar aviso de éxito
+    if (listaCriticos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 25px; color: #38a169; font-weight: bold; font-size: 14px;">🎉 ¡Bodega Óptima! No hay productos retenidos por más de 5 meses.</td></tr>`;
+        return;
+    }
+
+    // 6. Dibujar la nueva estructura de filas (sin nombre, con ubicación)
+    listaCriticos.forEach(item => {
+        let fila = document.createElement('tr');
+        fila.style.borderBottom = "1px solid #edf2f7";
+        fila.style.transition = "background 0.2s";
+        fila.onmouseover = function() { this.style.background = "#f7fafc"; };
+        fila.onmouseout = function() { this.style.background = "transparent"; };
+
+        fila.innerHTML = `
+            <td style="padding: 12px 10px; font-family: monospace; font-weight: bold; color: #2b6cb0; font-size: 13px;">${item.codigoContable}</td>
+            <td style="padding: 12px 10px; text-align: center; font-weight: bold; color: #4a5568;">
+                <span style="background: #e2e8f0; color: #4a5568; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                    📍 ${item.ubicacion}
+                </span>
+            </td>
+            <td style="padding: 12px 10px; font-weight: bold; color: #4a5568; text-align: center;">${item.pp}</td>
+            <td style="padding: 12px 10px; text-align: center;">
+                <span style="background: #feebc8; color: #c05621; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block;">
+                    ⚠️ ${item.meses} Meses
+                </span>
+            </td>
+            <td style="padding: 12px 15px; text-align: right; font-weight: bold; color: #2d3748;">${item.cantidad}</td>
+        `;
+        tbody.appendChild(fila);
+    });
+}
+
 </script>
+<div id="seccion-reporte-fifo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10050; justify-content: center; align-items: center; font-family: sans-serif; padding: 15px; box-sizing: border-box;">
+    <div style="background: white; padding: 20px; border-radius: 10px; width: 95%; max-width: 750px; max-height: 85vh; box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #2d3748; font-size: 16px;">
+                <i class='bx bx-time-five' style="color: #dd6b20; margin-right: 8px; font-size: 20px; vertical-align: middle;"></i> Alerta de Rotación FIFO (+5 Meses)
+            </h3>
+            <span id="contador-criticos-fifo" style="background: #e53e3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">0 Ítems</span>
+        </div>
+
+        <div style="overflow-y: auto; flex: 1; border: 1px solid #edf2f7; border-radius: 6px; margin-bottom: 15px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+<thead style="position: sticky; top: 0; background: #f4f7fc; z-index: 10; border-bottom: 2px solid #cbd5e0;">
+    <tr style="color: #4a5568; font-size: 12px;">
+        <th style="padding: 10px; font-weight: bold;">Cód. Contable</th>
+        <th style="padding: 10px; font-weight: bold; text-align: center;">Ubicación</th>
+        <th style="padding: 10px; font-weight: bold; text-align: center;">PP</th>
+        <th style="padding: 10px; font-weight: bold; text-align: center;">Antigüedad</th>
+        <th style="padding: 10px; font-weight: bold; text-align: right; padding-right: 15px;">Cantidad</th>
+    </tr>
+</thead>
+                <tbody id="tbody-reporte-fifo">
+                    </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: right; border-top: 1px solid #edf2f7; padding-top: 12px;">
+            <button onclick="document.getElementById('seccion-reporte-fifo').style.display = 'none'" style="background: #718096; color: white; border: none; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s;">
+                Cerrar Reporte
+            </button>
+        </div>
+    </div>
+</div>
 
 <div id="modal-detalle-contable" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 8px; width: 95%; max-width: 600px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
