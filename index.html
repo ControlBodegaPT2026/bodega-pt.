@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CONTROL DE BODEGA PT v0.9</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -131,7 +131,7 @@
     .grid-pasillos { 
         display: grid; 
         grid-template-columns: repeat(4, 1fr); /* Pasillos A y B siempre en 4 */
-        gap: 5px;
+        gap: 3px;
 	row-gap: 50px; 
         background: #e2e8f0; 
         padding: 20px; 
@@ -178,7 +178,7 @@
 	border: 2px solid #cbd5e0;
     }
     
-    .card-ubi { background: white; border-radius: 6px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
+    .card-ubi { background: white; border-radius: 5px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
     .ubi-green { border-top-color: var(--success); background: #f0fff4; }
     .ubi-yellow { border-top-color: #d69e2e; background: #fffaf0; }
     .ubi-red { border-top-color: var(--danger); background: #fff5f5; }
@@ -347,7 +347,7 @@ color: #1f2937;
 
         /* Reducimos el tamaño de los títulos (Ingreso, Salida, etc.) */
         .card-action h3 {
-            font-size: 10px !important;
+            font-size: 13px !important;
             margin-bottom: 5px;
         }
 
@@ -387,8 +387,16 @@ color: #1f2937;
             gap: 5px;
         }
         
-        .kpi-val { font-size: 14px !important; }
-        .pct-badge { font-size: 10px !important; }
+.kpi-val { font-size: 13px !important; }
+        
+        /* 📱 ¡AQUÍ AGRANDAMOS EL SEMÁFORO Y EL % EN EL CELULAR! */
+        .pct-badge { 
+            font-size: 15px !important; 
+            padding: 4px 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
         #mini-grafico { display: none; } /* Ocultamos gráfico en móvil para ganar espacio */
 
 /* 🚀 PASO 2 PEGADO AQUÍ: Contener los sectores D en el móvil */
@@ -639,6 +647,14 @@ div[style*="position: fixed"] button:active {
     50% { opacity: 0.6; } /* Hace un parpadeo suave, no molesto pero visible */
 }
 
+#busqueda {
+            font-size: 12px !important;
+            font-weight: 500 !important; /* Le da un poco más de cuerpo al texto */
+            height: auto !important;
+        }
+
+    }
+
 </style>
 </head>
 <body>
@@ -737,7 +753,7 @@ div[style*="position: fixed"] button:active {
         </div>
     </div>
 
-</div> <div class="stats-container" onclick="abrirSemaforoMovil()" style="cursor: pointer; transition: background 0.2s;" title="En móvil, toca aquí para ver los gráficos detallados">
+</div> <div class="stats-container" onclick="abrirSemaforoMovil()" style="cursor: pointer; transition: background 0.2s;" title="EN MÓVIL, TOCA AQUÍ PARA VER LOS GRÁFICOS DETALLADOS">
         <div class="kpi-block">
             <small>OCUPACIÓN TOTAL</small>
             <span class="kpi-val" id="kpi-total">0 / 0</span>
@@ -839,12 +855,12 @@ div[style*="position: fixed"] button:active {
         }
 
 // ====================================================================
-// 🎙️ SISTEMA NATIVO DE VOZ (VERSION ULTRA-ESTABLE ESTILO WHATSAPP)
+// 🎙️ SISTEMA NATIVO DE VOZ (VERSION ULTRA-ESTABLE MULTIPLATAFORMA / iOS OK)
 // ====================================================================
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let reconocimientoVoz = null;
 let estaEscuchando = false;
-let fuePorVoz = false; // Bandera clave para saber si activar el altavoz
+let fuePorVoz = false; 
 
 if (SpeechRecognition) {
     reconocimientoVoz = new SpeechRecognition();
@@ -857,68 +873,97 @@ if (SpeechRecognition) {
         estaEscuchando = true;
         fuePorVoz = true; 
         
-        // 🔥 CAMBIO DE COLOR EN VIVO: Fondo rojo suave e icono rojo
         let btnMic = document.getElementById('btnMicrofono');
         if (btnMic) {
             btnMic.style.background = "#ffe3e3"; 
             btnMic.style.color = "#e53e3e";      
-            btnMic.innerHTML = "<i class='bx bx-microphone-off'></i>"; // Icono de detener
+            btnMic.innerHTML = "<i class='bx bx-microphone-off'></i>"; 
         }
 
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.placeholder = "Escuchando... habla ahora";
     };
 
+    // Captura de errores específica para iOS (Evita congelamientos si el usuario guarda silencio)
+    reconocimientoVoz.onerror = (event) => {
+        console.error("Error en reconocimiento de voz:", event.error);
+        // Si da error en iOS por silencio o bloqueo, forzamos el apagado limpio para que pueda reintentar
+        reconocimientoVoz.stop();
+    };
+
     // Cuando termina de escuchar (REGRESA A MODO WHATSAPP NEUTRO)
     reconocimientoVoz.onend = () => {
         estaEscuchando = false;
         
-        // 🔥 REGRESAR AL GRIS WHATSAPP ORIGINAL
         let btnMic = document.getElementById('btnMicrofono');
         if (btnMic) {
             btnMic.style.background = "#f0f2f5"; 
             btnMic.style.color = "#54656f";      
-            btnMic.innerHTML = "<i class='bx bx-microphone'></i>"; // Icono de micro normal
+            btnMic.innerHTML = "<i class='bx bx-microphone'></i>"; 
         }
 
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.placeholder = "Escribe tu consulta aquí o habla...";
+    ```
+```javascript
     };
 
-    // Cuando procesa con éxito lo que dijiste por micrófono (CORREGIDO DIRECTO)
+    // Cuando procesa con éxito lo que dijiste por micrófono
     reconocimientoVoz.onresult = (event) => {
+        if (!event.results || event.results.length === 0) return;
+        
         const textoEscuchado = event.results[0][0].transcript;
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) {
             campoInput.value = textoEscuchado;
             
-            // 🔥 TRUCO MÁXIMO: Simulamos un "Enter" en el teclado para despertar tu función interna
-            let eventoEnter = new KeyboardEvent('keypress', { key: 'Enter', bubbles: true });
-            campoInput.dispatchEvent(eventoEnter);
+            // 🔥 TRUCO MÁXIMO DE ENVÍO DIRECTO: 
+            // En iOS, despachar el evento 'keypress' a veces no dispara el botón.
+            // Por lo tanto, si tienes un botón físico de enviar, lo presionamos directamente por código:
+            let btnEnviar = document.getElementById('btn-enviar-chat') || document.querySelector('[onclick*="enviar"]');
+            if (btnEnviar) {
+                btnEnviar.click();
+            } else {
+                // Alternativa: Si usas Enter
+                let eventoEnter = new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, bubbles: true });
+                campoInput.dispatchEvent(eventoEnter);
+            }
         }
     };
 }
 
-// Alternar encendido/apagado del micrófono
+// Alternar encendido/apagado del micrófono (Optimizado para iOS)
 function alternarMicrofono() {
     if (!reconocimientoVoz) {
         alert("Tu navegador o celular no soporta el reconocimiento de voz integrado.");
         return;
     }
+    
+    // 🔥 PARCHE DE ACTIVACIÓN DE AUDIO PARA IPHONE:
+    // Despierta los canales de audio nativos de Apple dentro del evento click del usuario
+    if (window.speechSynthesis) {
+        let u = new SpeechSynthesisUtterance('');
+        window.speechSynthesis.speak(u);
+    }
+
     if (estaEscuchando) {
         reconocimientoVoz.stop();
     } else {
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.value = "";
         
-        // Intentamos iniciar el reconocimiento nativo
         try {
-            reconocimientoVoz.start();
+            // En iOS es vital asegurar que no haya ninguna instancia colgada antes de iniciar
+            reconocimientoVoz.abort(); 
+            setTimeout(() => {
+                reconocimientoVoz.start();
+            }, 50);
         } catch (e) {
-            console.log("El micrófono ya estaba iniciado o hubo un reintento.");
+            console.log("Reintento de inicio controlado.");
         }
     }
 }
+
 // FUNCIÓN PARA QUE EL ASISTENTE LEA LA RESPUESTA EN VOZ ALTA
 function asistenteHablar(textoAI) {
     if ('speechSynthesis' in window) {
@@ -939,8 +984,7 @@ function asistenteHablar(textoAI) {
 
         window.speechSynthesis.speak(configuracionLectura);
     }
-}
-// ==========================================
+}// ==========================================
 // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
 // ==========================================
 const firebaseConfig = {
@@ -1543,7 +1587,7 @@ let card = document.createElement('div');
 
 if (id.startsWith('EX')) {
     card.style.border = "2px dashed #555";
-    card.style.background = "#fffbea";
+    card.style.background = "#f7fafc";
 }
                     
                     if (currentSectionName === 'GALPÓN') {
@@ -1615,13 +1659,13 @@ if (id.startsWith('EX')) {
 
                     // Si hay alerta, creamos un texto diminuto que no deforma la tarjeta
                     let textoMiniFIFO = alertaEncontrada 
-                        ? `<div style="color: #dd6b20; font-size: 9px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
+                        ? `<div style="color: #dd6b20; font-size: 15	px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
                         : "";
 
                     // CONTENIDO DE LA TARJETA (Mantiene tus estilos originales intactos)
                     card.innerHTML = `
                         ${flechaHTML}
-                        <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${id}</div>
+                        <div style="font-weight: bold; font-size: 20px; margin-bottom: 4px;">${id}</div>
                         <div style="font-size: 12px; line-height: 1.2;">
                             <div>${Math.round(usados)}/${cap} bultos</div>
                             <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
@@ -1771,7 +1815,7 @@ setTimeout(() => {
                     let fila = document.createElement('tr');
                     fila.style.cursor = "pointer";
                     fila.style.transition = "background 0.2s";
-                    fila.title = "Haz clic para ver el desglose de PP";
+                    fila.title = "HAZ CLIC PARA VER EL DESGLOSE DE PP";
                     
                     // Efecto visual hover al pasar el mouse
                     fila.onmouseover = function() { this.style.background = "#edf2f7"; };
@@ -2860,7 +2904,7 @@ if (coincidenciaPP) {
         respuestaFinal += `• **Total acumulado:** ${subtotalKg.toLocaleString()} kg (${Math.round(subtotalBultos)} bultos) en el inventario general.\n\n`;
         respuestaFinal += `🔍 **Ubicaciones donde se encuentra:**\n` + ubicacionesEncontradas.join('\n');
     } else {
-        respuestaFinal += `💨 El lote **PP ${ppBuscado}** no registra stock actual en ninguna de las bodegas del sistema.`;
+        respuestaFinal += `💨 La **PP ${ppBuscado}** no registra stock actual en ninguna de las bodegas del sistema.`;
     }
 
     return respuestaFinal;
@@ -2872,8 +2916,8 @@ if (coincidenciaPP) {
         const  aliasProductos = {
     "PTAB030315": ["chino", "saco chino", "sacos chinos", "borico chino"],
     "PTAB031110": ["sacas de 1200 gi", "sacas 1200 gi", "1200 gi", "sacas 1200 granular", "sacas 1200 kg gi"],
-    "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "rechazo caja manga", "caja manga rechazo"],
-    "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "rechazo sobremalla", "sobremalla rechazo"],
+    "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "rechazo caja manga", "caja manga rechazo", "caja manga"],
+    "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "rechazo sobremalla", "sobremalla rechazo", "sobremalla"],
     "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
     "PTAB030328": ["saco mcassab", "sacos mcassab", "mcassab", "macasa"],
     "PTGR210601": ["granulex 1000 kilos", "sacas de 1000 kilos granulex"],
