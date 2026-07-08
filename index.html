@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CONTROL DE BODEGA PT v0.9</title>
+    <title>CONTROL DE BODEGA PT. </title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -655,6 +655,31 @@ div[style*="position: fixed"] button:active {
 
     }
 
+/* 📱 AVISO DE ROTACIÓN: Se activa SOLO cuando el celular se pone en horizontal */
+@media (max-width: 768px) and (orientation: landscape) {
+    body::before {
+        content: "🔄 Por favor, gira tu teléfono a posición vertical para usar el CONTROL DE BODEGA PT.";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #1a202c; /* Fondo oscuro ejecutivo */
+        color: white;
+        z-index: 999999; /* Por encima de absolutamente todo */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 30px;
+        font-family: sans-serif;
+        font-size: 18px;
+        font-weight: bold;
+        box-sizing: border-box;
+    }
+}
+
+
 </style>
 </head>
 <body>
@@ -662,7 +687,7 @@ div[style*="position: fixed"] button:active {
     <div class="header">
 <div style="font-size: 20px; font-weight: bold; display:flex; align-items:center; gap:10px;">
     <img src="logo.png" style="width:55px; height:28px; object-fit:contain;">
-    CONTROL DE BODEGA PT.  v0.9
+    CONTROL DE BODEGA PT. 
 </div>
 <div class="header-nav">
             <button class="btn-nav active" id="btnPrin" onclick="cambiarBodega('principal')">PRINCIPAL</button>
@@ -887,7 +912,6 @@ if (SpeechRecognition) {
     // Captura de errores específica para iOS (Evita congelamientos si el usuario guarda silencio)
     reconocimientoVoz.onerror = (event) => {
         console.error("Error en reconocimiento de voz:", event.error);
-        // Si da error en iOS por silencio o bloqueo, forzamos el apagado limpio para que pueda reintentar
         reconocimientoVoz.stop();
     };
 
@@ -904,8 +928,6 @@ if (SpeechRecognition) {
 
         let campoInput = document.getElementById('input-mensaje-chat');
         if (campoInput) campoInput.placeholder = "Escribe tu consulta aquí o habla...";
-    ```
-```javascript
     };
 
     // Cuando procesa con éxito lo que dijiste por micrófono
@@ -917,14 +939,11 @@ if (SpeechRecognition) {
         if (campoInput) {
             campoInput.value = textoEscuchado;
             
-            // 🔥 TRUCO MÁXIMO DE ENVÍO DIRECTO: 
-            // En iOS, despachar el evento 'keypress' a veces no dispara el botón.
-            // Por lo tanto, si tienes un botón físico de enviar, lo presionamos directamente por código:
+            // 🔥 ENVÍO SEGURO Y COMPATIBLE PARA MÓVILES:
             let btnEnviar = document.getElementById('btn-enviar-chat') || document.querySelector('[onclick*="enviar"]');
             if (btnEnviar) {
                 btnEnviar.click();
             } else {
-                // Alternativa: Si usas Enter
                 let eventoEnter = new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, bubbles: true });
                 campoInput.dispatchEvent(eventoEnter);
             }
@@ -939,8 +958,7 @@ function alternarMicrofono() {
         return;
     }
     
-    // 🔥 PARCHE DE ACTIVACIÓN DE AUDIO PARA IPHONE:
-    // Despierta los canales de audio nativos de Apple dentro del evento click del usuario
+    // Parche para despertar los canales de audio en iPhone al hacer el clic físico
     if (window.speechSynthesis) {
         let u = new SpeechSynthesisUtterance('');
         window.speechSynthesis.speak(u);
@@ -953,7 +971,6 @@ function alternarMicrofono() {
         if (campoInput) campoInput.value = "";
         
         try {
-            // En iOS es vital asegurar que no haya ninguna instancia colgada antes de iniciar
             reconocimientoVoz.abort(); 
             setTimeout(() => {
                 reconocimientoVoz.start();
@@ -984,7 +1001,8 @@ function asistenteHablar(textoAI) {
 
         window.speechSynthesis.speak(configuracionLectura);
     }
-}// ==========================================
+}
+// ==========================================
 // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
 // ==========================================
 const firebaseConfig = {
