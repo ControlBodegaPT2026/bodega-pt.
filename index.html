@@ -320,6 +320,187 @@ color: #1f2937;
 .bottom-grid, .menu-opciones {
     display: none !important;
 }
+#busqueda:hover {
+    border-color: var(--primary, #2b6cb0) !important; /* Cambia al azul corporativo de tu sistema */
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.2); /* Le da un destello azul difuminado muy elegante */
+}
+/* 🤖 EFECTOS HOVER PARA EL ASISTENTE VIRTUAL (Notebook) */
+
+/* 1. Cambio de borde en el campo de texto del chat */
+#input-mensaje-chat:hover {
+    border-color: var(--primary, #2b6cb0) !important; /* Borde azul corporativo */
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.2); /* Destello suave */
+}
+
+/* 2. Cambio de color en el botón de Enviar Mensaje */
+#btn-enviar-chat:hover {
+    background: #1a4f80 !important; /* Un azul más oscuro y profundo al posarse */
+    transform: scale(1.05); /* Un levísimo estiramiento elegante */
+}
+
+/* 3. Cambio de color en el botón del Micrófono (cuando está apagado) */
+#btnMicrofono:hover {
+    background: #e2e8f0 !important; /* Gris un poco más oscuro que el fondo WhatsApp original */
+    color: #1a202c !important; /* El icono del micrófono se oscurece para resaltar */
+}
+/* 🤖 EFECTO HOVER PARA EL BOTÓN PRINCIPAL DEL ASISTENTE VIRTUAL (Notebook) */
+#btn-chat-asistente:hover {
+    background: #1a4f80 !important; /* Un azul más oscuro y marcado al posarse */
+    transform: scale(1.08); /* Se agranda un 8% de forma suave para invitar a hacer clic */
+    box-shadow: 0 6px 12px rgba(43, 108, 176, 0.4); /* Sombra más pronunciada para dar efecto de flotación */
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s !important; /* Transición limpia */
+}
+/* 📦 EFECTO HOVER SUAVE Y TRANSPARENTE PARA LOS CASILLEROS DEL LAYOUT (Notebook) */
+.card-ubi:hover {
+    /* Usamos un degradado blanco con un 15% de opacidad para que sea súper transparente */
+    background-image: linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)) !important;
+    
+    transform: translateY(-2px) scale(1.03); /* Reducimos el estiramiento a 1% para que sea más fino */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important; /* Una sombra más tenue y sofisticada */
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* 📥/📤 EFECTO HOVER PARA ABSOLUTAMENTE TODOS LOS CAMPOS (Notebook) */
+input:hover, 
+select:hover, 
+textarea:hover,
+.input-pp:hover, 
+.input-kg:hover,
+#pp_in:hover, 
+#kg_in:hover, 
+#pp_out:hover, 
+#kg_out:hover {
+    /* Cambiamos el fondo a un tono grisáceo/azul muy sutil y limpio que sí se nota */
+    background-color: #f7fafc !important;
+    background-image: none !important;
+    
+    /* Cambia el borde por el azul corporativo de tu sistema */
+    border-color: var(--primary, #2b6cb0) !important; 
+    
+    /* Le añade el destello azul transparente a los lados */
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.2) !important;
+    
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s !important;
+}
+
+/* Restaura el blanco impecable cuando el operador hace clic para escribir */
+input:focus, 
+select:focus,
+textarea:focus,
+.input-pp:focus,
+.input-kg:focus,
+#pp_in:focus, 
+#kg_in:focus, 
+#pp_out:focus, 
+#kg_out:focus {
+    background-color: #ffffff !important;
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.4) !important;
+}
+
+/* 📥 EFECTO HOVER PARA EL BOTÓN INGRESAR (Notebook) */
+.btn-ingreso:hover {
+    /* Mantiene el color verde éxito pero le añade un sutil velo oscuro transparente del 10% */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+    
+    transform: translateY(-1px) scale(1.01); /* 
+    box-shadow: 0 6px 12px rgba(43, 108, 176, 0.2) !important; /* Destello de sombra suave */
+    cursor: pointer;
+    transition: transform 0.15s ease, background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* 📤 EFECTO HOVER PARA EL BOTÓN RETIRAR (Notebook) */
+.btn-salida:hover {
+    /* Mantiene el color rojo peligro pero le añade un sutil velo oscuro transparente del 10% */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+    
+    transform: translateY(-1px) scale(1.01); /* 
+    box-shadow: 0 6px 12px rgba(229, 62, 62, 0.2) !important; /* Destello de sombra rojizo suave */
+    cursor: pointer;
+    transition: transform 0.15s ease, background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* 📜 EFECTO HOVER PARA EL BOTÓN "DESHACER ÚLTIMO" (Notebook) */
+button[onclick="deshacer()"]:hover {
+    /* Aplicamos un sutil velo oscuro semitransparente del 5% sobre su fondo blanco original */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)) !important;
+    
+    /* Resaltamos el borde a un gris más marcado y definido */
+    border-color: #4a5568 !important;
+    
+    /* Le agregamos una pequeña elevación de 1.5 píxeles */
+    transform: translateY(-1.5px) scale(1.02);
+    
+    /* Sombra tenue para dar volumen */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+    
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s, background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* Efecto opcional de click rápido (Active) para simular el hundimiento del botón */
+button[onclick="deshacer()"]:active {
+    transform: translateY(0px) scale(1.0);
+    box-shadow: none !important;
+}
+
+/* ====================================================================
+   ⚙️ EFECTOS HOVER PARA EL ENCABEZADO Y MENÚ DESPLEGABLE (Notebook)
+   ==================================================================== */
+
+/* 1. Botones Principales de Navegación (PRINCIPAL, ADOQUINES y Engranaje) */
+.btn-nav:hover {
+    filter: brightness(0.9) !important; /* Oscurece ligeramente el fondo para denotar interacción */
+    transform: translateY(-1px); /* Elevación milimétrica muy elegante */
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s !important;
+}
+
+/* Mantener el botón activo fijo sin que se mueva al pasar el mouse */
+.btn-nav.active:hover {
+    transform: none !important;
+    filter: none !important;
+}
+
+/* 2. Opciones internas del Menú Desplegable (Movimiento, FIFO, Exportar, etc.) */
+.menu-dropdown div:hover {
+    background-color: #f1f5f9 !important; /* Fondo gris claro limpio estilo moderno */
+    color: var(--primary, #2b6cb0) !important; /* El texto e iconos cambian al color de la empresa */
+    border-radius: 4px; /* Bordes suavemente redondeados en la selección */
+    padding-left: 12px; /* Pequeño desplazamiento hacia la derecha (efecto dinámico) */
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, padding-left 0.15s ease !important;
+}
+
+/* ====================================================================
+   📋🌐 EFECTO HOVER INTENSO PARA LAS PESTAÑAS DEL MODAL (Notebook)
+   ==================================================================== */
+
+/* Efecto al pasar el mouse por encima de cualquier pestaña del modal */
+#tab-material:hover, 
+#tab-general:hover {
+    /* Fondo azulino translúcido mucho más notable y nítido */
+    background-color: rgba(43, 108, 176, 0.08) !important; 
+    
+    /* Forzamos el azul corporativo puro en el texto para máxima legibilidad */
+    color: var(--primary, #2b6cb0) !important; 
+    
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s ease !important;
+}
+
+/* Pestaña "Detalle Material" cuando NO está activa: Línea inferior azul más viva */
+#tab-material[style*="border-bottom: 3px solid transparent"]:hover {
+    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
+/* Pestaña "Ver Stock General" cuando NO está activa: Línea inferior azul más viva */
+#tab-general[style*="border-bottom: 3px solid transparent"]:hover {
+    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
 @media (max-width: 768px) {
     /* 1. Forzamos que el cuerpo y los paneles ocupen todo el ancho */
     body {
@@ -706,9 +887,9 @@ div[style*="position: fixed"] button:active {
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
-<button class="btn-menu" onclick="verReporteFIFO()">
-    <i class='bx bx-time-five' style="margin-right: 8px; color: #dd6b20;"></i> Reporte FIFO (+5M)
-</button>
+    <div onclick="verReporteFIFO(); toggleMenu();" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <span>⏳</span> Reporte FIFO (+5M)
+    </div>
     <div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px;"><span>📊</span> Exportar</div>
     <div onclick="crearBackup()" style="display: flex; align-items: center; gap: 8px;"><span>💾</span> Backup</div>
     <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
@@ -754,7 +935,7 @@ div[style*="position: fixed"] button:active {
         <h3>🔍 Buscar</h3>
         
         <div style="position: relative; width: 100%; margin-bottom: 10px; display: block;">
-            <input type="text" id="busqueda" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)" style="width: 100%; padding: 10px 35px 10px 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; height: 40px; font-size: 14px;">
+            <input type="text" id="busqueda" title="ESCRIBE LOS NÚMEROS SIN GUIÓN" placeholder="Ingrese PP 00-00-00..." inputmode="numeric" maxlength="8" oninput="formatearMascara(this, true)" style="width: 100%; padding: 10px 35px 10px 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; height: 40px; font-size: 14px;">
             
             <button type="button" onclick="limpiarBuscador()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #cbd5e0; color: white; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; z-index: 5;">×</button>
         </div>
@@ -1599,6 +1780,7 @@ if (bodegaActual === "principal") {
 let card = document.createElement('div');
                     card.className = `card-ubi ${color}`;
                     card.dataset.id = id;
+card.title = "HAZ CLIC PARA VER EL ESTADO DE OCUPACIÓN DETALLADO";
                     
                     // Aseguramos que la tarjeta sirva de base para posicionar la flecha
                     card.style.position = 'relative';
