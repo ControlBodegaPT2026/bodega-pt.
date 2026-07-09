@@ -122,8 +122,12 @@
         margin-bottom: 1px; 
         align-items: center; 
         max-width: 1800px; /* 🚀 NUEVO: Evita que la barra se estire infinitamente en pantallas grandes */
+        border: 1px solid #cbd5e0;
     }
-    .kpi-block { border-right: 1px solid var(--border-color); padding-right: 20px; }
+    .kpi-block:not(:last-child) {
+    
+    border-right: 1px solid #cbd5e0 !important; 
+}
     .kpi-val { font-size: 20px; font-weight: bold; display: block; }
     .pct-badge { background: #e6fffa; color: #333; padding: 2px 8px; border-radius: 12px; font-size: 20px; font-weight: bold; }
 
@@ -499,6 +503,13 @@ button[onclick="deshacer()"]:active {
 /* Pestaña "Ver Stock General" cuando NO está activa: Línea inferior azul más viva */
 #tab-general[style*="border-bottom: 3px solid transparent"]:hover {
     border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
+/* 📦 FIJAR LÍNEAS HORIZONTALES EN LA TABLA DE STOCK */
+#tabla-stock tbody td {
+    border-bottom: 1px solid #b0bec5 !important; /* Un gris un poco más oscuro y marcado */
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
 }
 
 @media (max-width: 768px) {
@@ -943,21 +954,20 @@ div[style*="position: fixed"] button:active {
         <div id="res_busqueda" style="font-size: 12px; color: var(--primary);">Esperando búsqueda...</div>
     </div>
     <!-- Tarjeta 4: Stock por PP (Nueva ubicación) -->
-    <div class="card-action">
-        <h3 style="margin-top:0;">📦 Stock por PP</h3>
-        <!-- El div siguiente permite que la tabla tenga su propio scroll si hay muchos datos -->
-        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 3px;">
-            <table id="tabla-stock" style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="position: sticky; top: 0; background: white;">
-                        <th style="font-size: 12px; padding: 5px;">CÓD. CONT./ MATERIAL</th>
-                        <th style="font-size: 12px; padding: 5px;">KG TOTAL</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+<div class="card-action">
+    <h3 style="margin-top:0;">📦 Stock por PP</h3>
+    <div style="max-height: 180px; overflow-y: auto; border: 1px solid #cbd5e0; border-radius: 3px;">
+        <table id="tabla-stock" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="position: sticky; top: 0; background: white;">
+                    <th style="font-size: 12px; padding: 5px; border-bottom: 2px solid #cbd5e0;">CÓD. CONT./ MATERIAL</th>
+                    <th style="font-size: 12px; padding: 5px; border-bottom: 2px solid #cbd5e0;">KG TOTAL</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
+</div>
 
 </div> <div class="stats-container" onclick="abrirSemaforoMovil()" style="cursor: pointer; transition: background 0.2s;" title="EN MÓVIL, TOCA AQUÍ PARA VER LOS GRÁFICOS DETALLADOS">
         <div class="kpi-block">
@@ -975,7 +985,7 @@ div[style*="position: fixed"] button:active {
             <span class="kpi-val" id="kpi-ext">0 / 0</span>
             <span class="pct-badge" id="pct-ext">0%</span>
         </div>
-        <div id="mini-grafico" style="font-size:12px; line-height:1.8;"></div>
+        <div id="mini-grafico" style="font-size: 12px; line-height: 1.8;"></div>
     </div>
 
     <div class="panel" style="margin-bottom: 20px;">
@@ -1340,8 +1350,7 @@ let bultoSeleccionado = {
     
     "PASILLO 2", 
     ["B4", 115], ["B3", 120], ["B2", 155], ["B1", 140], // Fila superior (4)
-    ["B7", 160], ["B6", 160], ["B5", 115],             // Fila inferior (3 - Sin B8)
-    
+    ["B8", 200], ["B7", 160], ["B6", 160], ["B5", 115],    
 "PATIO", 
 ["C2", 350], ["C4", 350], ["C1", 350], ["C3", 350],
 
@@ -2938,9 +2947,9 @@ let nombreMat = infoMaestro && infoMaestro.nombre ? infoMaestro.nombre : "PP sin
                         // 🔥 TRUCO: Cambiamos ${colorBloque} por ${colorBordeFuerte} en el border-left
                         htmlDetalle += `
                         <div style="background: #ffffff; border: 1px solid #edf2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); text-align: left; border-left: 3px solid ${colorBordeFuerte};">
-                            <div style="font-size: 13px; font-weight: bold; color: #2d3748; margin-bottom: 4px;"> PP ${pp}</div>
+                            <div style="font-size: 15px; font-weight: bold; color: #2d3748; margin-bottom: 4px;"> PP ${pp}</div>
                             <div style="font-size: 12px; color: #4a5568; line-height: 1.4; margin-bottom: 8px;"> ${nombreMat} <span style="font-family: monospace; font-weight: bold; color: #718096;">${skuMat}</span></div>
-                            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #edf2f7; padding-top: 8px; font-size: 12px;">
+                            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #edf2f7; padding-top: 8px; font-size: 15px;">
                                 <span>Kilos: <b style="color: #2b6cb0;">${typeof fmt === 'function' ? fmt(kgLote) : kgLote.toLocaleString()} kg</b></span>
                                 <span>Bultos: <b style="color: #38a169;">${Math.round(bultosLote)} un.</b></span>
                             </div>
