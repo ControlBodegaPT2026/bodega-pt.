@@ -1071,7 +1071,7 @@ div[style*="position: fixed"] button:active {
         }
 
 // ====================================================================
-// 🎙️ SISTEMA NATIVO DE VOZ (VERSION ULTRA-ESTABLE MULTIPLATAFORMA / iOS OK)
+// 🎙️ SISTEMA NATIVO DE VOZ (VERSIÓN INTEGRAL Y ULTRA-ESTABLE OPTIMIZADA)
 // ====================================================================
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let reconocimientoVoz = null;
@@ -1100,10 +1100,21 @@ if (SpeechRecognition) {
         if (campoInput) campoInput.placeholder = "Escuchando... habla ahora";
     };
 
-    // Captura de errores específica para iOS (Evita congelamientos si el usuario guarda silencio)
+    // ✅ MEJORA DE GROK: Captura de errores avanzada (Manejo de permisos y estados)
     reconocimientoVoz.onerror = (event) => {
         console.error("Error en reconocimiento de voz:", event.error);
-        reconocimientoVoz.stop();
+        estaEscuchando = false; // Forzamos apagado del estado interno
+
+        if (event.error === 'not-allowed') {
+            notificar("Permiso de micrófono denegado. Actívalo en los ajustes de tu navegador.", "error");
+        } else if (event.error === 'no-speech') {
+            console.log("No se detectó voz (silencio).");
+        } else {
+            notificar("Error de audio: " + event.error, "warning");
+        }
+        
+        // Ejecutamos de forma segura el stop
+        try { reconocimientoVoz.stop(); } catch(e){}
     };
 
     // Cuando termina de escuchar (REGRESA A MODO WHATSAPP NEUTRO)
@@ -1130,7 +1141,7 @@ if (SpeechRecognition) {
         if (campoInput) {
             campoInput.value = textoEscuchado;
             
-            // 🔥 ENVÍO SEGURO Y COMPATIBLE PARA MÓVILES:
+            // ENVÍO SEGURO Y COMPATIBLE PARA MÓVILES:
             let btnEnviar = document.getElementById('btn-enviar-chat') || document.querySelector('[onclick*="enviar"]');
             if (btnEnviar) {
                 btnEnviar.click();
@@ -1155,20 +1166,26 @@ function alternarMicrofono() {
         window.speechSynthesis.speak(u);
     }
 
+    // ✅ MEJORA DE GROK: Si ya está escuchando, detiene inmediatamente el proceso y sale de la función
     if (estaEscuchando) {
         reconocimientoVoz.stop();
-    } else {
-        let campoInput = document.getElementById('input-mensaje-chat');
-        if (campoInput) campoInput.value = "";
+        return; 
+    }
+
+    // Si no está escuchando, preparamos el campo e iniciamos
+    let campoInput = document.getElementById('input-mensaje-chat');
+    if (campoInput) campoInput.value = "";
+    
+    try {
+        // ✅ MEJORA DE GROK: Nos aseguramos de que el modo continuo esté desactivado justo antes de arrancar
+        reconocimientoVoz.continuous = false;
         
-        try {
-            reconocimientoVoz.abort(); 
-            setTimeout(() => {
-                reconocimientoVoz.start();
-            }, 50);
-        } catch (e) {
-            console.log("Reintento de inicio controlado.");
-        }
+        reconocimientoVoz.abort(); 
+        setTimeout(() => {
+            reconocimientoVoz.start();
+        }, 50);
+    } catch (e) {
+        console.log("Reintento de inicio controlado.");
     }
 }
 
@@ -1193,6 +1210,7 @@ function asistenteHablar(textoAI) {
         window.speechSynthesis.speak(configuracionLectura);
     }
 }
+
 // ==========================================
 // 1. CONFIGURACIÓN DE FIREBASE (CON TUS DATOS REALES)
 // ==========================================
@@ -1265,19 +1283,20 @@ function verificarAcceso() {
     const panelHistorial = document.getElementById('panel-historial-contenedor');
     const menuOpciones = document.querySelectorAll('.menu-opciones');
     const btnMov = document.getElementById('btn-movimiento-interno');
-    const btnTareaMenu = document.getElementById('btn-tarea-admin-menu'); // 🔥 Nueva referencia de la tarea
+    const btnTareaMenu = document.getElementById('btn-tarea-admin-menu'); 
 
     if (rol === 'admin') {
-        // ADMIN: Ver todo completo
+        // 🔙 Volvemos al método infalible que recupera tus botones sí o sí
         if (contenedorGrid) contenedorGrid.style.setProperty('display', 'grid', 'important');
         if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'block', 'important');
         if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'block', 'important');
         if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
+        
+        // Esto va a obligar a tu barra de herramientas (FIFO, Reportes, Backup) a mostrarse pase lo que pase
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
         
-        // Muestra las opciones dentro del menú con el diseño nativo de tus dropdowns
-if (btnMov) btnMov.style.setProperty('display', 'flex', 'important'); 
-if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'flex', 'important');
+        if (btnMov) btnMov.style.setProperty('display', 'flex', 'important'); 
+        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'flex', 'important');
         console.log("Acceso: ADMINISTRADOR");
     } else {
         // OPERADOR: Habilitar contenedor principal pero ocultar selectivamente
@@ -1293,7 +1312,7 @@ if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'flex', 'important')
         
         // Asegura ocultar las opciones exclusivas de administración por completo
         if (btnMov) btnMov.style.setProperty('display', 'none', 'important'); 
-        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'none', 'important'); // 🔐 Oculta Tarea al Operario
+        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'none', 'important'); 
         
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
@@ -1377,7 +1396,11 @@ let maestroProductos = {};
         let logs = [];
 
 function cambiarBodega(tipo) {
+    if (bodegaActual === tipo) return; // Si ya está en esa bodega, evitar doble recarga
+
     bodegaActual = tipo;
+    
+    // Mantener la lógica visual de tus botones
     document.getElementById('btnPrin').classList.toggle('active', tipo === 'principal');
     document.getElementById('btnAdo').classList.toggle('active', tipo === 'adoquines');
     
@@ -1388,11 +1411,26 @@ function cambiarBodega(tipo) {
     // 🔥 NUEVA MEJORA: Limpiar selección interna de bultos al cambiar de bodega
     bultoSeleccionado.ingreso = null;
     bultoSeleccionado.salida = null;
+    if (typeof bultoSeleccionadoMovimiento !== 'undefined') {
+        bultoSeleccionadoMovimiento = null;
+    }
 
-    // Forzamos a que los menús desplegables vuelvan a su estado inicial vacío
-    if (document.getElementById('bultos_ingreso')) document.getElementById('bultos_ingreso').value = "";
-    if (document.getElementById('bultos_salida')) document.getElementById('bultos_salida').value = "";
+    // 🔥 SOLUCIÓN RECOMENDADA POR GROK:
+    // 1. Re-renderizamos las opciones de bultos para adaptarlas a la bodega actual si es necesario
+    if (typeof renderBultos === 'function') {
+        renderBultos();
+    }
 
+    // 2. Forzamos a que los menús desplegables vuelvan a su estado inicial vacío ("Seleccione...")
+    const selectIngreso = document.getElementById('bultos_ingreso');
+    const selectSalida = document.getElementById('bultos_salida');
+    const selectMovimiento = document.getElementById('mov_bulto'); // Revisa si tienes un select en el modal de traspasos
+
+    if (selectIngreso) selectIngreso.selectedIndex = 0;
+    if (selectSalida) selectSalida.selectedIndex = 0;
+    if (selectMovimiento) selectMovimiento.selectedIndex = 0;
+
+    // 3. Apuntamos temporalmente las variables o ejecutamos el render()
     render();
 }
 
@@ -2767,7 +2805,7 @@ function ejecutarMovimientoInterno() {
     // Generamos un autoBackup local preventivo de seguridad
     autoBackup();
 
-    // 🔥 SINCRONIZACIÓN EXCLUSIVA CON FIREBASE
+// 🔥 SINCRONIZACIÓN EXCLUSIVA CON FIREBASE
     if (typeof dbRef !== 'undefined' && dbRef.set) {
         dbRef.set({
             inventario: db,
@@ -2778,8 +2816,12 @@ function ejecutarMovimientoInterno() {
             render();
             cerrarModalMovimiento();
         }).catch((error) => {
-            console.error("Error en sincronización:", error);
-            notificar("Error al sincronizar el traspaso con la nube", "error");
+            console.error("Error en sincronización (Firebase reintentará en segundo plano):", error);
+            notificar("Traspaso guardado localmente (Esperando conexión para subir a la nube)", "warning");
+            
+            // ✅ SOLUCIÓN DE GROK: Forzamos el render y el cierre para que la interfaz no se congele
+            render();
+            cerrarModalMovimiento();
         });
     } else {
         // Fallback por si trabaja sin conexión temporalmente
@@ -2942,7 +2984,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputChat = document.getElementById('input-mensaje-chat');
     const cuerpoMensajes = document.getElementById('cuerpo-mensajes-chat');
 
-    // Abrir / Cerrar Ventana
+if (btnChat) {
+        // 🔥 Forzamos a que el botón flote un poco más arriba (a 90px del fondo en vez de los 20px habituales)
+        btnChat.style.setProperty('bottom', '60px', 'important');
+}
+
+    if (ventanaChat) {
+        // 🔥 NUEVO AJUSTE: Subimos la ventana modal completa para que despegue del fondo
+        // Cambia el valor de '80px' si necesitas que suba más o menos en la pantalla
+        ventanaChat.style.setProperty('bottom', '130px', 'important');
+    }
+
 btnChat.addEventListener('click', () => {
     ventanaChat.style.display = ventanaChat.style.display === 'none' ? 'flex' : 'none';
     // ❌ Eliminamos la línea inputChat.focus(); para evitar que se levante el teclado del celular de golpe
@@ -3233,7 +3285,7 @@ function verReporteFIFO() {
         return;
     }
 
-    // 6. Dibujar la estructura de filas consumiendo los datos puros
+// 6. Dibujar la estructura de filas en formato tabla compacta limpia
     listaCriticos.forEach(item => {
         let fila = document.createElement('tr');
         fila.style.borderBottom = "1px solid #edf2f7";
@@ -3242,53 +3294,92 @@ function verReporteFIFO() {
         fila.onmouseout = function() { this.style.background = "transparent"; };
 
         fila.innerHTML = `
-            <td style="padding: 12px 10px; font-family: monospace; font-weight: bold; color: #2b6cb0; font-size: 13px;">${item.codigoContable}</td>
-            <td style="padding: 12px 10px; text-align: center; font-weight: bold; color: #4a5568;">
-                <span style="background: #e2e8f0; color: #4a5568; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
-                    📍 ${item.ubicacion}
+            <td style="padding: 10px 8px; font-family: monospace; font-weight: bold; color: #2b6cb0; font-size: 14px; word-break: break-all;">${item.codigoContable}</td>
+            <td style="padding: 10px 4px; text-align: center; font-weight: bold; color: #4a5568;">
+                <span class="badge-ubi" style="background: #e2e8f0; color: #4a5568; padding: 3px 6px; border-radius: 4px; font-size: 14px; display: inline-block;">
+                    ${item.ubicacion}
                 </span>
             </td>
-            <td style="padding: 12px 10px; font-weight: bold; color: #4a5568; text-align: center;">${item.pp}</td>
-            <td style="padding: 12px 10px; text-align: center;">
-                <span style="background: #feebc8; color: #c05621; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block;">
-                    ⚠️ ${item.meses} Meses
+            <td style="padding: 10px 4px; font-weight: bold; color: #4a5568; text-align: center; font-family: monospace;">${item.pp}</td>
+            <td style="padding: 10px 4px; text-align: center;">
+                <span class="badge-anti" style="background: #feebc8; color: #c05621; padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 14px; display: inline-block;">
+                    ${item.meses}M
                 </span>
             </td>
-            <td style="padding: 12px 15px; text-align: right; font-weight: bold; color: #2d3748;">${fmt(item.cantidad)} kg</td>
+            <td style="padding: 10px 8px; text-align: right; font-weight: bold; color: #2d3748; white-space: nowrap;">${fmt(item.cantidad)} kg</td>
         `;
         tbody.appendChild(fila);
     });
 }
 
 </script>
-<div id="seccion-reporte-fifo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10050; justify-content: center; align-items: center; font-family: sans-serif; padding: 15px; box-sizing: border-box;">
-    <div style="background: white; padding: 20px; border-radius: 10px; width: 95%; max-width: 750px; max-height: 85vh; box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative;">
+<style>
+    /* Estilos base del scroll vertical */
+    .fifo-scroll-v::-webkit-scrollbar {
+        width: 6px;
+    }
+    .fifo-scroll-v::-webkit-scrollbar-track {
+        background: #f7fafc;
+    }
+    .fifo-scroll-v::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+
+    /* 🔥 AJUSTES PARA CELULAR: Forzamos a que la tabla se encoja y quepa al 100% */
+    @media (max-width: 600px) {
+        .fifo-modal-box {
+            width: 100% !important;
+            padding: 10px !important;
+            margin: 5px !important;
+        }
+        .fifo-title-text {
+            font-size: 14px !important;
+        }
+        /* Encojemos la tipografía y los paddings de la tabla al mínimo */
+        .fifo-tabla-maestra th, 
+        .fifo-tabla-maestra td {
+            padding: 6px 4px !important; /* Espacio súper ultra apretado */
+            font-size: 10.5px !important;  /* Letra pequeña para que entre todo de una */
+        }
+        /* Ajuste especial para los tags de Ubicación y Antigüedad en móvil */
+        .badge-ubi, .badge-anti {
+            padding: 2px 4px !important;
+            font-size: 10px !important;
+        }
+    }
+</style>
+
+<div id="seccion-reporte-fifo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10050; justify-content: center; align-items: center; font-family: sans-serif; padding: 10px; box-sizing: border-box;">
+    <div class="fifo-modal-box" style="background: white; padding: 20px; border-radius: 10px; width: 95%; max-width: 750px; max-height: 85vh; box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative;">
         
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2d3748; font-size: 16px;">
+            <h3 class="fifo-title-text" style="margin: 0; color: #2d3748; font-size: 16px;">
                 <i class='bx bx-time-five' style="color: #dd6b20; margin-right: 8px; font-size: 20px; vertical-align: middle;"></i> Alerta de Rotación FIFO (+5 Meses)
             </h3>
-            <span id="contador-criticos-fifo" style="background: #e53e3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">0 Ítems</span>
+            <span id="contador-criticos-fifo" style="background: #e53e3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 13px; font-weight: bold;">0 Ítems</span>
         </div>
 
-        <div style="overflow-y: auto; flex: 1; border: 1px solid #edf2f7; border-radius: 6px; margin-bottom: 15px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
-<thead style="position: sticky; top: 0; background: #f4f7fc; z-index: 10; border-bottom: 2px solid #cbd5e0;">
-    <tr style="color: #4a5568; font-size: 12px;">
-        <th style="padding: 10px; font-weight: bold;">Cód. Contable</th>
-        <th style="padding: 10px; font-weight: bold; text-align: center;">Ubicación</th>
-        <th style="padding: 10px; font-weight: bold; text-align: center;">PP</th>
-        <th style="padding: 10px; font-weight: bold; text-align: center;">Antigüedad</th>
-        <th style="padding: 10px; font-weight: bold; text-align: right; padding-right: 15px;">Cantidad</th>
-    </tr>
-</thead>
+        <div class="fifo-scroll-v" style="overflow-y: auto; flex: 1; border: 1px solid #edf2f7; border-radius: 6px; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+            <table class="fifo-tabla-maestra" style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 26%;"> <col style="width: 18%;"> <col style="width: 18%;"> <col style="width: 20%;"> <col style="width: 18%;"> </colgroup>
+                <thead style="position: sticky; top: 0; background: #f4f7fc; z-index: 10; border-bottom: 2px solid #cbd5e0;">
+                    <tr style="color: #4a5568; font-size: 12px;">
+                        <th style="padding: 10px 8px; font-weight: bold;">Cód.</th>
+                        <th style="padding: 10px 4px; font-weight: bold; text-align: center;">Ubi</th>
+                        <th style="padding: 10px 4px; font-weight: bold; text-align: center;">PP</th>
+                        <th style="padding: 10px 4px; font-weight: bold; text-align: center;">Antigüedad</th>
+                        <th style="padding: 10px 8px; font-weight: bold; text-align: right;">Cant.</th>
+                    </tr>
+                </thead>
                 <tbody id="tbody-reporte-fifo">
                     </tbody>
             </table>
         </div>
         
         <div style="text-align: right; border-top: 1px solid #edf2f7; padding-top: 12px;">
-            <button onclick="document.getElementById('seccion-reporte-fifo').style.display = 'none'" style="background: #718096; color: white; border: none; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s;">
+            <button onclick="document.getElementById('seccion-reporte-fifo').style.display = 'none'" style="background: #718096; color: white; border: none; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 13px;">
                 Cerrar Reporte
             </button>
         </div>
