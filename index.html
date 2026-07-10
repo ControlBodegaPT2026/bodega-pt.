@@ -1369,37 +1369,12 @@ const layoutAdo = [
 ["EX-02", 250]
 ];
 
-// 📦 PASO 1: MAESTRO GENERAL DE PP DINÁMICO (SE GUARDA EN LOCALSTORAGE)
-// Si ya hay productos guardados en el navegador, los carga. Si no, inicia con los de ejemplo.
-let maestroProductos = JSON.parse(localStorage.getItem('bodega_maestro')) || {
-    "04-06-26": { codigo: "PTAB030315", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 Kg. Logo REACH CHINO" },
-    "05-06-26": { codigo: "PTAB031110", nombre: "Acido Bórico Granular 99,5% - Saca PP 1.200 Kg Logo QB REACH" },
-    "38-05-26": { codigo: "PTAB300610", nombre: "A. Bórico Recuperado Planta Calcinado- En sacas de 1000 Kgs QB REACH" },
-    "28-06-26": { codigo: "PTAB030328", nombre: "Acido Borico Granular 99.5% - Saco PP 25 Kgs. Logo MCASSAB" },
-    "02-11-25": { codigo: "PTAB111111", nombre: "Acido Borico Granular 99,9% - Saca PP 1,1 MT Logo QB REAC" },
-    "21-11-25": { codigo: "PTAB111110", nombre: "Acido Borico Granular 99,9% Saca PP 1.200 Kg Logo QB REACH" },
-    "20-11-25": { codigo: "PTAB110602", nombre: "Acido Borico Granular 99,9% Saca PP 1 MT Logo QB" },
-    "08-03-26": { codigo: "PTAB031010", nombre: "Acido Bórico Granular 99,5% - Saca PP 1,1 MT Logo QB REACH" },
-    "37-06-26": { codigo: "PTAB030610", nombre: "Acido Bórico Granular 99,5% - Saca PP 1 MT Logo QB REACH" },
-    "38-03-26": { codigo: "PTAB030310", nombre: "Acido Bórico Granular 99,5% - Saco PP 25 kg. Logo QB REACH" },
-    "24-06-26": { codigo: "PTAB040310", nombre: "Acido Bórico Polvo 99,5% - Saco PP 25 Kg Logo QB REACH" },
-    "36-11-25": { codigo: "PTAB158001", nombre: "Ácido Bórico Granular 99,5% - G.I. Saca 2400 Lb (1.088,6Kg) sin Logo" },
-    "34-06-26": { codigo: "PTAB171010", nombre: "Ácido Bórico Granular 99,5% - Saca PP 1,1 MT Logo QB REACH 99,5%" },
-    "34-05-26": { codigo: "PTAB150548", nombre: "Ácido Bórico Granular 99,5% - Sacos PP 50 Lb Logo Borates Plus" },
-    "88-06-26": { codigo: "PTGR211401", nombre: "Granulex 10%B 10% B Granular SACA PP 2000 LB SIN LOGO 10%" },
-    "89-05-26": { codigo: "PTGR210601", nombre: "Granulex 10%B SACA PP 1MT SIN LOGO 10% B" },
-    "81-03-26": { codigo: "PTGR210501", nombre: "Granulex 10%B Saco 50lb Sin Logo" },
-    "26-05-26": { codigo: "PTUL321001", nombre: "Ulexita 30/32% B2O3 - Sacas Blancas 1,1MT Sin logo" },
-    "14-06-26": { codigo: "PTAB101010", nombre: "A. Bórico Recuperado Planta Caja de Mangas – En sacas de 1100 Kgs QB REACH" },
-    "13-06-26": { codigo: "PTAB941010", nombre: "A. Bórico Recuperado Planta Mezcla de Rechazo - Sacas 1100 Kgs QB REACH" },
-    "31-06-26": { codigo: "PTAB170310", nombre: "Ácido Bórico Granular 99,5% - Saco PP 25 Kg. Logo QB REACH 99,5%" }
- 
-    // Cuando llegue un PP nuevo, simplemente pones una coma arriba y agregas la nueva línea aquí abajo.
-};
+// ✅ Inicialización limpia en memoria interna. Firebase se encarga de llenarla en milisegundos.
+let maestroProductos = {};
 
         let bodegaActual = "principal";
-        let db = JSON.parse(localStorage.getItem('bodega_db')) || {};
-        let logs = JSON.parse(localStorage.getItem('bodega_logs')) || [];
+        let db = {};
+        let logs = [];
 
 function cambiarBodega(tipo) {
     bodegaActual = tipo;
@@ -1542,7 +1517,7 @@ function accion(tipo) {
     continuarProcesarAccion(tipo, pp, kg, ubi, ppInput);
 }
 
-// Sub-función auxiliar aislada para procesar el stock tras la selección segura
+// Sub-función auxiliar aislada para procesar el stock tras la selección segura (MÉTODO SINCRONIZADO)
 function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
     let pesoBulto = bultoSeleccionado[tipo];
     if (!pesoBulto) {
@@ -1587,23 +1562,40 @@ function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
         if (db[ubi] && Object.keys(db[ubi]).length === 0) delete db[ubi];
     }
 
+    // Añadimos el nuevo registro al historial global (sin recortar nada aquí)
     logs.unshift({ tipo, pp, kg, ubi, fecha: new Date().toLocaleString() });
-    localStorage.setItem('bodega_db', JSON.stringify(db));
-    localStorage.setItem('bodega_logs', JSON.stringify(logs.slice(0, 50)));
     
+    // ❌ ELIMINADOS: localStorage.setItem('bodega_db'...) y localStorage.setItem('bodega_logs'...) 
+    // Protegemos el historial para que no se mutile localmente.
+
+    // Reseteo rápido de los campos en la interfaz
     ppInput.value = "";
     document.getElementById(tipo === 'ingreso' ? 'kg_in' : 'kg_out').value = "";
     document.getElementById(tipo === 'ingreso' ? 'ubi_in' : 'ubi_out').selectedIndex = 0;
     ppInput.focus();
 
-    notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg}kg en ${ubi}`, "success");
+    // Lanzamos el auto-respaldo de seguridad local
     autoBackup();
 
-    dbRef.set({ inventario: db, historial: logs }).then(() => {
-        console.log("Sincronizado exitosamente.");
-    }).catch((e) => console.error(e));
-
-    render();
+    // 🔥 ENVIAR LA INFORMACIÓN INTEGRAL DIRECTO A FIREBASE (Nube en tiempo real)
+    if (typeof dbRef !== 'undefined' && dbRef.set) {
+        dbRef.set({ 
+            inventario: db, 
+            historial: logs 
+        }).then(() => {
+            console.log("Sincronizado exitosamente.");
+            notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg}kg en ${ubi}`, "success");
+            // Renderizamos solo cuando Firebase confirme la persistencia exitosa
+            render();
+        }).catch((e) => {
+            console.error("Error al sincronizar acción con Firebase:", e);
+            notificar("Error de red: Guardado localmente en memoria", "warning");
+            render();
+        });
+    } else {
+        notificar(`${tipo.toUpperCase()} LOCAL OK (Sin conexión): ${pp} - ${kg}kg en ${ubi}`, "warning");
+        render();
+    }
 }
 function renderBultos() {
     const pesos = pesosValidos;
@@ -1614,7 +1606,7 @@ function renderBultos() {
 
         // Limpiamos el menú desplegable
         selectContainer.innerHTML = "";
-
+bultoSeleccionado[tipo] = null;
         // Creamos la opción inicial por defecto
         const defaultOpt = document.createElement('option');
         defaultOpt.value = "";
@@ -1652,441 +1644,356 @@ function renderBultos() {
 function autoSeleccionarBulto(tipo) {
     let kgInput = document.getElementById(tipo === "ingreso" ? "kg_in" : "kg_out");
     let kg = parseFloat(kgInput.value);
-
     if (!kg || kg <= 0) return;
 
-    let encontrado = null;
-
-    for (let p of pesosValidos) {
-        let division = kg / p;
-        if (Math.abs(division - Math.round(division)) < 0.01) {
-            encontrado = p;
-            break;
-        }
-    }
+    // Usamos el método elegante de Grok para encontrar el peso óptimo
+    let encontrado = pesosValidos.find(p => 
+        Math.abs((kg / p) - Math.round(kg / p)) < 0.01
+    );
 
     if (!encontrado) return;
 
-    bultoSeleccionado[tipo] = encontrado;
-
-    // Actualiza el menú desplegable de forma automática si detecta un peso válido
-    let selectContainer = document.getElementById(`bultos_${tipo}`);
-    if (!selectContainer) return;
-
-    selectContainer.value = encontrado;
+    // Buscamos el menú desplegable en la pantalla
+    const select = document.getElementById(`bultos_${tipo}`);
+    if (select) {
+        select.value = encontrado; // Cambia el valor visualmente
+        
+        // 🔥 EL REMATE DETECTOR DE BUGS:
+        // Forzamos al select a avisarle a todo el WMS que acaba de cambiar automáticamente.
+        // Esto ejecuta el 'onchange' y actualiza bultoSeleccionado[tipo] de forma segura.
+        select.dispatchEvent(new Event('change'));
+    }
 }
 
 function render() {
-            let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
-if (!db) db = {}; //
-// 🔥 TÍTULO DINÁMICO
-let titulo = bodegaActual === "principal" 
-    ? "LAYOUT BODEGA PRINCIPAL" 
-    : "LAYOUT BODEGA ADOQUINES";
+    let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+    if (!db) db = {}; 
 
-document.getElementById("mapa-titulo").innerText = titulo;
-let container = document.getElementById('dibujo-bodega');
-            let selIn = document.getElementById('ubi_in');
-            let selOut = document.getElementById('ubi_out');
-            container.innerHTML = ""; selIn.innerHTML = ""; selOut.innerHTML = "";
+    // 🔥 TÍTULO DINÁMICO
+    let titulo = bodegaActual === "principal" 
+        ? "LAYOUT BODEGA PRINCIPAL" 
+        : "LAYOUT BODEGA ADOQUINES";
 
-// --- NUEVO: ORDENAR UBICACIONES ALFABÉTICAMENTE PARA LOS SELECTORES ---
-            let todasLasUbis = [];
-            layout.forEach(item => {
-                if (Array.isArray(item)) todasLasUbis.push(item[0]);
-            });
+    document.getElementById("mapa-titulo").innerText = titulo;
+    let container = document.getElementById('dibujo-bodega');
+    let selIn = document.getElementById('ubi_in');
+    let selOut = document.getElementById('ubi_out');
+    container.innerHTML = ""; selIn.innerHTML = ""; selOut.innerHTML = "";
+
+    // --- NUEVO: ORDENAR UBICACIONES ALFABÉTICAMENTE PARA LOS SELECTORES ---
+    let todasLasUbis = [];
+    layout.forEach(item => {
+        if (Array.isArray(item)) todasLasUbis.push(item[0]);
+    });
+    
+    // 🔥 AGREGADO: Inyectamos la opción neutra al inicio de ambos desplegables
+    selIn.add(new Option("Seleccione ubicación", ""));
+    selOut.add(new Option("Seleccione ubicación", ""));
+
+    todasLasUbis.sort().forEach(id => {
+        selIn.add(new Option(id, id));
+        selOut.add(new Option(id, id));
+    });
+    // ----------------------------------------------------------------------
+
+    let tB = 0, tC = 0, pB = 0, pC = 0, eB = 0, eC = 0;
+    let globalStock = {};
+    let currentGrid = null;
+    let currentSectionName = "";
+
+    layout.forEach(item => {
+        if (typeof item === 'string') {
+            currentSectionName = item;
+            let h = document.createElement('h5'); 
+            h.style.margin = "15px 0 5px 0";
+            h.innerText = item; 
+            container.appendChild(h);
+            currentGrid = document.createElement('div');
             
-            // 🔥 AGREGADO: Inyectamos la opción neutra al inicio de ambos desplegables
-            selIn.add(new Option("Seleccione ubicación", ""));
-            selOut.add(new Option("Seleccione ubicación", ""));
+            // ASIGNACIÓN DE GRIDS
+            if (item === 'GALPÓN') {
+                currentGrid.className = 'galpon-grid';
+            } else if (item === 'PATIO') {
+                currentGrid.className = 'patio-grid';
+            } else if (item === 'SECTORES') {
+                currentGrid.className = 'grid-sectores-d';
+            } else {
+                currentGrid.className = 'grid-pasillos';
+            }
+            container.appendChild(currentGrid);
+        } else {
+            let [id, cap] = item;
+            
+            let usados = 0;
+            let detallePP = ""; 
 
-            todasLasUbis.sort().forEach(id => {
-                selIn.add(new Option(id, id));
-                selOut.add(new Option(id, id));
-            });
-            // ----------------------------------------------------------------------
+            if (db[id]) {
+                for (let pp in db[id]) {
+                    usados += db[id][pp].bultos;
+                    globalStock[pp] = (globalStock[pp] || 0) + db[id][pp].kg;
+                    detallePP += `<div style="border-top: 1px dotted #ccc; margin-top: 2px; padding-top: 2px;">
+                                    ${pp}: <b>${fmt(db[id][pp].kg)}kg</b>
+                                  </div>`;
+                }
+            }
 
-            let tB = 0, tC = 0, pB = 0, pC = 0, eB = 0, eC = 0;
-            let globalStock = {};
-            let currentGrid = null;
-            let currentSectionName = "";
+            tB += usados; tC += cap;
+            if (bodegaActual === "principal") {
+                // 🔵 BODEGA PRINCIPAL
+                if (id.startsWith('C') || id.startsWith('EX')) { 
+                    eB += usados; 
+                    eC += cap; 
+                } else { 
+                    pB += usados; 
+                    pC += cap; 
+                }
+            } else {
+                // 🟢 ADOQUINES
+                if (id.startsWith('E') && !id.startsWith('EX')) { 
+                    eB += usados; 
+                    eC += cap; 
+                } else { 
+                    pB += usados; 
+                    pC += cap; 
+                }
+            }
 
-            layout.forEach(item => {
+            let pct = cap > 0 ? Math.round((usados / cap) * 100) : 0;
+            let disponible = cap - usados;
+            let color = pct > 90 ? 'ubi-red' : (pct > 70 ? 'ubi-yellow' : 'ubi-green');
+            
+            let card = document.createElement('div');
+            card.className = `card-ubi ${color}`;
+            card.dataset.id = id;
+            card.title = "HAZ CLIC PARA VER EL ESTADO DE OCUPACIÓN DETALLADO";
+            card.style.position = 'relative';
 
+            if (id.startsWith('EX')) {
+                card.style.border = "2px dashed #555";
+                card.style.background = "#f7fafc";
+            }
+            
+            if (currentSectionName === 'GALPÓN') {
+                card.classList.add('card-galpon');
+                if(id === 'E1' || id === 'E3') card.classList.add('galpon-izq');
+                if(id === 'E2' || id === 'E4') card.classList.add('galpon-der');
+            }
 
-                if (typeof item === 'string') {
+            // 🔥 INYECCIÓN DE FLECHAS DE ACCESO LOGÍSTICO
+            let flechaHTML = "";
+            const estiloFlechaBase = "display: inline-block; width: 10px; height: 10px; border-top: 3px solid #e53e3e; border-right: 3px solid #e53e3e;";
 
-                    currentSectionName = item;
-                    let h = document.createElement('h5'); 
-                    h.style.margin = "15px 0 5px 0";
-                    h.innerText = item; 
-                    container.appendChild(h);
-                    currentGrid = document.createElement('div');
-                    
-                    // ASIGNACIÓN DE GRIDS
-                    if (item === 'GALPÓN') {
-                        currentGrid.className = 'galpon-grid';
-                    } else if (item === 'PATIO') {
-                        currentGrid.className = 'patio-grid';
-                    } else if (item === 'SECTORES') {
-                        currentGrid.className = 'grid-sectores-d';
-                    } else {
-                        currentGrid.className = 'grid-pasillos';
-                    }
-                    container.appendChild(currentGrid);
-                } else {
-                    let [id, cap] = item;
-                    
-                    
-                    let usados = 0;
-                    let detallePP = ""; 
+            if (id === "A1" && bodegaActual === "principal") {
+                flechaHTML = `<div style="position: absolute; bottom: -32px; left: 80%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;"><span style="${estiloFlechaBase} transform: rotate(-135deg);"></span><span>ACCESO</span></div>`;
+            } else if (id === "B1" && bodegaActual === "principal") {
+                flechaHTML = `<div style="position: absolute; bottom: -32px; left: 80%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;"><span style="${estiloFlechaBase} transform: rotate(-135deg);"></span><span>ACCESO</span></div>`;
+            } else if (id === "C3" && bodegaActual === "principal") {
+                flechaHTML = `<div style="position: absolute; left: -50px; top: 95%; transform: translateY(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1;"><span style="${estiloFlechaBase} transform: rotate(-45deg); margin-bottom: 2px;"></span><span>ACCESO</span></div>`;
+            } else if (id === "D1" && bodegaActual === "adoquines") {
+                flechaHTML = `<div style="position: absolute; bottom: -32px; left: 20%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;"><span>ACCESO</span><span style="${estiloFlechaBase} transform: rotate(45deg);"></span></div>`;
+            } else if (id === "E3" && bodegaActual === "adoquines") {
+                flechaHTML = `<div style="position: absolute; top: -32px; left: 10%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;"><span>ACCESO</span><span style="${estiloFlechaBase} transform: rotate(45deg);"></span></div>`;
+            }
 
-                    if (db[id]) {
-                        for (let pp in db[id]) {
-                            usados += db[id][pp].bultos;
-                            globalStock[pp] = (globalStock[pp] || 0) + db[id][pp].kg;
-                            detallePP += `<div style="border-top: 1px dotted #ccc; margin-top: 2px; padding-top: 2px;">
-                                            ${pp}: <b>${fmt(db[id][pp].kg)}kg</b>
-                                          </div>`;
-                        }
-                    }
-
-                    tB += usados; tC += cap;
-if (bodegaActual === "principal") {
-
-    // 🔵 BODEGA PRINCIPAL
-    if (
-        id.startsWith('C') || 
-        id.startsWith('EX')   // EX cuenta como patio aquí
-    ) { 
-        eB += usados; 
-        eC += cap; 
-    } else { 
-        pB += usados; 
-        pC += cap; 
-    }
-
-} else {
-
-    // 🟢 ADOQUINES
-    if (
-        id.startsWith('E') && !id.startsWith('EX') // solo galpón es externo
-    ) { 
-        eB += usados; 
-        eC += cap; 
-    } else { 
-        // 🔥 EX queda aquí (sectores)
-        pB += usados; 
-        pC += cap; 
-    }
-
-}
-
-                    let pct = cap > 0 ? Math.round((usados / cap) * 100) : 0;
-                    let disponible = cap - usados;
-                    let color = pct > 90 ? 'ubi-red' : (pct > 70 ? 'ubi-yellow' : 'ubi-green');
-                    
-let card = document.createElement('div');
-                    card.className = `card-ubi ${color}`;
-                    card.dataset.id = id;
-card.title = "HAZ CLIC PARA VER EL ESTADO DE OCUPACIÓN DETALLADO";
-                    
-                    // Aseguramos que la tarjeta sirva de base para posicionar la flecha
-                    card.style.position = 'relative';
-
-if (id.startsWith('EX')) {
-    card.style.border = "2px dashed #555";
-    card.style.background = "#f7fafc";
-}
-                    
-                    if (currentSectionName === 'GALPÓN') {
-                        card.classList.add('card-galpon');
-                        if(id === 'E1' || id === 'E3') card.classList.add('galpon-izq');
-                        if(id === 'E2' || id === 'E4') card.classList.add('galpon-der');
-                    }
-
-// 🔥 INYECCIÓN DE FLECHAS DE ACCESO LOGÍSTICO (DISEÑO UNIFICADO Y CONSISTENTE)
-                    let flechaHTML = "";
-                    
-                    // Estilo base para las flechas CSS (para que todas midan y pesen lo mismo)
-                    const estiloFlechaBase = "display: inline-block; width: 10px; height: 10px; border-top: 3px solid #e53e3e; border-right: 3px solid #e53e3e;";
-
-                    if (id === "A1" && bodegaActual === "principal") {
-                        // Pasillo 1: flecha izquierda, abajo de A1
-                        flechaHTML = `
-                            <div style="position: absolute; bottom: -32px; left: 80%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
-                                <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
-                                <span>ACCESO</span>
-                            </div>`;
-                    } else if (id === "B1" && bodegaActual === "principal") {
-                        // Pasillo 2: flecha izquierda, debajo de B1
-                        flechaHTML = `
-                            <div style="position: absolute; bottom: -32px; left: 80%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceX 1.5s infinite; display: flex; align-items: center; gap: 5px;">
-                                <span style="${estiloFlechaBase} transform: rotate(-135deg);"></span>
-                                <span>ACCESO</span>
-                            </div>`;
-                    } else if (id === "C3" && bodegaActual === "principal") {
-                        // Patio: flecha arriba sobre la palabra ACCESO
-                        flechaHTML = `
-                            <div style="position: absolute; left: -50px; top: 95%; transform: translateY(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceY 1.5s infinite; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1;">
-                                <span style="${estiloFlechaBase} transform: rotate(-45deg); margin-bottom: 2px;"></span>
-                                <span>ACCESO</span>
-                            </div>`;
-                    } else if (id === "D1" && bodegaActual === "adoquines") {
-                        // Sectores: flecha derecha, debajo de D1
-                        flechaHTML = `
-                            <div style="position: absolute; bottom: -32px; left: 20%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
-                                <span>ACCESO</span>
-                                <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
-                            </div>`;
-                    } else if (id === "E3" && bodegaActual === "adoquines") {
-                        // Galpón: flecha derecha, arriba de E3
-                        flechaHTML = `
-                            <div style="position: absolute; top: -32px; left: 10%; transform: translateX(-50%); color: #e53e3e; font-size: 10px; font-weight: bold; font-family: sans-serif; white-space: nowrap; z-index: 100; animation: bounceXDer 1.5s infinite; display: flex; align-items: center; gap: 5px;">
-                                <span>ACCESO</span>
-                                <span style="${estiloFlechaBase} transform: rotate(45deg);"></span>
-                            </div>`;
-                    }
-// 🕒 CONTROL FIFO SUBTIL: SÓLO TEXTO, SIN CAMBIAR COLORES DE FONDO
-                    let alertaEncontrada = false;
-                    let mesesMaximos = 0;
-                    
-                    if (detallePP && typeof detallePP === 'string') {
-                        let ppsEncontradas = detallePP.match(/\d{2}-\d{2}-\d{2}/g);
-                        if (ppsEncontradas && ppsEncontradas.length > 0) {
-                            for (let pp of ppsEncontradas) {
-                                let resultadoPP = verificarAlertaFIFO(pp);
-                                if (resultadoPP.alerta) {
-                                    alertaEncontrada = true;
-                                    if (resultadoPP.meses > mesesMaximos) {
-                                        mesesMaximos = resultadoPP.meses;
-                                    }
-                                }
+            // 🕒 CONTROL FIFO SUBTIL
+            let alertaEncontrada = false;
+            let mesesMaximos = 0;
+            
+            if (detallePP && typeof detallePP === 'string') {
+                let ppsEncontradas = detallePP.match(/\d{2}-\d{2}-\d{2}/g);
+                if (ppsEncontradas && ppsEncontradas.length > 0) {
+                    for (let pp of ppsEncontradas) {
+                        let resultadoPP = verificarAlertaFIFO(pp);
+                        if (resultadoPP.alerta) {
+                            alertaEncontrada = true;
+                            if (resultadoPP.meses > mesesMaximos) {
+                                mesesMaximos = resultadoPP.meses;
                             }
                         }
                     }
-
-                    // Si hay alerta, creamos un texto diminuto que no deforma la tarjeta
-                    let textoMiniFIFO = alertaEncontrada 
-                        ? `<div style="color: #dd6b20; font-size: 15	px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
-                        : "";
-
-                    // CONTENIDO DE LA TARJETA (Mantiene tus estilos originales intactos)
-                    card.innerHTML = `
-                        ${flechaHTML}
-                        <div style="font-weight: bold; font-size: 20px; margin-bottom: 4px;">${id}</div>
-                        <div style="font-size: 12px; line-height: 1.2;">
-                            <div>${Math.round(usados)}/${cap} bultos</div>
-                            <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
-                            <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
-                            <div style="background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
-                                ${detallePP || "Vacío"}
-                            </div>
-                            
-                            ${textoMiniFIFO}
-                        </div>`;
-                    
-                    currentGrid.appendChild(card);
                 }
-            });
+            }
 
-// --- FUNCIÓN INTERNA PARA SEMÁFORO ---
-            const getSemaforo = (p) => {
-                if (p > 90) return '🔴';
-                if (p > 70) return '🟡';
-                return '🟢';
-            };
+            let textoMiniFIFO = alertaEncontrada 
+                ? `<div style="color: #dd6b20; font-size: 15px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
+                : "";
 
-            // ACTUALIZACIÓN DE INDICADORES (KPIs) CON SEMÁFORO
-            let pctTotalVal = tC > 0 ? Math.round((tB/tC)*100) : 0;
-            let pctPVal = pC > 0 ? Math.round((pB/pC)*100) : 0;
-            let pctExtVal = eC > 0 ? Math.round((eB/eC)*100) : 0;
-function barra(pct) {
-    // Definimos degradados modernos (Gris/Rojo para crítico, Amarillo/Naranja para advertencia, Verde/Menta para óptimo)
-    let gradient = pct > 90 
-        ? "linear-gradient(90deg, #f56565, #e53e3e)" 
-        : (pct > 70 ? "linear-gradient(90deg, #ecc94b, #dd6b20)" : "linear-gradient(90deg, #48bb78, #38a169)");
-    
-    // Color de sombra que combine con el estado
-    let shadowColor = pct > 90 ? "rgba(229,62,62,0.4)" : (pct > 70 ? "rgba(221,107,32,0.3)" : "rgba(56,161,105,0.3)");
-
-    return `
-        <div style="display:flex; align-items:center; gap:10px; width:160px;">
+            card.innerHTML = `
+                ${flechaHTML}
+                <div style="font-weight: bold; font-size: 20px; margin-bottom: 4px;">${id}</div>
+                <div style="font-size: 12px; line-height: 1.2;">
+                    <div>${Math.round(usados)}/${cap} bultos</div>
+                    <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
+                    <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
+                    <div style="background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
+                        ${detallePP || "Vacío"}
+                    </div>
+                    ${textoMiniFIFO}
+                </div>`;
             
-            <div style="
-                flex:1;
-                height:14px;
-                background:#edf2f7;
-                border-radius:20px;
-                overflow:hidden;
-                box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-                border: 1px solid #e2e8f0;
-            ">
-                <div style="
-                    height:100%;
-                    width:0%;
-                    background:${gradient};
-                    border-radius:20px;
-                    box-shadow: 0 2px 6px ${shadowColor};
-                    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-                " class="barra-fill" data-pct="${pct}"></div>
-            </div>
+            currentGrid.appendChild(card);
+        }
+    });
 
-            <span style="font-size:12px; font-weight:700; width:38px; text-align:right; color:#2d3748;">
-                ${pct}%
-            </span>
-        </div>
-    `;
+    const getSemaforo = (p) => {
+        if (p > 90) return '🔴';
+        if (p > 70) return '🟡';
+        return '🟢';
+    };
+
+    let pctTotalVal = tC > 0 ? Math.round((tB/tC)*100) : 0;
+    let pctPVal = pC > 0 ? Math.round((pB/pC)*100) : 0;
+    let pctExtVal = eC > 0 ? Math.round((eB/eC)*100) : 0;
+
+    function barra(pct) {
+        let gradient = pct > 90 ? "linear-gradient(90deg, #f56565, #e53e3e)" : (pct > 70 ? "linear-gradient(90deg, #ecc94b, #dd6b20)" : "linear-gradient(90deg, #48bb78, #38a169)");
+        let shadowColor = pct > 90 ? "rgba(229,62,62,0.4)" : (pct > 70 ? "rgba(221,107,32,0.3)" : "rgba(56,161,105,0.3)");
+        return `<div style="display:flex; align-items:center; gap:10px; width:160px;"><div style="flex:1; height:14px; background:#edf2f7; border-radius:20px; overflow:hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;"><div style="height:100%; width:0%; background:${gradient}; border-radius:20px; box-shadow: 0 2px 6px ${shadowColor}; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);" class="barra-fill" data-pct="${pct}"></div></div><span style="font-size:12px; font-weight:700; width:38px; text-align:right; color:#2d3748;">${pct}%</span></div>`;
+    }
+
+    let nombre1 = bodegaActual === "principal" ? "PASILLOS" : "SECTORES";
+    let nombre2 = bodegaActual === "principal" ? "PATIO" : "GALPÓN";
+
+    document.getElementById('mini-grafico').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-weight:600; font-size:12px; color:#4a5568;">${nombre1}</span><span>${barra(pctPVal)}</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-weight:600; font-size:12px; color:#4a5568;">${nombre2}</span><span>${barra(pctExtVal)}</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:6px; font-weight:bold;"><span style="font-size:12px; color:#1a202c;">TOTAL</span><span>${barra(pctTotalVal)}</span></div>`;
+
+    setTimeout(() => {
+        document.querySelectorAll('.barra-fill').forEach(el => {
+            el.style.width = el.dataset.pct + "%";
+        });
+    }, 50);
+
+    document.getElementById('kpi-total').innerText = `${Math.round(tB)} / ${tC}`;
+    document.getElementById('pct-total').innerText = `${pctTotalVal}% ${getSemaforo(pctTotalVal)}`;
+    
+    if (bodegaActual === "principal") {
+        document.getElementById('label-p').innerText = "PASILLOS";
+        document.getElementById('label-ext').innerText = "PATIO";
+    } else {
+        document.getElementById('label-p').innerText = "SECTORES";
+        document.getElementById('label-ext').innerText = "GALPÓN";
+    }
+
+    document.getElementById('kpi-p').innerText = `${Math.round(pB)} / ${pC}`;
+    document.getElementById('pct-p').innerText = `${pctPVal}% ${getSemaforo(pctPVal)}`;
+    
+    document.getElementById('kpi-ext').innerText = `${Math.round(eB)} / ${eC}`;
+    document.getElementById('pct-ext').innerText = `${pctExtVal}% ${getSemaforo(pctExtVal)}`;
+
+    // 🔥 MOTORES INDEPENDIENTES INVOCADOS AL FINAL:
+    renderTablaStock(globalStock); // Le pasamos los datos calculados de stock
+    renderHistorial();            // Dibuja el historial limitando elementos
 }
 
-// Nombres dinámicos
-let nombre1 = bodegaActual === "principal" ? "PASILLOS" : "SECTORES";
-let nombre2 = bodegaActual === "principal" ? "PATIO" : "GALPÓN";
+function renderTablaStock(globalStock) {
+    let tbody = document.querySelector('#tabla-stock tbody'); 
+    tbody.innerHTML = "";
+    let sumaTotalKg = 0; 
+    let agrupacionContable = {};
 
-// Dibujar gráfico con filas más espaciadas y estilizadas
-document.getElementById('mini-grafico').innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-weight:600; font-size:12px; color:#4a5568;">${nombre1}</span>
-        <span>${barra(pctPVal)}</span>
-    </div>
+    for (let pp in globalStock) {
+        let kilosPP = globalStock[pp];
+        sumaTotalKg += kilosPP; 
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-weight:600; font-size:12px; color:#4a5568;">${nombre2}</span>
-        <span>${barra(pctExtVal)}</span>
-    </div>
+        let infoProd = maestroProductos[pp] || { codigo: "SIN-CODIGO", nombre: "Producto No Registrado" };
+        let codContable = infoProd.codigo;
+        let nomProd = infoProd.nombre;
 
-    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:6px; font-weight:bold;">
-        <span style="font-size:12px; color:#1a202c;">TOTAL</span>
-        <span>${barra(pctTotalVal)}</span>
-    </div>
-`;
-setTimeout(() => {
-    document.querySelectorAll('.barra-fill').forEach(el => {
-        el.style.width = el.dataset.pct + "%";
-    });
-}, 50);
-            document.getElementById('kpi-total').innerText = `${Math.round(tB)} / ${tC}`;
-            document.getElementById('pct-total').innerText = `${pctTotalVal}% ${getSemaforo(pctTotalVal)}`;
+        if (!agrupacionContable[codContable]) {
+            agrupacionContable[codContable] = {
+                nombre: nomProd,
+                totalKg: 0,
+                desgloses: []
+            };
+        }
+
+        agrupacionContable[codContable].totalKg += kilosPP;
+        agrupacionContable[codContable].desgloses.push({ pp: pp, kg: kilosPP });
+    }
+
+    window.datosContablesActuales = agrupacionContable;
+
+    if (Object.keys(agrupacionContable).length > 0) {
+        for (let cod in agrupacionContable) {
+            let item = agrupacionContable[cod];
+            let fila = document.createElement('tr');
+            fila.style.cursor = "pointer";
+            fila.style.transition = "background 0.2s";
+            fila.title = "HAZ CLIC PARA VER EL DESGLOSE DE PP";
             
-            // Cambio dinámico de etiquetas y semáforos
-            if (bodegaActual === "principal") {
-                document.getElementById('label-p').innerText = "PASILLOS";
-                document.getElementById('label-ext').innerText = "PATIO";
-            } else {
-                document.getElementById('label-p').innerText = "SECTORES";
-                document.getElementById('label-ext').innerText = "GALPÓN";
-            }
+            fila.onmouseover = function() { this.style.background = "#edf2f7"; };
+            fila.onmouseout = function() { this.style.background = "transparent"; };
+            fila.onclick = function() { abrirModalContable(cod); };
 
-            document.getElementById('kpi-p').innerText = `${Math.round(pB)} / ${pC}`;
-            document.getElementById('pct-p').innerText = `${pctPVal}% ${getSemaforo(pctPVal)}`;
-            
-            document.getElementById('kpi-ext').innerText = `${Math.round(eB)} / ${eC}`;
-            document.getElementById('pct-ext').innerText = `${pctExtVal}% ${getSemaforo(pctExtVal)}`;
+            fila.innerHTML = `
+                <td style="padding: 8px 4px; line-height: 1.3;">
+                    <span style="background: var(--primary, #2b6cb0); color: white; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: bold;">${cod}</span>
+                    <div style="font-size: 11px; color: #4a5568; margin-top: 2px; font-weight: 500;">${item.nombre}</div>
+                </td>
+                <td style="text-align: right; font-weight: bold; white-space: nowrap; padding-right: 5px; color: #2d3748;">
+                    ${fmt(item.totalKg)} kg <i class='bx bx-chevron-right' style='vertical-align: middle; color: #a0aec0; font-size: 16px;'></i>
+                </td>`;
+            tbody.appendChild(fila);
+        }
 
-// --- MEJORA: TABLA DE STOCK AGRUPADO POR CÓDIGO CONTABLE CON DETALLE INTERACTIVO ---
-            let tbody = document.querySelector('#tabla-stock tbody'); 
-            tbody.innerHTML = "";
-            let sumaTotalKg = 0; 
+        let filaTotal = document.createElement('tr');
+        filaTotal.style.fontWeight = "bold";
+        filaTotal.style.backgroundColor = "#f8f9fa";
+        filaTotal.style.borderTop = "2px solid #333";
+        filaTotal.innerHTML = `
+            <td style="padding: 8px;">TOTAL BODEGA:</td>
+            <td style="padding: 8px; text-align: right; color: #d32f2f; font-size: 14px;">${fmt(sumaTotalKg)} kg</td>`;
+        tbody.appendChild(filaTotal);
+    } else {
+        tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 10px; color: #777;'>Sin stock</td></tr>";
+    }
+}
 
-            // Estructura para agrupar: { COD_CONTABLE: { nombre: "...", totalKg: 0, desgloses: [ {pp, kg}, ... ] } }
-            let agrupacionContable = {};
+function renderHistorial() {
+    if (!logs || logs.length === 0) {
+        document.getElementById('historial-lista').innerHTML = "<div style='text-align:center; color:#777; padding:10px;'>Sin movimientos</div>";
+        renderBultos();
+        return;
+    }
 
-            for (let pp in globalStock) {
-                let kilosPP = globalStock[pp];
-                sumaTotalKg += kilosPP; 
+    // 1. Clonamos los logs para no alterar los datos originales
+    let listaClonada = [...logs];
 
-                // Buscamos en el maestro usando el PP COMPLETO de 6 dígitos (Paso 1)
-                let infoProd = maestroProductos[pp] || { codigo: "SIN-CODIGO", nombre: "Producto No Registrado" };
-                let codContable = infoProd.codigo;
-                let nomProd = infoProd.nombre;
-
-                if (!agrupacionContable[codContable]) {
-                    agrupacionContable[codContable] = {
-                        nombre: nomProd,
-                        totalKg: 0,
-                        desgloses: []
-                    };
-                }
-
-                agrupacionContable[codContable].totalKg += kilosPP;
-                agrupacionContable[codContable].desgloses.push({ pp: pp, kg: kilosPP });
-            }
-
-            // Guardamos temporalmente el objeto de agrupación de forma global para que el modal lo lea
-            window.datosContablesActuales = agrupacionContable;
-
-            // Dibujamos la tabla principal agrupada
-            if (Object.keys(agrupacionContable).length > 0) {
-                for (let cod in agrupacionContable) {
-                    let item = agrupacionContable[cod];
-                    
-                    // Creamos una fila HTML interactiva con estilos de botón/clic
-                    let fila = document.createElement('tr');
-                    fila.style.cursor = "pointer";
-                    fila.style.transition = "background 0.2s";
-                    fila.title = "HAZ CLIC PARA VER EL DESGLOSE DE PP";
-                    
-                    // Efecto visual hover al pasar el mouse
-                    fila.onmouseover = function() { this.style.background = "#edf2f7"; };
-                    fila.onmouseout = function() { this.style.background = "transparent"; };
-                    
-                    // Al hacer clic, abrimos la ventana modal pasando el código contable
-                    fila.onclick = function() { abrirModalContable(cod); };
-
-                    fila.innerHTML = `
-                        <td style="padding: 8px 4px; line-height: 1.3;">
-                            <span style="background: var(--primary, #2b6cb0); color: white; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: bold;">${cod}</span>
-                            <div style="font-size: 11px; color: #4a5568; margin-top: 2px; font-weight: 500;">${item.nombre}</div>
-                        </td>
-                        <td style="text-align: right; font-weight: bold; white-space: nowrap; padding-right: 5px; color: #2d3748;">
-                            ${fmt(item.totalKg)} kg <i class='bx bx-chevron-right' style='vertical-align: middle; color: #a0aec0; font-size: 16px;'></i>
-                        </td>
-                    `;
-                    tbody.appendChild(fila);
-                }
-
-                // Fila del Gran Total General
-                let filaTotal = document.createElement('tr');
-                filaTotal.style.fontWeight = "bold";
-                filaTotal.style.backgroundColor = "#f8f9fa";
-                filaTotal.style.borderTop = "2px solid #333";
-                filaTotal.innerHTML = `
-                    <td style="padding: 8px;">TOTAL BODEGA:</td>
-                    <td style="padding: 8px; text-align: right; color: #d32f2f; font-size: 14px;">${fmt(sumaTotalKg)} kg</td>
-                `;
-                tbody.appendChild(filaTotal);
-
-            } else {
-                tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 10px; color: #777;'>Sin stock</td></tr>";
-            }
-
-// ====================================================================================
-// 📊 SISTEMA DE CONTROL DE BODEGA PT - LÓGICA Y RENDERIZADO UNIFICADO
-// ====================================================================================
-
-// MANTENER EL HISTORIAL DE LOGS CON ICONOS BOXICONS Y SEÑALIZACIÓN FIFO
-document.getElementById('historial-lista').innerHTML = logs.map(l => {
-    const iconClass = l.tipo === 'ingreso' ? 'bxs-plus-circle' : l.tipo === 'salida' ? 'bxs-minus-circle' : 'bx-transfer-alt';
-    const iconColor = l.tipo === 'ingreso' ? 'var(--success)' : l.tipo === 'salida' ? 'var(--danger)' : 'var(--primary, #2b6cb0)';
+    // 2. Opcional/Seguridad: Ordenamos de forma descendente por fecha si tus fechas usan formato ISO o texto comparable.
+    // Si tus fechas en Firebase ya vienen en orden cronológico normal, pasamos directo al paso 3.
     
-    // Validar antigüedad en el historial
-    let fifoLog = verificarAlertaFIFO(l.pp);
-    let alertarStyle = fifoLog.alerta ? 'background-color: #fffaf0; border-left: 3px solid #dd6b20;' : 'border-bottom:1px solid #eee;';
-    let badgeFIFO = fifoLog.alerta ? ` <span style="background:#dd6b20; color:white; font-size:9px; padding:1px 4px; border-radius:3px; font-weight:bold;">⚠️ FIFO ${fifoLog.meses}M</span>` : '';
+    // 3. 🔥 EL CORTE CORRECTO: Nos aseguramos de tomar los 40 movimientos MÁS RECIENTES reales.
+    // Si tu Firebase añade los nuevos al FINAL, usamos .slice(-40).reverse() para ver el más nuevo arriba.
+    let logsRecientes = listaClonada.slice(0,40); 
 
-    return `<div style="${alertarStyle} padding:8px 5px; display: flex; align-items: center;">
-                <i class='bx ${iconClass}' style='color:${iconColor}; font-size: 24px; margin-right: 10px;'></i>
-                <div style="flex-grow: 1;">
-                    <b class="${fifoLog.alerta ? 'pp-antigua-texto' : ''}">${l.pp}</b>${badgeFIFO} - ${l.kg}kg en <b>${l.ubi}</b> 
-                    <small style="display: block; color: #777;">${l.fecha}</small>
-                </div>
-            </div>`;
-}).join('');
+    // NOTA: Si notas que siguen apareciendo viejos, cambia la línea de arriba por esta otra:
+    // let logsRecientes = listaClonada.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 40);
 
-renderBultos();
-} // <--- Cierre original de la función render
+    document.getElementById('historial-lista').innerHTML = logsRecientes.map(l => {
+        const iconClass = l.tipo === 'ingreso' ? 'bxs-plus-circle' : l.tipo === 'salida' ? 'bxs-minus-circle' : 'bx-transfer-alt';
+        const iconColor = l.tipo === 'ingreso' ? 'var(--success)' : l.tipo === 'salida' ? 'var(--danger)' : 'var(--primary, #2b6cb0)';
+        
+        let fifoLog = verificarAlertaFIFO(l.pp);
+        let alertarStyle = fifoLog.alerta ? 'background-color: #fffaf0; border-left: 3px solid #dd6b20;' : 'border-bottom:1px solid #eee;';
+        let badgeFIFO = fifoLog.alerta ? ` <span style="background:#dd6b20; color:white; font-size:9px; padding:1px 4px; border-radius:3px; font-weight:bold;">⚠️ FIFO ${fifoLog.meses}M</span>` : '';
+
+        return `<div style="${alertarStyle} padding:8px 5px; display: flex; align-items: center;">
+                    <i class='bx ${iconClass}' style='color:${iconColor}; font-size: 24px; margin-right: 10px;'></i>
+                    <div style="flex-grow: 1;">
+                        <b class="${fifoLog.alerta ? 'pp-antigua-texto' : ''}">${l.pp}</b>${badgeFIFO} - ${l.kg}kg en <b>${l.ubi}</b> 
+                        <small style="display: block; color: #777;">${l.fecha}</small>
+                    </div>
+                </div>`;
+    }).join('');
+
+    // Al final, invocamos el refresco de los bultos seleccionables
+    renderBultos();
+}
 
 function fmt(n) { return new Intl.NumberFormat('de-DE').format(Math.round(n)); }
+
 
 // ====================================================================================
 // 📊 SEMÁFORO MÓVIL CON ANIMACIÓN DE BARRAS DE PROGRESO (CORREGIDO)
@@ -2495,14 +2402,14 @@ document.addEventListener("click", function(e) {
         menu.classList.remove("show");
     }
 });
-
-// FUNCIÓN DESHACER ÚLTIMO MOVIMIENTO (LOCAL & FIREBASE)
+// FUNCIÓN DESHACER ÚLTIMO MOVIMIENTO (MÉTODO CENTRALIZADO FIREBASE)
 function deshacer() {
     if (logs.length === 0) return alert("No hay movimientos para deshacer");
 
     const ultimoLog = logs[0]; 
     const { tipo, pp, kg, ubi } = ultimoLog;
 
+    // Mantenemos tu lógica exacta de bultos e inversión de datos
     if (tipo === 'ingreso') {
         if (db[ubi] && db[ubi][pp]) {
             let ratio = db[ubi][pp].bultos / db[ubi][pp].kg;
@@ -2520,7 +2427,6 @@ function deshacer() {
         db[ubi][pp].kg += kg;
         db[ubi][pp].bultos += (kg / pesoBulto);
     } else if (tipo === 'transferencia') {
-        // Soporte añadido para deshacer traspasos de forma exacta rebotando el flujo origen/destino
         let partes = ubi.split(" ➡️ ");
         let origOriginal = partes[0];
         let destOriginal = partes[1];
@@ -2540,23 +2446,30 @@ function deshacer() {
         db[origOriginal][pp].bultos += (kg / pesoBulto);
     }
 
+    // 1. Quitamos del historial en memoria
     logs.shift(); 
-    localStorage.setItem('bodega_db', JSON.stringify(db));
-    localStorage.setItem('bodega_logs', JSON.stringify(logs));
 
+    // ❌ AQUÍ ESTABAN LOS LOCALSTORAGE QUE ELIMINAMOS PARA EVITAR COMPORTAMIENTOS FANTASMA
+
+    // 2. 🔥 Enviamos directo a Firebase la actualización global
     if (typeof dbRef !== 'undefined' && dbRef.set) {
         dbRef.set({
             inventario: db,
             historial: logs
         }).then(() => {
             console.log("Nube actualizada tras deshacer movimiento.");
+            // 3. Renderizamos y avisamos al usuario solo cuando se haya guardado con éxito en la nube
+            render(); 
+            alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
         }).catch((error) => {
             console.error("Error al sincronizar con la nube:", error);
+            alert("Error al intentar deshacer en la nube de Firebase: " + error.message);
         });
+    } else {
+        // Fallback visual en caso de que no haya conexión a Firebase
+        render();
+        alert(`Se deshizo localmente (sin conexión): ${tipo}: ${pp} en ${ubi}`);
     }
-
-    render(); 
-    alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
 }
 
 // EXPORTACIÓN A EXCEL DATA PLANA
@@ -2607,28 +2520,50 @@ function crearBackup() {
     notificar("Backup descargado correctamente", "success");
 }
 
-// RESTAURACIÓN DE BACKUPS MANUALES
+// RESTAURACIÓN DE BACKUPS MANUALES (DIRECTO A FIREBASE)
 function restaurarBackup(archivo) {
+    if (!archivo) return;
+    
     const reader = new FileReader();
 
     reader.onload = function(e) {
         try {
             const backup = JSON.parse(e.target.result);
 
+            // Validamos que el archivo traiga la información necesaria
             if (backup.db && backup.logs) {
-                db = backup.db;
-                logs = backup.logs;
+                
+                if (confirm("⚠️ ¿Estás completamente seguro de sobreescribir la bodega actual con esta copia de seguridad?\n\nEsto cambiará los datos en tiempo real para todos los operarios conectados.")) {
+                    
+                    // 1. Actualizamos las variables locales en la memoria del sistema
+                    db = backup.db;
+                    logs = backup.logs;
 
-                localStorage.setItem('bodega_db', JSON.stringify(db));
-                localStorage.setItem('bodega_logs', JSON.stringify(logs));
+                    // ❌ ELIMINAMOS AQUÍ LOS LOCALSTORAGE: Ya no guardamos 'bodega_db' ni 'bodega_logs' localmente
 
-                render();
-                notificar("Backup restaurado correctamente", "success");
+                    // 2. 🔥 Subimos los datos estructurados directamente a Firebase
+                    if (typeof dbRef !== 'undefined' && dbRef.set) {
+                        dbRef.set({
+                            inventario: db,  // Firebase espera 'inventario'
+                            historial: logs   // Firebase espera 'historial'
+                        }).then(() => {
+                            // 3. El render() se ejecutará solo cuando Firebase confirme el guardado exitoso
+                            render();
+                            notificar("🎉 Backup restaurado y sincronizado en la nube con éxito", "success");
+                        }).catch((error) => {
+                            notificar("Error al subir el backup a Firebase: " + error.message, "error");
+                        });
+                    } else {
+                        // Fallback visual si se hace offline
+                        render();
+                        notificar("Backup aplicado localmente (Sin conexión a Firebase)", "warning");
+                    }
+                }
             } else {
-                notificar("Backup incompleto", "error");
+                notificar("Backup incompleto o con formato incorrecto", "error");
             }
         } catch (err) {
-            notificar("Archivo inválido", "error");
+            notificar("Archivo JSON inválido o corrupto", "error");
         }
     };
     reader.readAsText(archivo);
@@ -2817,6 +2752,7 @@ function ejecutarMovimientoInterno() {
     db[destino][pp].kg += kg;
     db[destino][pp].bultos += bultosTraspaso;
 
+    // Insertamos el registro de transferencia al principio del historial global
     logs.unshift({ 
         tipo: "transferencia", 
         pp, 
@@ -2825,25 +2761,32 @@ function ejecutarMovimientoInterno() {
         fecha: new Date().toLocaleString() 
     });
 
-    localStorage.setItem('bodega_db', JSON.stringify(db));
-    localStorage.setItem('bodega_logs', JSON.stringify(logs.slice(0, 50)));
+    // ❌ ELIMINADOS: localStorage.setItem('bodega_db'...) y localStorage.setItem('bodega_logs'...) 
+    // Evitamos recortar el historial localmente para proteger la integridad de los datos globales.
 
-    notificar(`TRASPASO OK: ${pp} movido de ${origen} a ${destino}`, "success");
+    // Generamos un autoBackup local preventivo de seguridad
     autoBackup();
 
+    // 🔥 SINCRONIZACIÓN EXCLUSIVA CON FIREBASE
     if (typeof dbRef !== 'undefined' && dbRef.set) {
         dbRef.set({
             inventario: db,
             historial: logs
         }).then(() => {
             console.log("Sincronización Inter-Bodegas exitosa.");
+            notificar(`TRASPASO OK: ${pp} movido de ${origen} a ${destino}`, "success");
+            render();
+            cerrarModalMovimiento();
         }).catch((error) => {
             console.error("Error en sincronización:", error);
+            notificar("Error al sincronizar el traspaso con la nube", "error");
         });
+    } else {
+        // Fallback por si trabaja sin conexión temporalmente
+        notificar(`TRASPASO LOCAL OK: ${pp} movido de ${origen} a ${destino}`, "success");
+        render();
+        cerrarModalMovimiento();
     }
-
-    render();
-    cerrarModalMovimiento();
 }
 
 // Bucle en segundo plano para respaldar cada 5 minutos
@@ -3221,8 +3164,9 @@ if (coincidenciaPP) {
         return "No entendí tu consulta. Prueba preguntándome por: 'stock total', el número de una 'PP' o cuanto hay de chino.";
     }
 });
+				
 // ====================================================================================
-// 📊 FUNCIÓN PARA GENERAR EL REPORTE EJECUTIVO FIFO (+5 MESES)
+// 📊 FUNCIÓN PARA GENERAR EL REPORTE EJECUTIVO FIFO - BASADO EN DB (MÉTODO SEGURO)
 // ====================================================================================
 function verReporteFIFO() {
     // 1. Abrir la ventana modal flotante
@@ -3235,67 +3179,42 @@ function verReporteFIFO() {
     if (!tbody) return;
     tbody.innerHTML = "";
 
+    // Si la base de datos está vacía, mostramos aviso preventivo
+    if (!db || Object.keys(db).length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 25px; color: #718096; font-size: 14px;">No hay datos de stock en el sistema.</td></tr>`;
+        return;
+    }
+
     let listaCriticos = [];
 
-    // 2. Escanear celdas para extraer Kilos y Ubicaciones físicas en tiempo real
-    let tarjetas = document.querySelectorAll('[id^="celda-"], .grid-item, .card, [style*="grid"] > div, div');
-    let datosPorPP = {};
+    // 2. ESCANEAR LA BASE DE DATOS DIRECTAMENTE (Memoria interna del sistema)
+    // Estructura esperada en db: { "A1": { "24-05-01": { kg: 1200, bultos: 30 }, ... }, ... }
+    for (let ubiId in db) {
+        let contenidoUbi = db[ubiId];
+        if (!contenidoUbi) continue;
 
-    tarjetas.forEach(tarjeta => {
-        let textoTarjeta = tarjeta.innerHTML || "";
-        if (textoTarjeta.length > 2000) return; // Omitir contenedores globales masivos
+        for (let pp in contenidoUbi) {
+            let datosLote = contenidoUbi[pp];
+            
+            // Si el lote está vacío o no tiene peso/bultos válidos, lo ignoramos
+            if (!datosLote || (datosLote.bultos <= 0 && datosLote.kg <= 0)) continue;
 
-        let ppsEncontradas = textoTarjeta.match(/\d{2}-\d{2}-\d{2}/g);
-        
-        if (ppsEncontradas && ppsEncontradas.length > 0) {
-            ppsEncontradas.forEach(pp => {
-                // Intentar rescatar el ID o nombre visible de la celda (ej: D1, P2)
-                let ubicacionId = tarjeta.id ? tarjeta.id.replace('celda-', '').toUpperCase() : "";
-                
-                // Si el ID del elemento no ayuda, buscamos un texto corto en mayúsculas dentro de la tarjeta
-                if (!ubicacionId || ubicacionId.length > 5) {
-                    let matchId = textoTarjeta.match(/>\s*([A-Z0-9]{1,4})\s*</);
-                    ubicacionId = matchId ? matchId[1] : "Bodega";
-                }
-
-                // Capturar el peso (Kilos/Bultos)
-                let matchKilos = textoTarjeta.match(/(\d{1,3}(?:\.\d{3})+)/);
-                let pesoLimpio = matchKilos ? matchKilos[1] + " kg" : "";
-
-                // Guardar registro de lo encontrado en esta tarjeta
-                if (!datosPorPP[pp]) {
-                    datosPorPP[pp] = { ubi: ubicacionId, kg: pesoLimpio };
-                } else {
-                    // Si ya existía la PP pero no tenía peso, se lo asignamos
-                    if (!datosPorPP[pp].kg && pesoLimpio) datosPorPP[pp].kg = pesoLimpio;
-                }
-            });
-        }
-    });
-
-    // 3. Cruzar con maestroProductos
-    if (typeof maestroProductos !== 'undefined') {
-        for (let pp in maestroProductos) {
+            // 3. Evaluar la antigüedad real de la PP
             let analisis = verificarAlertaFIFO(pp);
 
+            // Si se dispara la alerta por antigüedad, lo sumamos al reporte
             if (analisis.alerta) {
-                let infoProd = maestroProductos[pp];
-                let rastreoVisual = datosPorPP[pp] || { ubi: "Ubi. Gral", kg: "" };
-                
-                // Si no se capturaron kilos en el mapa, usamos el estimado del saco/empaque
-                let cantidadFinal = rastreoVisual.kg;
-                if (!cantidadFinal) {
-                    let nombreLower = (infoProd.nombre || "").toLowerCase();
-                    let matchSaco = nombreLower.match(/(\d{1,3}(?:\.\d{3})|\d+)\s*(?:kg|mt)/);
-                    cantidadFinal = matchSaco ? matchSaco[1] + " kg" : "1.200 kg";
-                }
+                // Buscamos el código contable en el maestro si existe
+                let infoProd = (typeof maestroProductos !== 'undefined' && maestroProductos[pp]) 
+                    ? maestroProductos[pp] 
+                    : { codigo: "SIN-COD", nombre: "Producto No Registrado" };
 
                 listaCriticos.push({
                     codigoContable: infoProd.codigo || "SIN-COD",
-                    ubicacion: rastreoVisual.ubi,
+                    ubicacion: ubiId,
                     pp: pp,
                     meses: analisis.meses,
-                    cantidad: cantidadFinal
+                    cantidad: datosLote.kg // Usamos los kilos reales directamente guardados en la db
                 });
             }
         }
@@ -3304,7 +3223,7 @@ function verReporteFIFO() {
     // 4. ORDENAR ESTRICTAMENTE POR CÓDIGO CONTABLE
     listaCriticos.sort((a, b) => a.codigoContable.localeCompare(b.codigoContable, undefined, { numeric: true, sensitivity: 'base' }));
 
-    // Actualizar el número de alertas en el escudo superior
+    // Actualizar el número de alertas en el escudo/badge superior
     let contadorBadge = document.getElementById('contador-criticos-fifo');
     if (contadorBadge) contadorBadge.innerText = `${listaCriticos.length} Ítems`;
 
@@ -3314,7 +3233,7 @@ function verReporteFIFO() {
         return;
     }
 
-    // 6. Dibujar la nueva estructura de filas (sin nombre, con ubicación)
+    // 6. Dibujar la estructura de filas consumiendo los datos puros
     listaCriticos.forEach(item => {
         let fila = document.createElement('tr');
         fila.style.borderBottom = "1px solid #edf2f7";
@@ -3335,7 +3254,7 @@ function verReporteFIFO() {
                     ⚠️ ${item.meses} Meses
                 </span>
             </td>
-            <td style="padding: 12px 15px; text-align: right; font-weight: bold; color: #2d3748;">${item.cantidad}</td>
+            <td style="padding: 12px 15px; text-align: right; font-weight: bold; color: #2d3748;">${fmt(item.cantidad)} kg</td>
         `;
         tbody.appendChild(fila);
     });
