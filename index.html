@@ -1853,7 +1853,7 @@ function render() {
             }
 
             let textoMiniFIFO = alertaEncontrada 
-                ? `<div style="color: #dd6b20; font-size: 15px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
+                ? `<div style="color: #dd6b20; font-size: 12px; font-weight: bold; margin-top: 2px; text-align: center; animation: pulsoAlertaFIFO 2s infinite ease-in-out;">⚠️ FIFO ${mesesMaximos}M</div>` 
                 : "";
 
             card.innerHTML = `
@@ -2123,10 +2123,15 @@ window.abrirModalContable = function(codigoContable) {
     window.codigoContableSeleccionado = codigoContable;
     window.tabActualModal = "material"; 
     
+    // Resetear visualmente las 3 pestañas dejando activa la primera
     document.getElementById('tab-material').style.color = "var(--primary, #2b6cb0)";
     document.getElementById('tab-material').style.borderBottom = "3px solid var(--primary, #2b6cb0)";
     document.getElementById('tab-general').style.color = "#718096";
     document.getElementById('tab-general').style.borderBottom = "3px solid transparent";
+    if (document.getElementById('tab-grafico')) {
+        document.getElementById('tab-grafico').style.color = "#718096";
+        document.getElementById('tab-grafico').style.borderBottom = "3px solid transparent";
+    }
 
     document.getElementById('modal-detalle-contable').style.display = 'flex';
     dibujarContenidoModal();
@@ -2141,26 +2146,67 @@ window.cambiarTabModal = function(tab) {
     
     let btnMaterial = document.getElementById('tab-material');
     let btnGeneral = document.getElementById('tab-general');
+    let btnGrafico = document.getElementById('tab-grafico');
 
+    // Inicializamos todos los botones en estado inactivo
+    [btnMaterial, btnGeneral, btnGrafico].forEach(btn => {
+        if (btn) {
+            btn.style.color = "#718096";
+            btn.style.borderBottom = "3px solid transparent";
+        }
+    });
+
+    // Activamos visualmente solo la pestaña seleccionada
     if (tab === 'material') {
         btnMaterial.style.color = "var(--primary, #2b6cb0)";
         btnMaterial.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
-        btnGeneral.style.color = "#718096";
-        btnGeneral.style.borderBottom = "3px solid transparent";
-    } else {
+    } else if (tab === 'general') {
         btnGeneral.style.color = "var(--primary, #2b6cb0)";
         btnGeneral.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
-        btnMaterial.style.color = "#718096";
-        btnMaterial.style.borderBottom = "3px solid transparent";
+    } else if (tab === 'grafico') {
+        if (btnGrafico) {
+            btnGrafico.style.color = "var(--primary, #2b6cb0)";
+            btnGrafico.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
+        }
     }
+    
     dibujarContenidoModal();
 };
 
 function dibujarContenidoModal() {
     let tHeaders = document.getElementById('modal-contable-headers');
     let tBodyModal = document.getElementById('modal-contable-tabla-body');
+    let contenedorTabla = document.getElementById('modal-contable-contenedor-tabla');
+    let contenedorGrafico = document.getElementById('modal-contable-contenedor-grafico');
+    
+    if (!tBodyModal) return;
     tBodyModal.innerHTML = "";
 
+    // ====================================================================
+    // 📊 MODO: VER GRÁFICO (CON DESCRIPCIÓN ESTRUCTURAL)
+    // ====================================================================
+    if (window.tabActualModal === 'grafico') {
+        if (contenedorTabla) contenedorTabla.style.display = "none";
+        if (contenedorGrafico) contenedorGrafico.style.display = "flex";
+        
+        // Corrección: Añadir título y descripción legible al gráfico como en las otras pestañas
+        document.getElementById('modal-contable-titulo').style.display = "none"; 
+        document.getElementById('modal-contable-sub').innerText = "Distribución porcentual del stock total por tipo de material en esta bodega";
+
+        let datos = window.datosContablesActuales[window.codigoContableSeleccionado];
+        if (datos && typeof dibujarGraficoModal === 'function') {
+            dibujarGraficoModal(datos);
+        }
+        return; 
+    }
+
+    // Si no es gráfico, restablecemos la visibilidad de la tabla
+    if (contenedorTabla) contenedorTabla.style.display = "block";
+    if (contenedorGrafico) contenedorGrafico.style.display = "none";
+
+    // ====================================================================
+    // 📦 MODO: DETALLE MATERIAL
+    // ====================================================================
     if (window.tabActualModal === 'material') {
         let datos = window.datosContablesActuales[window.codigoContableSeleccionado];
         if (!datos) return;
@@ -2183,7 +2229,7 @@ function dibujarContenidoModal() {
         });
 
     } else {
-// ====================================================================
+        // ====================================================================
         // 🌐 MODO: VER STOCK GENERAL COMPLETO
         // ====================================================================
         document.getElementById('modal-contable-titulo').style.display = "none";
@@ -2200,7 +2246,6 @@ function dibujarContenidoModal() {
             let item = window.datosContablesActuales[cod];
             let subtotalCodigo = 0;
 
-            // 🔥 SE CORRIGE EL INTERLINEADO (line-height: 1.5) Y ALINEACIÓN VERTICAL CREADA PARA TEXTOS LARGOS
             tBodyModal.innerHTML += `
                 <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
                     <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
@@ -2215,7 +2260,7 @@ function dibujarContenidoModal() {
                 tBodyModal.innerHTML += `
                     <tr style="border-bottom: 1px solid #edf2f7;">
                         <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
-                          🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
+                            🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
                         </td>
                         <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
                             ${fmt(d.kg)} kg
@@ -2234,13 +2279,10 @@ function dibujarContenidoModal() {
                 </tr>`;
         }
 
-        // 🧠 DETECTOR DINÁMICO DEL NOMBRE DE LA BODEGA ACTIVA
-        // Si bodegaActual es 'principal' pone 'BODEGA PRINCIPAL', si no, lo pasa a mayúsculas ('ADOQUINES')
         let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
             ? 'BODEGA PRINCIPAL' 
             : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
 
-        // 🔄 CAMBIO: Fila de cierre con el nombre de la bodega interactivo
         tBodyModal.innerHTML += `
             <tr style="background: #fff5f5; border-top: 3px double #e53e3e; font-weight: bold;">
                 <td style="padding: 12px 10px; color: #c53030; font-size: 14px; text-align: right;">
@@ -2250,6 +2292,135 @@ function dibujarContenidoModal() {
                     ${fmt(granSumatoriaKg)} kg
                 </td>
             </tr>`;
+    }
+}
+
+// ====================================================================
+// 📊 MOTOR DE RENDERIZADO: GRÁFICO DE ANILLO (DISTRIBUCIÓN POR MATERIAL)
+// ====================================================================
+function dibujarGraficoModal() {
+    const canvas = document.getElementById('canvas-grafico-modal');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // 1. Limpieza total del lienzo
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 2. Inicialización de los acumuladores de las 5 categorías + Otros
+    const categorias = {
+        "ÁCIDO BÓRICO": 0,
+        "RECHAZO": 0,
+        "CALCINADO": 0,
+        "GRANULEX": 0,
+        "ULEXITA": 0,
+        "OTROS": 0
+    };
+
+    let stockTotalGeneral = 0;
+
+    // 3. Procesamiento y clasificación del stock mediante .toLowerCase()
+    for (let cod in window.datosContablesActuales) {
+        let item = window.datosContablesActuales[cod];
+        let nombreMinuscula = (item.nombre || "").toLowerCase();
+        let kilos = item.totalKg || 0;
+
+        if (kilos === 0 && item.desgloses) {
+            item.desgloses.forEach(d => kilos += d.kg);
+        }
+
+        if (nombreMinuscula.includes("acido") || nombreMinuscula.includes("ácido")) {
+            categorias["ÁCIDO BÓRICO"] += kilos;
+        } else if (nombreMinuscula.includes("rechazo") || nombreMinuscula.includes("manga") || nombreMinuscula.includes("mangas")) {
+            categorias["RECHAZO"] += kilos;
+        } else if (nombreMinuscula.includes("calcinado")) {
+            categorias["CALCINADO"] += kilos;
+        } else if (nombreMinuscula.includes("granulex")) {
+            categorias["GRANULEX"] += kilos;
+        } else if (nombreMinuscula.includes("ulexita")) {
+            categorias["ULEXITA"] += kilos;
+        } else {
+            categorias["OTROS"] += kilos;
+        }
+
+        stockTotalGeneral += kilos;
+    }
+
+    // Control de seguridad si no hay stock
+    if (stockTotalGeneral === 0) {
+        ctx.fillStyle = "#718096";
+        ctx.font = "bold 16px sans-serif"; // Letra más grande para el aviso vacio
+        ctx.textAlign = "center";
+        ctx.fillText("Sin existencias de stock para graficar", canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    // 4. Configuración de colores corporativos (Calcinado ahora es Amarillo)
+    const colores = {
+        "ÁCIDO BÓRICO": "#3182ce", // Azul
+        "RECHAZO": "#e53e3e",      // Rojo
+        "CALCINADO": "#d69e2e",    // 🌟 Amarillo oscuro/Dorado para legibilidad sobre fondo blanco
+        "GRANULEX": "#38a169",     // Verde
+        "ULEXITA": "#805ad5",      // Morado
+        "OTROS": "#718096"         // Gris
+    };
+
+    // 5. Parámetros geométricos ajustados para dar más espacio a textos grandes
+    const centerX = 115; // Movido a la izquierda (antes 140) para dar espacio a la derecha
+    const centerY = canvas.height / 2;
+    const radius = 85;    // Gráfico ligeramente más grande (antes 80)
+    const innerRadius = 45; 
+    
+    let startAngle = 0;
+
+    // 6. Renderizado de los arcos del anillo
+    for (let cat in categorias) {
+        let kgCat = categorias[cat];
+        if (kgCat === 0) continue;
+
+        let porcentaje = kgCat / stockTotalGeneral;
+        let sliceAngle = porcentaje * (2 * Math.PI);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle, false);
+        ctx.arc(centerX, centerY, innerRadius, startAngle + sliceAngle, startAngle, true);
+        ctx.closePath();
+        
+        ctx.fillStyle = colores[cat];
+        ctx.fill();
+
+        startAngle += sliceAngle;
+    }
+
+    // 7. Dibujo de Leyendas con fuentes notablemente más grandes y legibles
+    let legendX = 245; // Desplazado a la izquierda para evitar cortes de texto
+    let legendY = 45;
+    
+    ctx.textAlign = "left";
+    ctx.font = "bold 13px sans-serif"; // Aumentado de 11px a 13px
+    ctx.fillStyle = "#1a202c";        // Color más oscuro para mayor contraste
+    ctx.fillText("DISTRIBUCIÓN TOTAL:", legendX, legendY - 18);
+
+    for (let cat in categorias) {
+        let kgCat = categorias[cat];
+        if (kgCat === 0) continue;
+
+        let pct = ((kgCat / stockTotalGeneral) * 100).toFixed(1);
+
+        // Cuadro de color indicador (ligeramente más grande)
+        ctx.fillStyle = colores[cat];
+        ctx.fillRect(legendX, legendY - 11, 14, 14);
+
+        // Nombre de la categoría y porcentaje (Tamaño 13px)
+        ctx.fillStyle = "#2d3748";
+        ctx.font = "bold 13px sans-serif"; // Añadido negrita y tamaño 13px
+        ctx.fillText(`${cat} (${pct}%)`, legendX + 22, legendY);
+        
+        // Kilogramos debajo de la categoría (Tamaño 12px)
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "bold 12px monospace";  // Cambiado a negrita y tamaño 12px
+        ctx.fillText(`${fmt(Math.round(kgCat))} kg`, legendX + 22, legendY + 15);
+
+        legendY += 38; // Incrementado el espaciado vertical (antes 32) para evitar solapamientos
     }
 }
 
@@ -3386,33 +3557,49 @@ function verReporteFIFO() {
     </div>
 </div>
 
-<div id="modal-detalle-contable" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: white; padding: 20px; border-radius: 8px; width: 95%; max-width: 600px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
+<!-- MODAL DE DETALLE CONTABLE CON TRES OPCIONES (MATERIAL, GENERAL Y GRÁFICO) -->
+<div id="modal-detalle-contable" style="display: none; position: fixed; z-index: 11000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;" class="modal-fade-in">
+    <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); box-sizing: border-box; display: flex; flex-direction: column; max-height: 85vh;" class="modal-slide-up">
         
-        <div style="display: flex; border-bottom: 2px solid #edf2f7; margin-bottom: 15px; gap: 10px;">
-            <button id="tab-material" onclick="cambiarTabModal('material')" style="background: none; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; color: var(--primary, #2b6cb0); border-bottom: 3px solid var(--primary, #2b6cb0); font-size: 14px; font-family: sans-serif;">📋 Detalle Material</button>
-            <button id="tab-general" onclick="cambiarTabModal('general')" style="background: none; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; color: #718096; border-bottom: 3px solid transparent; font-size: 14px; font-family: sans-serif;">🌐 Ver Stock General Completo</button>
+        <!-- Encabezado del Modal -->
+        <h3 id="modal-contable-titulo" style="margin-top: 0; margin-bottom: 2px; color: var(--primary);"></h3>
+        <div id="modal-contable-sub" style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;"></div>
+        
+        <!-- 📋 NAVEGACIÓN INTERNA DEL MODAL: AHORA CON TRES PESTAÑAS -->
+        <div style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; gap: 5px;">
+            <div id="tab-material" onclick="cambiarTabModal('material')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+                📋 Detalle Material
+            </div>
+            <div id="tab-general" onclick="cambiarTabModal('general')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+                🌐 Stock General
+            </div>
+            <div id="tab-grafico" onclick="cambiarTabModal('grafico')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+                📊 Ver Gráfico
+            </div>
         </div>
 
-        <h3 id="modal-contable-titulo" style="margin-top: 0; color: #2d3748; font-size: 16px; margin-bottom: 4px; font-family: sans-serif;">CÓDIGO CONTABLE:</h3>
-        <p id="modal-contable-sub" style="font-size: 12px; color: #555; margin-bottom: 15px; font-weight: bold; font-family: sans-serif;"></p>
-        
-        <div style="max-height: 320px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 6px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: sans-serif;">
-                <thead style="position: sticky; top: 0; background: #f4f7fc; z-index: 10;">
-                    <tr id="modal-contable-headers">
-                        </tr>
+        <!-- Contenedor para Tablas (Opción 1 y Opción 2) -->
+        <div id="modal-contable-contenedor-tabla" style="overflow-y: auto; flex-grow: 1; margin-bottom: 15px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr id="modal-contable-headers"></tr>
                 </thead>
-                <tbody id="modal-contable-tabla-body">
-                    </tbody>
+                <tbody id="modal-contable-tabla-body"></tbody>
             </table>
         </div>
-        
-        <div style="text-align: right; margin-top: 15px;">
-            <button onclick="cerrarModalContable()" style="background: #718096; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: sans-serif;">Cerrar</button>
+
+        <!-- Contenedor para el Gráfico Canvas (Opción 3) -->
+        <div id="modal-contable-contenedor-grafico" style="display: none; justify-content: center; align-items: center; flex-grow: 1; margin-bottom: 15px; background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0;">
+            <canvas id="canvas-grafico-modal" width="500" height="250" style="max-width: 100%; height: auto;"></canvas>
         </div>
+
+        <!-- Botón de Cierre -->
+        <button type="button" onclick="cerrarModalContable()" style="width: 100%; padding: 12px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--text-main); transition: all 0.15s;">
+            Cerrar Ventana
+        </button>
     </div>
 </div>
+
 <div id="modal-semaforo-movil" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); position: relative; font-family: sans-serif;">
         <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 38px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
