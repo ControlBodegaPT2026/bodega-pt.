@@ -482,9 +482,10 @@ button[onclick="deshacer()"]:active {
    📋🌐 EFECTO HOVER INTENSO PARA LAS PESTAÑAS DEL MODAL (Notebook)
    ==================================================================== */
 
-/* Efecto al pasar el mouse por encima de cualquier pestaña del modal */
+/* Efecto al pasar el mouse por encima de cualquier pestaña del modal (Se incluyó #tab-grafico) */
 #tab-material:hover, 
-#tab-general:hover {
+#tab-general:hover,
+#tab-grafico:hover {
     /* Fondo azulino translúcido mucho más notable y nítido */
     background-color: rgba(43, 108, 176, 0.08) !important; 
     
@@ -502,6 +503,11 @@ button[onclick="deshacer()"]:active {
 
 /* Pestaña "Ver Stock General" cuando NO está activa: Línea inferior azul más viva */
 #tab-general[style*="border-bottom: 3px solid transparent"]:hover {
+    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
+/* 📊 Pestaña "Ver Gráfico" cuando NO está activa: Línea inferior azul más viva */
+#tab-grafico[style*="border-bottom: 3px solid transparent"]:hover {
     border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
 }
 
@@ -2191,7 +2197,7 @@ function dibujarContenidoModal() {
         
         // Corrección: Añadir título y descripción legible al gráfico como en las otras pestañas
         document.getElementById('modal-contable-titulo').style.display = "none"; 
-        document.getElementById('modal-contable-sub').innerText = "Distribución porcentual del stock total por tipo de material en esta bodega";
+        document.getElementById('modal-contable-sub').innerText = "DISTRIBUCIÓN PORCENTUAL DEL STOCK TOTAL POR TIPO DE MATERIAL EN ESTA BODEGA";
 
         let datos = window.datosContablesActuales[window.codigoContableSeleccionado];
         if (datos && typeof dibujarGraficoModal === 'function') {
@@ -2233,7 +2239,7 @@ function dibujarContenidoModal() {
         // 🌐 MODO: VER STOCK GENERAL COMPLETO
         // ====================================================================
         document.getElementById('modal-contable-titulo').style.display = "none";
-        document.getElementById('modal-contable-sub').innerText = "Detalle de stock por material y PP en esta bodega";
+        document.getElementById('modal-contable-sub').innerText = "DETALLE DE STOCK POR MATERIAL Y PP EN ESTA BODEGA";
 
         tHeaders.innerHTML = `
             <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
@@ -2365,9 +2371,9 @@ function dibujarGraficoModal() {
     };
 
     // 5. Parámetros geométricos ajustados para dar más espacio a textos grandes
-    const centerX = 115; // Movido a la izquierda (antes 140) para dar espacio a la derecha
+    const centerX = 100; 
     const centerY = canvas.height / 2;
-    const radius = 85;    // Gráfico ligeramente más grande (antes 80)
+    const radius = 95;    
     const innerRadius = 45; 
     
     let startAngle = 0;
@@ -2392,13 +2398,13 @@ function dibujarGraficoModal() {
     }
 
     // 7. Dibujo de Leyendas con fuentes notablemente más grandes y legibles
-    let legendX = 245; // Desplazado a la izquierda para evitar cortes de texto
-    let legendY = 45;
+    let legendX = 280; // Desplazado a la izquierda para evitar cortes de texto
+    let legendY = 50;
     
     ctx.textAlign = "left";
-    ctx.font = "bold 13px sans-serif"; // Aumentado de 11px a 13px
+    ctx.font = "bold 15px sans-serif"; // 
     ctx.fillStyle = "#1a202c";        // Color más oscuro para mayor contraste
-    ctx.fillText("DISTRIBUCIÓN TOTAL:", legendX, legendY - 18);
+    ctx.fillText("DISTRIBUCIÓN TOTAL:", legendX, legendY - 28);
 
     for (let cat in categorias) {
         let kgCat = categorias[cat];
@@ -2410,17 +2416,17 @@ function dibujarGraficoModal() {
         ctx.fillStyle = colores[cat];
         ctx.fillRect(legendX, legendY - 11, 14, 14);
 
-        // Nombre de la categoría y porcentaje (Tamaño 13px)
+        // Nombre de la categoría y porcentaje
         ctx.fillStyle = "#2d3748";
-        ctx.font = "bold 13px sans-serif"; // Añadido negrita y tamaño 13px
+        ctx.font = "bold 15px sans-serif"; // Añadido negrita
         ctx.fillText(`${cat} (${pct}%)`, legendX + 22, legendY);
         
-        // Kilogramos debajo de la categoría (Tamaño 12px)
+        // Kilogramos debajo de la categoría
         ctx.fillStyle = "#4a5568";
-        ctx.font = "bold 12px monospace";  // Cambiado a negrita y tamaño 12px
+        ctx.font = "bold 15px monospace";  // Cambiado a negrita
         ctx.fillText(`${fmt(Math.round(kgCat))} kg`, legendX + 22, legendY + 15);
 
-        legendY += 38; // Incrementado el espaciado vertical (antes 32) para evitar solapamientos
+        legendY += 45;
     }
 }
 
@@ -3528,7 +3534,7 @@ function verReporteFIFO() {
             <h3 class="fifo-title-text" style="margin: 0; color: #2d3748; font-size: 16px;">
                 <i class='bx bx-time-five' style="color: #dd6b20; margin-right: 8px; font-size: 20px; vertical-align: middle;"></i> Alerta de Rotación FIFO (+5 Meses)
             </h3>
-            <span id="contador-criticos-fifo" style="background: #e53e3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 13px; font-weight: bold;">0 Ítems</span>
+            <span id="contador-criticos-fifo" style="background: #e53e3e; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">0 Ítems</span>
         </div>
 
         <div class="fifo-scroll-v" style="overflow-y: auto; flex: 1; border: 1px solid #edf2f7; border-radius: 6px; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
@@ -3557,28 +3563,31 @@ function verReporteFIFO() {
     </div>
 </div>
 
-<!-- MODAL DE DETALLE CONTABLE CON TRES OPCIONES (MATERIAL, GENERAL Y GRÁFICO) -->
-<div id="modal-detalle-contable" style="display: none; position: fixed; z-index: 11000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;" class="modal-fade-in">
-    <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); box-sizing: border-box; display: flex; flex-direction: column; max-height: 85vh;" class="modal-slide-up">
+<!-- MODAL DE DETALLE CONTABLE CON ANCLAJE SUPERIOR FIJO -->
+<!-- 🌟 CAMBIO: Se cambia 'align-items: center;' por 'align-items: flex-start;' y se agrega 'padding-top: 40px;' -->
+<div id="modal-detalle-contable" style="display: none; position: fixed; z-index: 11000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: flex-start; justify-content: center; padding-top: 40px; box-sizing: border-box;" class="modal-fade-in">
+    
+    <!-- El contenedor blanco se mantiene con tus configuraciones exitosas -->
+    <div style="background: white; padding: 10px; border-radius: 8px; width: 95%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); box-sizing: border-box; display: flex; flex-direction: column; max-height: 85vh;" class="modal-slide-up">
         
-        <!-- Encabezado del Modal -->
-        <h3 id="modal-contable-titulo" style="margin-top: 0; margin-bottom: 2px; color: var(--primary);"></h3>
-        <div id="modal-contable-sub" style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;"></div>
-        
-        <!-- 📋 NAVEGACIÓN INTERNA DEL MODAL: AHORA CON TRES PESTAÑAS -->
-        <div style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; gap: 5px;">
-            <div id="tab-material" onclick="cambiarTabModal('material')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+        <!-- 📋 1. NAVEGACIÓN INTERNA DEL MODAL: PARTE SUPERIOR -->
+        <div style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 12px; gap: 5px;">
+            <div id="tab-material" onclick="cambiarTabModal('material')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
                 📋 Detalle Material
             </div>
-            <div id="tab-general" onclick="cambiarTabModal('general')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+            <div id="tab-general" onclick="cambiarTabModal('general')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
                 🌐 Stock General
             </div>
-            <div id="tab-grafico" onclick="cambiarTabModal('grafico')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;">
+            <div id="tab-grafico" onclick="cambiarTabModal('grafico')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
                 📊 Ver Gráfico
             </div>
         </div>
 
-        <!-- Contenedor para Tablas (Opción 1 y Opción 2) -->
+        <!-- 📝 2. TEXTOS DESCRIPTIVOS -->
+        <h3 id="modal-contable-titulo" style="margin-top: 0; margin-bottom: 2px; color: var(--primary);"></h3>
+        <div id="modal-contable-sub" style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;"></div>
+
+        <!-- Contenedor para Tablas -->
         <div id="modal-contable-contenedor-tabla" style="overflow-y: auto; flex-grow: 1; margin-bottom: 15px;">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
@@ -3588,9 +3597,9 @@ function verReporteFIFO() {
             </table>
         </div>
 
-        <!-- Contenedor para el Gráfico Canvas (Opción 3) -->
+        <!-- Contenedor para el Gráfico Canvas -->
         <div id="modal-contable-contenedor-grafico" style="display: none; justify-content: center; align-items: center; flex-grow: 1; margin-bottom: 15px; background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0;">
-            <canvas id="canvas-grafico-modal" width="500" height="250" style="max-width: 100%; height: auto;"></canvas>
+            <canvas id="canvas-grafico-modal" width="500" height="260" style="max-width: 100%; height: auto;"></canvas>
         </div>
 
         <!-- Botón de Cierre -->
@@ -3602,7 +3611,7 @@ function verReporteFIFO() {
 
 <div id="modal-semaforo-movil" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); position: relative; font-family: sans-serif;">
-        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 38px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
+        <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
         
         <div id="contenido-semaforo-clonado" style="margin-top: 15px; max-height: 380px; overflow-y: auto;">
             </div>
