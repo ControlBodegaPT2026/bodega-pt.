@@ -3503,6 +3503,81 @@ function verReporteFIFO() {
         border-radius: 4px;
     }
 
+/* ====================================================================
+   ❌ EFECTO HOVER PARA EL BOTÓN "CERRAR VENTANA" DEL MODAL (Notebook)
+   ==================================================================== */
+
+/* Estado normal: Aseguramos una transición suave predeterminada */
+button[onclick="cerrarModalContable()"] {
+    transition: transform 0.15s ease, background-color 0.15s, box-shadow 0.15s !important;
+}
+
+/* Estado Hover: Al posar el cursor sobre el botón */
+button[onclick="cerrarModalContable()"]:hover {
+    /* Oscurecemos el fondo gris suavemente */
+    background-color: #cbd5e0 !important; 
+    
+    /* Pequeña elevación de 1 píxel */
+    transform: translateY(-1px); 
+    
+    /* Sombra tenue para dar volumen y separación del fondo */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important; 
+    
+    cursor: pointer;
+}
+
+/* Estado Active: Al hacer clic (efecto de hundimiento) */
+button[onclick="cerrarModalContable()"]:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: none !important;
+}
+/* ====================================================================
+   ❌ EFECTO HOVER PARA EL BOTÓN "ENTENDIDO / CERRAR" DEL SEMÁFORO MÓVIL
+   ==================================================================== */
+
+/* Estado normal: Asegura que los cambios visuales se animen de forma fluida */
+button[onclick="cerrarSemaforoMovil()"] {
+    transition: transform 0.15s ease, background-color 0.15s, box-shadow 0.15s !important;
+}
+
+/* Estado Hover: Se activa al pasar el puntero del mouse sobre el botón azul */
+button[onclick="cerrarSemaforoMovil()"]:hover {
+    background-color: #1a4f80 !important; /* Un azul más oscuro y profundo */
+    transform: translateY(-1px); /* Elevación sutil de 1 píxel */
+    box-shadow: 0 4px 8px rgba(43, 108, 176, 0.3) !important; /* Brillo azulado sutil */
+    cursor: pointer;
+}
+
+/* Estado Active: Se activa en el instante exacto en que haces clic */
+button[onclick="cerrarSemaforoMovil()"]:active {
+    transform: translateY(1px) scale(0.98); /* Simula el hundimiento */
+    box-shadow: none !important; /* Pierde la sombra por el contacto físico */
+}
+
+/* ====================================================================
+   ❌ EFECTO HOVER PARA EL BOTÓN "CERRAR REPORTE" (Gris Pizarra)
+   ==================================================================== */
+
+/* Estado normal: Configura la suavidad de las animaciones */
+button[onclick*="seccion-reporte-fifo"] {
+    transition: transform 0.15s ease, background-color 0.15s, box-shadow 0.15s !important;
+}
+
+/* Estado Hover: Al posar el mouse sobre el botón de reporte */
+button[onclick*="seccion-reporte-fifo"]:hover {
+    background-color: #4a5568 !important; /* Gris carbón más oscuro */
+    transform: translateY(-1px); /* Elevación sutil de 1 píxel */
+    box-shadow: 0 4px 8px rgba(113, 128, 150, 0.3) !important; /* Sombra suave */
+    cursor: pointer;
+}
+
+/* Estado Active: Al presionar (simulación de botón físico) */
+button[onclick*="seccion-reporte-fifo"]:active {
+    transform: translateY(1px) scale(0.98); /* Efecto de hundimiento */
+    box-shadow: none !important; /* Desactiva la sombra al presionar */
+}
+
+
     /* 🔥 AJUSTES PARA CELULAR: Forzamos a que la tabla se encoja y quepa al 100% */
     @media (max-width: 600px) {
         .fifo-modal-box {
@@ -3609,7 +3684,7 @@ function verReporteFIFO() {
     </div>
 </div>
 
-<div id="modal-semaforo-movil" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;">
+<div id="modal-semaforo-movil" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 11000; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 12px; width: 92%; max-width: 450px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); position: relative; font-family: sans-serif;">
         <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; text-align: center;">📊 ESTADO DE OCUPACIÓN DETALLADO</h3>
         
