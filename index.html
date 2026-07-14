@@ -547,7 +547,7 @@ button[onclick="deshacer()"]:active {
         /* Reducimos el tamaño de los títulos (Ingreso, Salida, etc.) */
         .card-action h3 {
             font-size: 15px !important;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         /* Iconos y textos de los inputs más pequeños para que quepan */
@@ -575,9 +575,16 @@ button[onclick="deshacer()"]:active {
 
         /* Tabla de stock por PP miniatura */
         #tabla-stock th, #tabla-stock td {
-            font-size: 9px !important;
+            font-size: 10px !important;
             padding: 3px !important;
         }
+
+      #tabla-stock tr:last-child td:last-child {
+        padding: 3px 12px 3px 3px !important;
+        white-space: nowrap !important;
+        font-size: 12px !important; 
+}
+
 
         /* Ajuste de estadísticas para que no ocupen tanto espacio */
         .stats-container {
@@ -1989,7 +1996,7 @@ function renderTablaStock(globalStock) {
         filaTotal.style.borderTop = "2px solid #333";
         filaTotal.innerHTML = `
             <td style="padding: 8px;">TOTAL BODEGA:</td>
-            <td style="padding: 8px; text-align: center; color: #d32f2f; font-size: 15px;">${fmt(sumaTotalKg)} kg</td>`;
+            <td style="padding: 8px 20px 8px 8px; text-align: right; color: #d32f2f; font-size: 15px; white-space: nowrap;">${fmt(sumaTotalKg)} kg</td>`;
         tbody.appendChild(filaTotal);
     } else {
         tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 10px; color: #777;'>Sin stock</td></tr>";
