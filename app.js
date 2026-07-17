@@ -2484,7 +2484,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 3️⃣ Controlador de la Ventana de Chat del Asistente Virtual
+// 3️⃣ Controlador de la Ventana de Chat del Asistente Virtual (Corregido para voz)
     const btnChat = document.getElementById('btn-chat-asistente');
     const ventanaChat = document.getElementById('ventana-chat-asistente');
     const btnCerrar = document.getElementById('btn-cerrar-chat');
@@ -2515,8 +2515,11 @@ document.addEventListener("DOMContentLoaded", () => {
         let texto = inputChat.value.trim();
         if (!texto) return;
 
-        if (document.activeElement === inputChat) {
-            window.fuePorVoz = false;
+        // ✅ REGLA DE SEGURIDAD PARA VOZ:
+        // Solo cambiamos fuePorVoz a false si el usuario REALMENTE escribió usando el teclado.
+        // Si el estado "fuePorVoz" ya estaba en true por el micrófono, preservamos el valor.
+        if (document.activeElement === inputChat && !fuePorVoz) {
+            fuePorVoz = false;
         }
 
         agregarMensajeChat(texto, 'usuario');
@@ -2526,11 +2529,15 @@ document.addEventListener("DOMContentLoaded", () => {
             let respuesta = analizarConsultaBodega(texto);
             agregarMensajeChat(respuesta, 'asistente');
             
-            if (window.fuePorVoz) {
+            // ✅ EJECUCIÓN DIRECTA:
+            // Verificamos tanto la variable global "fuePorVoz" local como la montada en window.
+            if (fuePorVoz || window.fuePorVoz) {
                 if (typeof asistenteHablar === 'function') {
                     asistenteHablar(respuesta); 
                 }
-                window.fuePorVoz = false; 
+                // Limpiamos los flags de control tras finalizar la lectura
+                fuePorVoz = false; 
+                window.fuePorVoz = false;
             }
         }, 1300);
     }
@@ -2539,7 +2546,14 @@ document.addEventListener("DOMContentLoaded", () => {
         btnEnviar.addEventListener('click', procesarEnvioUsuario);
     }
     if (inputChat) {
-        inputChat.addEventListener('keypress', (e) => { if (e.key === 'Enter') procesarEnvioUsuario(); });
+        inputChat.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') {
+                // Al presionar Enter explícitamente con teclado, anulamos bandera de voz
+                fuePorVoz = false;
+                window.fuePorVoz = false;
+                procesarEnvioUsuario(); 
+            }
+        });
     }
 
     function agregarMensajeChat(texto, emisor) {
