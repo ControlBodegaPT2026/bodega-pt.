@@ -1,0 +1,984 @@
+
+    :root {
+        --bg-body: #f4f7fc; --bg-card: #ffffff; --text-main: #333333;
+        --text-muted: #718096; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --radius: 6px; --primary: #2b6cb0; --success: #38a169; --danger: #e53e3e;
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 30px; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); padding: 15px 30px; border-radius: var(--radius); color: white; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .header-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+    .btn-nav { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+    .btn-nav.active { background: white; color: var(--primary); font-weight: 700; }
+
+.top-grid { 
+    display: grid; 
+    /* El uso de 0min permite que las columnas se encojan al máximo */
+    grid-template-columns: repeat(4, minmax(0, 1fr)); 
+    gap: 5px; /* Espacio reducido entre tarjetas */
+    margin-bottom: 1px;
+    align-items: start; /* Alinea las tarjetas al tope */
+}
+
+.card-action {
+    background: var(--bg-card); 
+    padding: 20px;
+    border-radius: var(--radius); 
+    border: 1px solid #cbd5e0;
+    min-width: 0; /* Crucial para que el grid pueda encoger la tarjeta */
+    overflow: hidden;
+min-height: 220px;
+}
+
+/* Ajuste específico para la tabla de stock cuando está arriba */
+.card-action table {
+    font-size: 11px; /* Letra más pequeña para que quepa en la columna */
+}
+
+.card-action h3 {
+    font-size: 15px; /* Títulos ligeramente más pequeños */
+    margin-top: 0;
+}
+    
+    .input-group { display: flex; gap: 3px; margin-bottom: 10px; }
+    .input-box { display: flex; border: 1px solid var(--border-color); border-radius: 5px; flex: 1; overflow: hidden; background: #fafafa; }
+    .input-box i { padding: 5px; color: var(--text-muted); background: #eee; border-right: 1px solid var(--border-color); }
+    input, select { border: none; padding: 10px; width: 100%; background: transparent; outline: none; }
+/* Ocultar flechas en inputs de tipo número (Chrome, Safari, Edge, Opera) */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Ocultar flechas en inputs de tipo número (Firefox) */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+.btn-action { 
+    width: 100%; 
+    border: none;
+    padding: 12px; 
+    border-radius: 6px; 
+    color: white; 
+    cursor: pointer; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    
+    /* 🚀 Sombra sutil por defecto */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease; 
+}
+
+/* Efecto cuando el operador pasa el mouse por encima (Se eleva un poquito) */
+.btn-action:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tu efecto de presión que agregamos antes (Se hunde y pierde la sombra) */
+.btn-action:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    opacity: 0.9;
+}
+
+.btn-ingreso { background: var(--success); }
+.btn-salida { background: var(--danger); }
+
+/* 🚀 NUEVO: Este estado se activa JUSTO en el momento en que el usuario hace clic o presiona el botón */
+.btn-action:active {
+    /* Reduce el tamaño del botón al 95% para simular que se hunde */
+    transform: scale(0.95);
+    /* Reduce la opacidad un poco para simular un cambio de luz al presionarse */
+    opacity: 0.9;
+}
+
+.stats-container { 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr) auto; 
+        background: var(--bg-card); 
+        padding: 10px 20px; /* 🔥 Reducido de 20px a 10px arriba/abajo para que sea más delgada */
+        border-radius: var(--radius); 
+        gap: 30px; /* 🔥 Reducido de 100px a 30px para que los semáforos estén más juntos */
+        margin-bottom: 1px; 
+        align-items: center; 
+        max-width: 1800px; /* 🚀 NUEVO: Evita que la barra se estire infinitamente en pantallas grandes */
+        border: 1px solid #cbd5e0;
+    }
+    .kpi-block:not(:last-child) {
+    
+    border-right: 1px solid #cbd5e0 !important; 
+}
+    .kpi-val { font-size: 20px; font-weight: bold; display: block; }
+    .pct-badge { background: #e6fffa; color: #333; padding: 2px 8px; border-radius: 12px; font-size: 20px; font-weight: bold; }
+
+    /* ESTILOS DE GRILLAS INDEPENDIENTES */
+    .grid-pasillos { 
+        display: grid; 
+        grid-template-columns: repeat(4, 1fr); /* Pasillos A y B siempre en 4 */
+        gap: 3px;
+	row-gap: 50px; 
+        background: #e2e8f0; 
+        padding: 20px; 
+        border-radius: 5px; 
+        border: 2px solid #cbd5e0;
+        margin-bottom: 20px;
+    }
+.grid-sectores-d { 
+    display: grid; 
+    grid-template-columns: repeat(6, minmax(140px, 1fr));
+    gap: 5px; 
+	row-gap: 50px; 
+        background: #e2e8f0; 
+        padding: 15px; 
+        border-radius: 5px; 
+        border: 2px solid #cbd5e0;
+    margin-bottom: 20px;
+    justify-items: stretch;
+}
+.grid-sectores-d .card-ubi[data-id="D7"] {
+    /* 🚀 Hace que empiece en la columna 5 y se extienda hasta la línea 7 (abarcando 2 columnas de ancho) */
+    grid-column: 5 / span 2; 
+}
+    .galpon-grid { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); /* Esto fuerza el 2x2: E1,E2 arriba / E3,E4 abajo */
+        gap: 5px; 
+	row-gap: 50px;        
+	background: #e2e8f0; 
+        padding: 20px; 
+        border-radius: 5px; 
+        border: 2px solid #cbd5e0;
+    }	    
+
+
+	.patio-grid { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); 
+	column-gap: 150px;
+        row-gap: 5px;
+        background: #e2e8f0; 
+        padding: 20px; 
+        border-radius: 5px;
+	border: 2px solid #cbd5e0;
+    }
+    
+    .card-ubi { background: white; border-radius: 5px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
+    .ubi-green { border-top-color: var(--success); background: #f0fff4; }
+    .ubi-yellow { border-top-color: #d69e2e; background: #fffaf0; }
+    .ubi-red { border-top-color: var(--danger); background: #fff5f5; }
+
+    .bottom-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    .panel { background: white; border-radius: var(--radius); border: 1px solid var(--border-color); padding: 15px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; color: var(--text-muted); text-transform: uppercase; padding: 10px; border-bottom: 2px solid #f4f4f4; }
+    td { padding: 10px; border-bottom: 1px solid #f9f9f9; font-size: 13px; }
+/* Estilos para el filtro del mapa */
+    .ubi-off { opacity: 0.15; filter: grayscale(1); transition: all 0.3s ease; }
+    .ubi-highlight { 
+        border: 3px solid #2b6cb0 !important; 
+        transform: scale(1.08); 
+        z-index: 10; 
+        box-shadow: 0 0 20px rgba(43,108,176,0.6);
+        transition: all 0.3s ease;
+
+}
+
+/* ====================================================================
+       🎬 ANIMACIONES PARA EL MODAL DEL SEMÁFORO (ENTRADA SUAVE PREMIUM)
+       ==================================================================== */
+    
+    /* 1. Transición gradual para el fondo oscuro */
+    .modal-fade-in {
+        animation: fadeInBg 0.55s ease-out forwards;
+    }
+
+    /* 2. Deslizamiento y escalado elástico para el cuadro blanco */
+    .modal-slide-up {
+        animation: slideUpContent 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* 📐 Definición de las trayectorias */
+    @keyframes fadeInBg {
+        from { background-color: rgba(0, 0, 0, 0); }
+        to { background-color: rgba(0, 0, 0, 0.5); }
+    }
+
+    @keyframes slideUpContent {
+        from {
+            opacity: 0;
+            transform: translateY(25px) scale(0.97); /* Inicia un poco abajo y compacto */
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1); /* Se acomoda en su posición real */
+        }
+    }
+
+.bultos-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.bulto-btn {
+    border: 1px solid #ccc;
+    background: #f7fafc;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.bulto-btn:hover {
+    background: #edf2f7;
+}
+
+.bulto-btn.active {
+    background: #2b6cb0;
+    color: white;
+    border-color: #2b6cb0;
+    font-weight: bold;
+}
+.btn-nav-small {
+    padding: 5px 10px;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.btn-nav-small:hover {
+    opacity: 1;
+}
+.menu-opciones {
+    position: relative;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    display: none;
+    min-width: 160px;
+    z-index: 1000;
+    overflow: hidden;
+
+    /* animación */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+/* estado visible */
+.menu-dropdown.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.menu-dropdown div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s ease;
+color: #1f2937;
+}
+
+.menu-dropdown div:hover {
+    background: #edf2f7;
+    color: #1a202c;
+}
+/* separador */
+.menu-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 4px 0;
+}
+/* Bloqueo preventivo ajustado */
+.bottom-grid, .menu-opciones {
+    display: none !important;
+}
+#busqueda:hover {
+    border-color: var(--primary, #2b6cb0) !important; /* Cambia al azul corporativo de tu sistema */
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.2); /* Le da un destello azul difuminado muy elegante */
+}
+/* 🤖 EFECTOS HOVER PARA EL ASISTENTE VIRTUAL (Notebook) */
+
+/* 1. Cambio de borde en el campo de texto del chat */
+#input-mensaje-chat:hover {
+    border-color: var(--primary, #2b6cb0) !important; /* Borde azul corporativo */
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.2); /* Destello suave */
+}
+
+/* 2. Cambio de color en el botón de Enviar Mensaje */
+#btn-enviar-chat:hover {
+    background: #1a4f80 !important; /* Un azul más oscuro y profundo al posarse */
+    transform: scale(1.05); /* Un levísimo estiramiento elegante */
+}
+
+/* 3. Cambio de color en el botón del Micrófono (cuando está apagado) */
+#btnMicrofono:hover {
+    background: #e2e8f0 !important; /* Gris un poco más oscuro que el fondo WhatsApp original */
+    color: #1a202c !important; /* El icono del micrófono se oscurece para resaltar */
+}
+/* 🤖 EFECTO HOVER PARA EL BOTÓN PRINCIPAL DEL ASISTENTE VIRTUAL (Notebook) */
+#btn-chat-asistente:hover {
+    background: #1a4f80 !important; /* Un azul más oscuro y marcado al posarse */
+    transform: scale(1.08); /* Se agranda un 8% de forma suave para invitar a hacer clic */
+    box-shadow: 0 6px 12px rgba(43, 108, 176, 0.4); /* Sombra más pronunciada para dar efecto de flotación */
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s !important; /* Transición limpia */
+}
+/* 📦 EFECTO HOVER SUAVE Y TRANSPARENTE PARA LOS CASILLEROS DEL LAYOUT (Notebook) */
+.card-ubi:hover {
+    /* Usamos un degradado blanco con un 15% de opacidad para que sea súper transparente */
+    background-image: linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)) !important;
+    
+    transform: translateY(-2px) scale(1.03); /* Reducimos el estiramiento a 1% para que sea más fino */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important; /* Una sombra más tenue y sofisticada */
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* 📥/📤 EFECTO HOVER PARA ABSOLUTAMENTE TODOS LOS CAMPOS (Notebook) */
+input:hover, 
+select:hover, 
+textarea:hover,
+.input-pp:hover, 
+.input-kg:hover,
+#pp_in:hover, 
+#kg_in:hover, 
+#pp_out:hover, 
+#kg_out:hover {
+    /* Cambiamos el fondo a un tono grisáceo/azul muy sutil y limpio que sí se nota */
+    background-color: #f7fafc !important;
+    background-image: none !important;
+    
+    /* Cambia el borde por el azul corporativo de tu sistema */
+    border-color: var(--primary, #2b6cb0) !important; 
+    
+    /* Le añade el destello azul transparente a los lados */
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.2) !important;
+    
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s !important;
+}
+
+/* Restaura el blanco impecable cuando el operador hace clic para escribir */
+input:focus, 
+select:focus,
+textarea:focus,
+.input-pp:focus,
+.input-kg:focus,
+#pp_in:focus, 
+#kg_in:focus, 
+#pp_out:focus, 
+#kg_out:focus {
+    background-color: #ffffff !important;
+    box-shadow: 0 0 5px rgba(43, 108, 176, 0.4) !important;
+}
+
+/* 📥 EFECTO HOVER PARA EL BOTÓN INGRESAR (Notebook) */
+.btn-ingreso:hover {
+    /* Mantiene el color verde éxito pero le añade un sutil velo oscuro transparente del 10% */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+    
+    transform: translateY(-1px) scale(1.01); 
+    box-shadow: 0 6px 12px rgba(43, 108, 176, 0.2) !important; /* Destello de sombra suave */
+    cursor: pointer;
+    transition: transform 0.15s ease, background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* 📤 EFECTO HOVER PARA EL BOTÓN RETIRAR (Notebook) */
+.btn-salida:hover {
+    /* Mantiene el color rojo peligro pero le añade un sutil velo oscuro transparente del 10% */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) !important;
+    
+    transform: translateY(-1px) scale(1.01); /* 
+    box-shadow: 0 6px 12px rgba(229, 62, 62, 0.2) !important; /* Destello de sombra rojizo suave */
+    cursor: pointer;
+    transition: transform 0.15s ease, background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* 📜 EFECTO HOVER PARA EL BOTÓN "DESHACER ÚLTIMO" (Notebook) */
+button[onclick="deshacer()"]:hover {
+    /* Aplicamos un sutil velo oscuro semitransparente del 5% sobre su fondo blanco original */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)) !important;
+    
+    /* Resaltamos el borde a un gris más marcado y definido */
+    border-color: #4a5568 !important;
+    
+    /* Le agregamos una pequeña elevación de 1.5 píxeles */
+    transform: translateY(-1.5px) scale(1.02);
+    
+    /* Sombra tenue para dar volumen */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+    
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s, background-image 0.15s, box-shadow 0.15s !important;
+}
+
+/* Efecto opcional de click rápido (Active) para simular el hundimiento del botón */
+button[onclick="deshacer()"]:active {
+    transform: translateY(0px) scale(1.0);
+    box-shadow: none !important;
+}
+
+/* ====================================================================
+   ⚙️ EFECTOS HOVER PARA EL ENCABEZADO Y MENÚ DESPLEGABLE (Notebook)
+   ==================================================================== */
+
+/* 1. Botones Principales de Navegación (PRINCIPAL, ADOQUINES y Engranaje) */
+.btn-nav:hover {
+    filter: brightness(0.9) !important; /* Oscurece ligeramente el fondo para denotar interacción */
+    transform: translateY(-1px); /* Elevación milimétrica muy elegante */
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s !important;
+}
+
+/* Mantener el botón activo fijo sin que se mueva al pasar el mouse */
+.btn-nav.active:hover {
+    transform: none !important;
+    filter: none !important;
+}
+
+/* 2. Opciones internas del Menú Desplegable (Movimiento, FIFO, Exportar, etc.) */
+.menu-dropdown div:hover {
+    background-color: #f1f5f9 !important; /* Fondo gris claro limpio estilo moderno */
+    color: var(--primary, #2b6cb0) !important; /* El texto e iconos cambian al color de la empresa */
+    border-radius: 4px; /* Bordes suavemente redondeados en la selección */
+    padding-left: 12px; /* Pequeño desplazamiento hacia la derecha (efecto dinámico) */
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, padding-left 0.15s ease !important;
+}
+
+/* ====================================================================
+   📋🌐 EFECTO HOVER INTENSO PARA LAS PESTAÑAS DEL MODAL (Notebook)
+   ==================================================================== */
+
+/* Efecto al pasar el mouse por encima de cualquier pestaña del modal (Se incluyó #tab-grafico) */
+#tab-material:hover, 
+#tab-general:hover,
+#tab-grafico:hover {
+    /* Fondo azulino translúcido mucho más notable y nítido */
+    background-color: rgba(43, 108, 176, 0.08) !important; 
+    
+    /* Forzamos el azul corporativo puro en el texto para máxima legibilidad */
+    color: var(--primary, #2b6cb0) !important; 
+    
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s ease !important;
+}
+
+/* Pestaña "Detalle Material" cuando NO está activa: Línea inferior azul más viva */
+#tab-material[style*="border-bottom: 3px solid transparent"]:hover {
+    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
+/* Pestaña "Ver Stock General" cuando NO está activa: Línea inferior azul más viva */
+#tab-general[style*="border-bottom: 3px solid transparent"]:hover {
+    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
+/* 📊 Pestaña "Ver Gráfico" cuando NO está activa: Línea inferior azul más viva */
+#tab-grafico[style*="border-bottom: 3px solid transparent"]:hover {
+    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+}
+
+/* 📦 FIJAR LÍNEAS HORIZONTALES EN LA TABLA DE STOCK */
+#tabla-stock tbody td {
+    border-bottom: 1px solid #b0bec5 !important; /* Un gris un poco más oscuro y marcado */
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+@media (max-width: 768px) {
+    /* 1. Forzamos que el cuerpo y los paneles ocupen todo el ancho */
+    body {
+        padding: 10px !important; /* Reducimos margen lateral */
+        width: calc(100% - 20px) !important;
+    }
+
+    .stats-container, .panel {
+        width: 100% !important;
+        box-sizing: border-box; /* Asegura que el padding no los desborde */
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+        /* Mantenemos las 4 columnas pero reducimos el espacio entre ellas */
+        .top-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 12px;
+        }
+
+        /* Hacemos las tarjetas más pequeñas */
+        .card-action {
+            padding: 5px !important;
+        }
+
+        /* Reducimos el tamaño de los títulos (Ingreso, Salida, etc.) */
+        .card-action h3 {
+            font-size: 15px !important;
+            margin-bottom: 10px;
+        }
+
+        /* Iconos y textos de los inputs más pequeños para que quepan */
+        .input-box i, .input-box span {
+            padding: 5px !important;
+            font-size: 10px !important;
+        }
+
+        input, select {
+            padding: 5px !important;
+            font-size: 10px !important;
+        }
+
+        /* Botones compactos */
+        .btn-action {
+            padding: 8px 2px !important;
+            font-size: 9px !important;
+        }
+
+        /* Selector de bultos mini */
+        .bulto-btn {
+            padding: 3px 5px !important;
+            font-size: 9px !important;
+        }
+
+        /* Tabla de stock por PP miniatura */
+        #tabla-stock th, #tabla-stock td {
+            font-size: 10px !important;
+            padding: 3px !important;
+        }
+
+      #tabla-stock tr:last-child td:last-child {
+        padding: 3px 12px 3px 3px !important;
+        white-space: nowrap !important;
+        font-size: 12px !important; 
+}
+
+
+        /* Ajuste de estadísticas para que no ocupen tanto espacio */
+        .stats-container {
+            grid-template-columns: repeat(3, 1fr);
+            padding: 10px;
+            gap: 5px;
+        }
+        
+.kpi-val { font-size: 13px !important; }
+        
+        /* 📱 ¡AQUÍ AGRANDAMOS EL SEMÁFORO Y EL % EN EL CELULAR! */
+        .pct-badge { 
+            font-size: 15px !important; 
+            padding: 4px 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        #mini-grafico { display: none; } /* Ocultamos gráfico en móvil para ganar espacio */
+
+/* 🚀 PASO 2 PEGADO AQUÍ: Contener los sectores D en el móvil */
+        .grid-sectores-d {
+            overflow-x: auto; /* Activa el desplazamiento horizontal interno */
+            display: grid;
+            grid-template-columns: repeat(6, minmax(140px, 1fr)) !important; 
+            padding: 10px !important;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch; /* Suavizado para iPhone y Android */
+        }
+
+        /* Hace que la barra de scroll horizontal en el celular sea fina y elegante */
+        .grid-sectores-d::-webkit-scrollbar {
+            height: 5px;
+        }
+        .grid-sectores-d::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+/* 🚗 PATIO C: Forzar ensanchamiento definitivo en móviles */
+        /* Buscamos cualquier contenedor que tenga relación con el patio c y reconfiguramos su grilla */
+        .grid-patio-c, [class*="patio"], [id*="patio"], .patio-c, #patio-c {
+            display: grid !important;
+            /* Bajamos a 2 columnas fijas si es necesario, o forzamos un mínimo de 150px por tarjeta */
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)) !important;
+            column-gap: 50px;
+        }
+
+        /* 🎯 EL CAMBIO DEFINITIVO: Atacamos directamente a las tarjetas que están dentro del contenedor del Patio C */
+        /* Usamos '!important' en el ancho mínimo e incluso en el ancho base para romper cualquier bloqueo de JavaScript */
+        [class*="patio"] .card-ubi, [id*="patio"] .card-ubi, .grid-patio-c .card-ubi {
+            min-width: 100px !important; /* 🔥 Fuerza a que cada tarjeta mida mínimo 145px de ancho */
+            width: 125px !important;     /* Obliga al navegador a estirarlas sí o sí */
+            box-sizing: border-box !important;
+        }
+
+        /* 🚀 CORREGIDO CON ULTRA FUERZA: Reorganiza el encabezado obligatoriamente */
+        html body header, html body .header, html body #header {
+            display: flex !important;
+            flex-direction: column !important; /* Pone el título arriba y los botones abajo */
+            align-items: center !important;
+            gap: 10px !important; 
+            padding: 12px 5px 8px 5px !important; 
+            text-align: center !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* 🔎 Forzamos la letra PEQUEÑA en el título usando rutas absolutas imposibles de ignorar */
+        html body header h1, html body .header h1, html body #header h1, html body h1 {
+            font-size: 11px !important; /* Letra ultra pequeña y fina */
+            letter-spacing: 1.5px !important; /* Separa las letras elegantemente */
+            text-transform: uppercase !important;
+            line-height: 1.3 !important; 
+            width: 95% !important; 
+            margin: 0 auto !important;
+        }
+
+        /* 🛠️ Botón Exportar / Menú de opciones compacto */
+        .menu-opciones, .btn-exportar, header .menu-opciones {
+            position: static !important; 
+            margin-top: 4px !important; 
+            margin-bottom: 4px !important;
+            font-size: 10px !important; 
+            padding: 4px 8px !important; 
+            max-width: 95% !important;
+            text-align: center !important;
+        }
+
+        /* Ajusta el contenedor de los botones de navegación */
+        .nav-tabs {
+            display: flex !important;
+            width: 100% !important; 
+            gap: 6px !important; /* Espacio ligeramente más compacto */
+            justify-content: space-between !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Botones de navegación proporcionales al nuevo tamaño del título */
+        .btn-nav {
+            flex: 1 !important; 
+            padding: 8px 4px !important; /* Un poco más compactos */
+            font-size: 10px !important; /* 🔥 Letra a 10px para que combine con el título */
+            text-align: center !important;
+            white-space: nowrap;
+        }
+
+        /* Hace que los botones PRINCIPAL y ADOQUINES se repartan el 50% cada uno */
+        .btn-nav {
+            flex: 1 !important; /* Obliga a ambos botones a medir exactamente lo mismo */
+            padding: 10px 5px !important; /* Tamaño cómodo para el dedo */
+            font-size: 11px !important; /* Letra ligeramente más compacta para evitar desbordes */
+            text-align: center !important;
+            white-space: nowrap;
+        }
+/* 🚀 EFECTO ZOOM DESACTIVADO (Se mantiene limpio para Modales) */
+.card-ubi {
+    transition: box-shadow 0.2s ease !important;
+}
+
+/* ================================================================= */
+/* 🔄 ANIMACIONES DE MOVIMIENTO SUTIL PARA LAS FLECHAS DE ENTRADA    */
+/* ================================================================= */
+@keyframes bounceX {
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(-55%); }
+}
+
+@keyframes bounceXDer {
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(-45%); }
+}
+
+@keyframes bounceY {
+    0%, 100% { transform: translateY(-50%); }
+    50% { transform: translateY(-55%); }
+}
+
+/* 🔍 INTERMEZZA AQUÍ: BOTÓN LIMPIAR (X) PARA EL CAMPO DE BÚSQUEDA */
+.input-busqueda-contenedor {
+    position: relative;
+    width: 100%;
+}
+
+#busqueda {
+    padding-right: 35px !important; 
+}
+
+#busqueda::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.btn-limpiar-busqueda {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #cbd5e0;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.btn-limpiar-busqueda:hover {
+    background: #a0aec0;
+}
+
+/* 🎙️ ESTILO PARA EL MICRÓFONO EN MOTO ESCUCHA */
+.mic-escuchando {
+    background: #e53e3e !important; /* Rojo de alerta cuando graba */
+    color: white !important;
+    animation: parpadeoMic 1.2s infinite ease-in-out;
+    box-shadow: 0 0 10px rgba(229, 62, 62, 0.5);
+}
+
+@keyframes parpadeoMic {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* 📱 CORRECCIÓN TAMAÑO DE LETRA ASISTENTE EN CELULARES */
+#input-mensaje-chat { 
+    font-size: 14px !important; 
+}
+
+/* 📱 ADAPTACIÓN DEL DESTELLO TÁCTIL EN CÍRCULO PERFECTO PARA TODOS LOS BOTONES REDONDOS */
+#btn-chat-asistente, 
+#btn-enviar-chat, 
+#btnMicrofono,
+[id*="btn-enviar"], 
+[id*="Microfono"] { 
+    border-radius: 50% !important;
+    overflow: hidden !important; /* 🔥 Corta el destello cuadrado sobrante */
+    -webkit-clip-path: circle(50% at 50% 50%) !important; /* Enmascara el tap de forma circular */
+    clip-path: circle(50% at 50% 50%) !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.15) !important; /* Mantiene el efecto gris sutil */
+}
+
+/* 🌊 ANIMACIÓN DE HUNDIMIENTO PRESTADO PARA TODOS LOS BOTONES DE ACCIÓN Y CIERRE EN MODALES */
+#btn-cerrar-chat,
+#btn-cancelar-maestro,
+#btn-guardar-maestro,
+[id*="modal"] button,
+div[style*="position: fixed"] button {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Efecto al pasar el mouse (Notebook) */
+#btn-cerrar-chat:hover,
+#btn-cancelar-maestro:hover,
+#btn-guardar-maestro:hover,
+[id*="modal"] button:hover,
+div[style*="position: fixed"] button:hover {
+    transform: scale(1.03) !important; /* Se estira ligeramente de forma elegante */
+}
+
+/* Efecto Clic / Tap en celular (¡Se hunde con fuerza!) */
+#btn-cerrar-chat:active,
+#btn-cancelar-maestro:active,
+#btn-guardar-maestro:active,
+[id*="modal"] button:active,
+div[style*="position: fixed"] button:active {
+    transform: scale(0.93) !important; /* Se encoge imitando un botón real */
+    filter: brightness(0.9) !important; /* Se oscurece un poco para dar feedback */
+}
+
+/* 🚨 CLASE PARA DESTACAR PRODUCTOS ANTIGUOS (+5 MESES) EN EL LAYOUT */
+.alerta-fifo-layout {
+    background-color: #fffaf0 !important; /* Fondo crema/naranja muy suave */
+    border-left: 5px solid #dd6b20 !important; /* Una barra naranja gruesa al lado izquierdo */
+    position: relative;
+}
+
+/* El texto de la PP antigua brillará en rojo/naranja con un indicador */
+.pp-antigua-texto {
+    color: #e53e3e !important; 
+    font-weight: bold !important;
+    animation: pulsoAlertaFIFO 2s infinite ease-in-out;
+}
+
+/* Pequeño recordatorio flotante tipo etiqueta */
+.badge-fifo {
+    background: #dd6b20;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes pulsoAlertaFIFO {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; } /* Hace un parpadeo suave, no molesto pero visible */
+}
+
+#busqueda {
+            font-size: 12px !important;
+            font-weight: 500 !important; /* Le da un poco más de cuerpo al texto */
+            height: auto !important;
+        }
+
+    }
+
+/* 📱 AVISO DE ROTACIÓN: Se activa SOLO cuando el celular se pone en horizontal */
+@media (max-width: 768px) and (orientation: landscape) {
+    body::before {
+        content: "🔄 Por favor, gira tu teléfono a posición vertical para usar el CONTROL DE BODEGA PT.";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #1a202c; /* Fondo oscuro ejecutivo */
+        color: white;
+        z-index: 999999; /* Por encima de absolutamente todo */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 30px;
+        font-family: sans-serif;
+        font-size: 18px;
+        font-weight: bold;
+        box-sizing: border-box;
+    }
+}
+
+
+/* Estilos base del scroll vertical */
+    .fifo-scroll-v::-webkit-scrollbar {
+        width: 6px;
+    }
+    .fifo-scroll-v::-webkit-scrollbar-track {
+        background: #f7fafc;
+    }
+    .fifo-scroll-v::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+
+/* ====================================================================
+   ❌ EFECTO HOVER PARA EL BOTÓN "CERRAR VENTANA" DEL MODAL (Notebook)
+   ==================================================================== */
+
+/* Estado normal: Aseguramos una transición suave predeterminada */
+button[onclick="cerrarModalContable()"] {
+    transition: transform 0.15s ease, background-color 0.15s, box-shadow 0.15s !important;
+}
+
+/* Estado Hover: Al posar el cursor sobre el botón */
+button[onclick="cerrarModalContable()"]:hover {
+    /* Oscurecemos el fondo gris suavemente */
+    background-color: #cbd5e0 !important; 
+    
+    /* Pequeña elevación de 1 píxel */
+    transform: translateY(-1px); 
+    
+    /* Sombra tenue para dar volumen y separación del fondo */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important; 
+    
+    cursor: pointer;
+}
+
+/* Estado Active: Al hacer clic (efecto de hundimiento) */
+button[onclick="cerrarModalContable()"]:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: none !important;
+}
+/* ====================================================================
+   ❌ EFECTO HOVER PARA EL BOTÓN "ENTENDIDO / CERRAR" DEL SEMÁFORO MÓVIL
+   ==================================================================== */
+
+/* Estado normal: Asegura que los cambios visuales se animen de forma fluida */
+button[onclick="cerrarSemaforoMovil()"] {
+    transition: transform 0.15s ease, background-color 0.15s, box-shadow 0.15s !important;
+}
+
+/* Estado Hover: Se activa al pasar el puntero del mouse sobre el botón azul */
+button[onclick="cerrarSemaforoMovil()"]:hover {
+    background-color: #1a4f80 !important; /* Un azul más oscuro y profundo */
+    transform: translateY(-1px); /* Elevación sutil de 1 píxel */
+    box-shadow: 0 4px 8px rgba(43, 108, 176, 0.3) !important; /* Brillo azulado sutil */
+    cursor: pointer;
+}
+
+/* Estado Active: Se activa en el instante exacto en que haces clic */
+button[onclick="cerrarSemaforoMovil()"]:active {
+    transform: translateY(1px) scale(0.98); /* Simula el hundimiento */
+    box-shadow: none !important; /* Pierde la sombra por el contacto físico */
+}
+
+/* ====================================================================
+   ❌ EFECTO HOVER PARA EL BOTÓN "CERRAR REPORTE" (Gris Pizarra)
+   ==================================================================== */
+
+/* Estado normal: Configura la suavidad de las animaciones */
+button[onclick*="seccion-reporte-fifo"] {
+    transition: transform 0.15s ease, background-color 0.15s, box-shadow 0.15s !important;
+}
+
+/* Estado Hover: Al posar el mouse sobre el botón de reporte */
+button[onclick*="seccion-reporte-fifo"]:hover {
+    background-color: #4a5568 !important; /* Gris carbón más oscuro */
+    transform: translateY(-1px); /* Elevación sutil de 1 píxel */
+    box-shadow: 0 4px 8px rgba(113, 128, 150, 0.3) !important; /* Sombra suave */
+    cursor: pointer;
+}
+
+/* Estado Active: Al presionar (simulación de botón físico) */
+button[onclick*="seccion-reporte-fifo"]:active {
+    transform: translateY(1px) scale(0.98); /* Efecto de hundimiento */
+    box-shadow: none !important; /* Desactiva la sombra al presionar */
+}
+
+
+    /* 🔥 AJUSTES PARA CELULAR: Forzamos a que la tabla se encoja y quepa al 100% */
+    @media (max-width: 600px) {
+        .fifo-modal-box {
+            width: 100% !important;
+            padding: 10px !important;
+            margin: 5px !important;
+        }
+        .fifo-title-text {
+            font-size: 14px !important;
+        }
+        /* Encojemos la tipografía y los paddings de la tabla al mínimo */
+        .fifo-tabla-maestra th, 
+        .fifo-tabla-maestra td {
+            padding: 6px 4px !important; /* Espacio súper ultra apretado */
+            font-size: 10.5px !important;  /* Letra pequeña para que entre todo de una */
+        }
+        /* Ajuste especial para los tags de Ubicación y Antigüedad en móvil */
+        .badge-ubi, .badge-anti {
+            padding: 2px 4px !important;
+            font-size: 10px !important;
+        }
+    }
+
