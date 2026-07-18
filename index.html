@@ -233,6 +233,16 @@
             </div>
             
             <div style="text-align: right; border-top: 1px solid #edf2f7; padding-top: 12px;">
+</div><!-- Este div cierra la clase "fifo-scroll-v" de tu archivo -->
+            
+            <!-- 🖨️ BARRA DE ACCIONES INFERIOR CON BOTÓN DE IMPRESIÓN INTEGRADO -->
+            <div style="text-align: right; border-top: 1px solid #edf2f7; padding-top: 12px; display: flex; justify-content: flex-end; gap: 10px;">
+                
+                <!-- Nuevo botón de impresión -->
+                <button id="btn-imprimir-fifo" style="background: #2b6cb0; color: white; border: none; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                    🖨️ Imprimir Reporte
+                </button>
+
                 <button onclick="document.getElementById('seccion-reporte-fifo').style.display = 'none'" style="background: #718096; color: white; border: none; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 13px;">
                     Cerrar Reporte
                 </button>
@@ -257,6 +267,10 @@
 
             <h3 id="modal-contable-titulo" style="margin-top: 0; margin-bottom: 2px; color: var(--primary);"></h3>
             <div id="modal-contable-sub" style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;"></div>
+
+            <button id="btn-imprimir-stock-general" style="display: none; width: 100%; padding: 10px; background: #2b6cb0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 14px;">
+                🖨️ Imprimir Stock General (Solo Admin)
+            </button>
 
             <div id="modal-contable-contenedor-tabla" style="overflow-y: auto; flex-grow: 1; margin-bottom: 15px;">
                 <table style="width: 100%; border-collapse: collapse;">
@@ -292,10 +306,10 @@
     <div id="modal-nuevo-maestro" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10005; justify-content: center; align-items: center;">
         <div style="background: white; padding: 25px; border-radius: 12px; width: 92%; max-width: 480px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); font-family: sans-serif;">
             <h3 style="margin-top: 0; color: #2d3748; font-size: 16px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; text-align: center;">📢 PP NUEVA DETECTADA</h3>
-            <p id="txt-pp-nuevo-aviso" style="font-size: 13px; color: #4a5568; text-align: center; margin-bottom: 20px; font-weight: bold;"></p>
+            <p id="txt-pp-nuevo-aviso" style="font-size: 15px; color: #4a5568; text-align: center; margin-bottom: 20px; font-weight: bold;"></p>
             <div style="margin-bottom: 25px;">
-                <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">CÓDIGO CONTABLE / MATERIAL</label>
-                <select id="sel-maestro-producto" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; font-family: monospace;"></select>
+                <label style="display: block; font-size: 14px; font-weight: bold; color: #4a5568; margin-bottom: 5px;">CÓDIGO CONTABLE / MATERIAL</label>
+                <select id="sel-maestro-producto" style="width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 15px; font-family: monospace;"></select>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button id="btn-cancelar-maestro" style="flex: 1; background: #718096; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">Cancelar Ingreso</button>

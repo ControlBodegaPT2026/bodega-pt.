@@ -1300,6 +1300,9 @@ window.abrirModalContable = function(codigoContable) {
         modalContable.style.display = 'flex';
     }
     
+    // Al abrir el modal, nos aseguramos de ocultar o mostrar el botón según corresponda
+    gestionarBotonImpresionStock("material");
+
     if (typeof dibujarContenidoModal === 'function') {
         dibujarContenidoModal();
     }
@@ -1348,10 +1351,164 @@ window.cambiarTabModal = function(tab) {
         btnGrafico.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
     }
     
+    // 🔥 PASO ADICIONAL INTEGRADO: Validamos el rol y la pestaña para mostrar u ocultar el botón
+    gestionarBotonImpresionStock(tab);
+
     if (typeof dibujarContenidoModal === 'function') {
         dibujarContenidoModal();
     }
 };
+
+// ====================================================================
+// 🔐 FUNCIÓN AUXILIAR: VISIBILIDAD E INYECCIÓN DINÁMICA DE IMPRESIÓN
+// ====================================================================
+function gestionarBotonImpresionStock(tabActiva) {
+    // 1. Extraer el rol actual directamente desde la URL de la misma forma que sección 4
+    const urlParams = new URLSearchParams(window.location.search);
+    const rol = urlParams.get('rol');
+    const esAdministrador = (rol === 'admin');
+
+    // 2. Intentamos buscar si ya existe el botón en la interfaz
+    let btnImprimir = document.getElementById('btn-imprimir-stock-general');
+
+    // 3. Si no existe, la pestaña es la correcta y es administrador, lo creamos dinámicamente
+    if (!btnImprimir && tabActiva === 'general' && esAdministrador) {
+        const contenedorTitulo = document.getElementById('modal-contable-titulo')?.parentElement;
+        
+        if (contenedorTitulo) {
+            btnImprimir = document.createElement('button');
+            btnImprimir.id = 'btn-imprimir-stock-general';
+            btnImprimir.innerText = '🖨️ Imprimir Stock';
+            
+            // Asignación de estilos adaptados al diseño de tu interfaz
+            btnImprimir.style.backgroundColor = 'var(--primary, #2b6cb0)';
+            btnImprimir.style.color = '#ffffff';
+            btnImprimir.style.border = 'none';
+            btnImprimir.style.padding = '8px 16px';
+            btnImprimir.style.borderRadius = '6px';
+            btnImprimir.style.cursor = 'pointer';
+            btnImprimir.style.fontSize = '14px';
+            btnImprimir.style.fontWeight = 'bold';
+            btnImprimir.style.marginLeft = '15px';
+            btnImprimir.style.transition = 'background-color 0.2s';
+
+            // Insertar el botón al lado del título del modal
+            contenedorTitulo.appendChild(btnImprimir);
+        } else {
+            console.error("No se encontró el contenedor del título del modal para adjuntar el botón.");
+            return;
+        }
+    }
+
+    // 4. Control estricto de visibilidad (Solo se muestra en pestaña general y si es administrador)
+    if (btnImprimir) {
+        if (tabActiva === 'general' && esAdministrador) {
+            btnImprimir.style.setProperty('display', 'inline-block', 'important');
+        } else {
+            btnImprimir.style.setProperty('display', 'none', 'important');
+        }
+    }
+}
+
+// ====================================================================
+// 🗂️ ALGORITMO DE IMPRESIÓN DE STOCK GENERAL CON DETECCIÓN DE BODEGA
+// ====================================================================
+function ejecutarImpresionStockGeneral() {
+    const tbody = document.getElementById('modal-contable-tabla-body');
+    const headersOriginales = document.getElementById('modal-contable-headers');
+    const tituloInforme = "DETALLE DE STOCK POR MATERIAL Y PP EN ESTA BODEGA";
+
+    if (!tbody || tbody.children.length === 0) {
+        alert("No hay datos disponibles en la tabla para imprimir.");
+        return;
+    }
+
+    // 🏬 ALGORITMO DE DETECCIÓN DINÁMICA DE BODEGA
+    let bodegaDetectada = "NO ESPECIFICADA";
+    
+    // Buscamos los botones de navegación del WMS
+    const botonesNav = document.querySelectorAll('.btn-nav');
+    botonesNav.forEach(btn => {
+        const textoBtn = btn.innerText.toUpperCase();
+        
+        // Evaluamos si el botón es de una bodega conocida y si está activo/visible
+        // Nota: Si tu sistema usa otra clase como '.active' o '.selected', puedes agregarla aquí
+        if (textoBtn.includes('PRINCIPAL') || textoBtn.includes('ADOQUINES')) {
+            // Verificación por estilos: si el botón no está oculto por el script de roles
+            if (btn.style.display !== 'none' && window.getComputedStyle(btn).display !== 'none') {
+                // Si el botón tiene un estilo de fondo activo o si es el que interactúa el usuario
+                // Por defecto, tomamos el texto del botón que está operativo en la interfaz
+                if (textoBtn.includes('PRINCIPAL')) bodegaDetectada = "PRINCIPAL";
+                if (textoBtn.includes('ADOQUINES')) bodegaDetectada = "ADOQUINES";
+            }
+        }
+    });
+
+    // Respaldar detección: Si hay un título en la pantalla principal que dice la bodega, lo usamos de apoyo
+    if (bodegaDetectada === "NO ESPECIFICADA") {
+        const tituloPantalla = document.querySelector('h1, h2, .titulo-bodega')?.innerText.toUpperCase() || "";
+        if (tituloPantalla.includes('PRINCIPAL')) bodegaDetectada = "PRINCIPAL";
+        if (tituloPantalla.includes('ADOQUINES')) bodegaDetectada = "ADOQUINES";
+    }
+
+    // Configuración del documento de impresión
+    const ventanaImpresion = window.open('', '_blank');
+    const fechaHoy = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    ventanaImpresion.document.write(`
+        <html>
+        <head>
+            <title>Informe - ${tituloInforme}</title>
+            <style>
+                body { font-family: sans-serif; color: #2d3748; padding: 10px; margin: 0; }
+                .header { border-bottom: 3px solid #2b6cb0; padding-bottom: 12px; margin-bottom: 20px; }
+                .title { font-size: 18px; font-weight: bold; color: #1a365d; margin: 0; }
+                .meta-info { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: #4a5568; }
+                .bodega-tag { font-weight: bold; color: #2b6cb0; font-size: 14px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+                th { background-color: #f7fafc; color: #2d3748; font-weight: bold; padding: 10px 8px; border: 1px solid #cbd5e0; text-align: left; }
+                td { padding: 10px 8px; border: 1px solid #e2e8f0; }
+                tr:nth-child(even) { background-color: #fcfcfc; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="title">🌐 STOCK GENERAL: ${tituloInforme}</div>
+                <div class="meta-info">
+                    <div><strong>BODEGA:</strong> <span class="bodega-tag">🏢 ${bodegaDetectada}</span></div>
+                    <div><strong>Fecha:</strong> ${fechaHoy}</div>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>${headersOriginales ? headersOriginales.innerHTML : ''}</tr>
+                </thead>
+                <tbody>
+                    ${tbody.innerHTML}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+
+    ventanaImpresion.document.close();
+    ventanaImpresion.focus();
+
+    setTimeout(() => {
+        ventanaImpresion.print();
+        ventanaImpresion.close();
+    }, 250);
+}
+
+// Escuchador global asignado al botón de impresión de stock general
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'btn-imprimir-stock-general') {
+        ejecutarImpresionStockGeneral();
+    }
+});
 
 /**
  * Controla la inyección y el dibujo dinámico del contenido interno del modal
@@ -1461,7 +1618,7 @@ function dibujarContenidoModal() {
                 tBodyModal.innerHTML += `
                     <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
                         <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
-                            <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 11px; vertical-align: middle; line-height: 1;">${cod}</span>
+                            <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; vertical-align: middle; line-height: 1;">${cod}</span>
                             <span style="vertical-align: middle;">${item.nombre}</span>
                         </td>
                     </tr>`;
@@ -1498,19 +1655,19 @@ function dibujarContenidoModal() {
                     </tr>`;
             }
         }
-
-        let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
+let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
             ? 'BODEGA PRINCIPAL' 
             : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
 
         let granSumatoriaFormateada = typeof fmt === 'function' ? fmt(granSumatoriaKg) : granSumatoriaKg;
 
+        // 🔵 FILA DE STOCK TOTAL EN AZUL Y CIFRA EN NEGRITA
         tBodyModal.innerHTML += `
-            <tr style="background: #fff5f5; border-top: 3px double #e53e3e; font-weight: bold;">
-                <td style="padding: 12px 10px; color: #c53030; font-size: 14px; text-align: right;">
-                    🔴 STOCK TOTAL ${nombreBodegaFinal}:
+            <tr style="background: #ebf8ff; border-top: 3px double #3182ce; font-weight: bold;">
+                <td style="padding: 12px 10px; color: #2c5282; font-size: 14px; text-align: right;">
+                    🔵 STOCK TOTAL ${nombreBodegaFinal}:
                 </td>
-                <td style="padding: 12px 20px; text-align: right; color: #e53e3e; font-size: 14px; font-family: monospace;">
+                <td style="padding: 12px 20px; text-align: right; color: #2b6cb0; font-size: 15px; font-family: monospace; font-weight: bold;">
                     ${granSumatoriaFormateada} kg
                 </td>
             </tr>`;
@@ -2812,3 +2969,113 @@ function verReporteFIFO() {
         tbody.appendChild(fila);
     });
 }
+
+// ====================================================================
+// 🖨️ SISTEMA DE IMPRESIÓN DEL REPORTE FIFO CON TOTALIZADOR
+// ====================================================================
+function imprimirReporteFIFO() {
+    const tablaContenido = document.getElementById('tbody-reporte-fifo');
+    
+    // Verificación de seguridad básica
+    if (!tablaContenido || tablaContenido.innerHTML.includes('¡Bodega Óptima!') || tablaContenido.children.length === 0) {
+        if (typeof notificar === 'function') {
+            notificar("No hay datos críticos en el reporte FIFO para imprimir", "warning");
+        } else {
+            alert("No hay datos críticos en el reporte FIFO para imprimir.");
+        }
+        return;
+    }
+
+    // 🧮 ALGORITMO DE CÁLCULO DE TOTALES
+    let sumaTotalKg = 0;
+    const filas = tablaContenido.getElementsByTagName('tr');
+
+    for (let i = 0; i < filas.length; i++) {
+        const celdas = filas[i].getElementsByTagName('td');
+        if (celdas.length >= 5) {
+            // Extraemos el texto de la quinta celda (índice 4: Cantidad)
+            let textoCantidad = celdas[4].innerText || celdas[4].textContent;
+            
+            // Limpieza de caracteres: removemos "kg", espacios y puntos de miles para poder operar numéricamente
+            // Reemplazamos cualquier cosa que no sea número o coma decimal
+            let numeroLimpio = textoCantidad.replace(/[^0-9,-]/g, '');
+            
+            // Si tu sistema usa comas para los decimales, las cambiamos temporalmente a puntos para Float
+            numeroLimpio = numeroLimpio.replace(',', '.');
+            
+            let valorNumérico = parseFloat(numeroLimpio);
+            if (!isNaN(valorNumérico)) {
+                sumaTotalKg += valorNumérico;
+            }
+        }
+    }
+
+    // Formateamos el resultado de la suma final de forma legible
+    let totalFormateado = typeof fmt === 'function' ? fmt(sumaTotalKg) : sumaTotalKg.toLocaleString('es-CL');
+
+    // CONSTRUCCIÓN DEL DOCUMENTO DE IMPRESIÓN
+    const ventanaImpresion = window.open('', '_blank');
+    const fechaHoy = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    ventanaImpresion.document.write(`
+        <html>
+        <head>
+            <title>Reporte de Rotación FIFO</title>
+            <style>
+                body { font-family: sans-serif; color: #2d3748; padding: 30px; margin: 0; }
+                .header { border-bottom: 3px solid #dd6b20; padding-bottom: 12px; margin-bottom: 20px; }
+                .title { font-size: 22px; font-weight: bold; color: #2d3748; }
+                .date { font-size: 12px; color: #718096; margin-top: 5px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+                th { background-color: #f4f7fc; color: #4a5568; font-weight: bold; padding: 10px 8px; border: 1px solid #cbd5e0; text-align: left; }
+                td { padding: 10px 8px; border: 1px solid #e2e8f0; }
+                tr:nth-child(even) { background-color: #fcfcfc; }
+                .fila-total { background-color: #edf2f7 !important; font-weight: bold; border-top: 2px solid #cbd5e0; border-bottom: 2px solid #cbd5e0; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="title">⚠️ ALERTA DE ROTACIÓN FIFO (+5 MESES)</div>
+                <div class="date">Fecha de impresión: ${fechaHoy}</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 26%;">Cód.</th>
+                        <th style="width: 18%; text-align: center;">Ubi</th>
+                        <th style="width: 18%; text-align: center;">PP</th>
+                        <th style="width: 20%; text-align: center;">Antigüedad</th>
+                        <th style="width: 18%; text-align: right;">Cant.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tablaContenido.innerHTML}
+                    <!-- Inyección de la fila del totalizador matemático -->
+                    <tr class="fila-total">
+                        <td colspan="4" style="padding: 12px 8px; text-align: right;">TOTAL CANTIDAD:</td>
+                        <td style="padding: 12px 8px; text-align: right; white-space: nowrap;">${totalFormateado} kg</td>
+                    </tr>
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+
+    ventanaImpresion.document.close();
+    ventanaImpresion.focus();
+    
+    setTimeout(() => {
+        ventanaImpresion.print();
+        ventanaImpresion.close();
+    }, 250);
+}
+
+// Escuchador de eventos global para detectar el clic en el botón de impresión
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'btn-imprimir-fifo') {
+        imprimirReporteFIFO();
+    }
+});
