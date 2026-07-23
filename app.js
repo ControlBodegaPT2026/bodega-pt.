@@ -2798,15 +2798,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const aliasProductos = {
             "PTAB030315": ["chino", "saco chino", "sacos chinos", "borico chino"],
             "PTAB031110": ["sacas de 1200 gi", "sacas 1200 gi", "1200 gi", "sacas 1200 granular", "sacas 1200 kg gi"],
+            "PTAB031010": ["sacas de 1100 gi", "sacas 1100 gi", "1100 gi", "sacas 1100 granular", "sacas 1100 kg gi"],
+            "PTAB030610": ["sacas de 1000 gi", "sacas 1000 gi", "1000 gi", "sacas 1000 granular", "sacas 1000 kg gi"],
+            "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
+            "PTAB040310": ["saco polvo gi", "saco 25 kilos polvo", "polvo gi"],
+            "PTAB158001": ["sacas de 2400 gi", "sacas 2400 gi", "2400 gi", "sacas 2400 sin logo", "sacas 2400 kilos gi sin logo"],
+            "PTUL321001": ["sacas 1100 ulexita", "ulexita 1100 kilos", "saca 1100 kilos sin logo ulexita", "ulexita"],
             "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "rechazo caja manga", "caja manga rechazo", "caja manga"],
             "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "rechazo sobremalla", "sobremalla rechazo", "sobremalla"],
-            "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
             "PTAB030328": ["saco mcassab", "sacos mcassab", "mcassab", "macasa"],
             "PTGR210601": ["granulex 1000 kilos", "sacas de 1000 kilos granulex"],
             "PTGR211401": ["granulex 2000 libras", "sacas de 2000 lb granulex"],
-            "PTAB030610": ["sacas 1000 kilos gi", "sacas gi", "sacas granular gi"],
-            "PTAB040310": ["saco polvo gi", "saco 25 kilos polvo", "polvo gi"],
+            "PTGR210501": ["granulex 50 libras", "sacos de 50 lb granulex"],
+            "PTAB150548": ["saco 50 libras borates plus", "saco borates plus", "sacos 50 libras borates plus", "sacos borates plus"],
             "PTAB170310": ["saco bajo en sulfato", "sacos bajo en sulfato"],
+            "PTAB111111": ["sacas 1100 estandar", "saca 1100 estandar", "sacas 1100 kilos estandar", "saca 1100 kilos estandar"],
+            "PTAB111110": ["sacas 1200 estandar", "saca 1200 estandar", "sacas 1200 kilos estandar", "saca 1200 kilos estandar"],
+            "PTAB110602": ["sacas 1000 estandar", "saca 1000 estandar", "sacas 1000 kilos estandar", "saca 1000 kilos estandar"],
+
             "PTAB300610": ["sacas 1000 kilos calcinado", "sacas calcinado", "calcinado"]
         };
 

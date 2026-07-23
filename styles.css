@@ -685,6 +685,13 @@ button[onclick="deshacer()"]:active {
             text-align: center !important;
             white-space: nowrap;
         }
+
+        /* 📱 AJUSTE DE POSICIÓN PARA EL MENÚ DESPLEGABLE EN MÓVIL */
+        #menuDropdown {
+            top: 105px !important; /* Empuja el menú hacia abajo. Súbelo a 60px o 65px si necesitas más espacio */
+        }
+
+
 /* 🚀 EFECTO ZOOM DESACTIVADO (Se mantiene limpio para Modales) */
 .card-ubi {
     transition: box-shadow 0.2s ease !important;
