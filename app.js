@@ -991,12 +991,13 @@ function render() {
 }
 
 // ====================================================================
-// 📊 12. TABLA DE STOCK CON DESGLOSE CONTABLE
+// 📊 12. TABLA DE STOCK CON DESGLOSE CONTABLE (ORDENADA POR CÓDIGO)
 // ====================================================================
 
 /**
  * Renderiza la tabla de stock consolidada agrupando los lotes físicos (PP)
- * bajo sus respectivos códigos contables definidos en el maestro de productos.
+ * bajo sus respectivos códigos contables definidos en el maestro de productos,
+ * ordenados de forma alfabética/alfanumérica ascendente.
  * 
  * @param {Object} globalStock - Objeto con el stock acumulado por PP { "PP": kg }.
  */
@@ -1036,8 +1037,15 @@ function renderTablaStock(globalStock) {
     // Exposición global segura para el consumo del modal de desgloses
     window.datosContablesActuales = agrupacionContable;
 
-    if (Object.keys(agrupacionContable).length > 0) {
-        for (let cod in agrupacionContable) {
+    // Obtener los códigos contables
+    let codigosOrdenados = Object.keys(agrupacionContable);
+
+    if (codigosOrdenados.length > 0) {
+        // 🌟 MEJORA: Ordenar alfabéticamente de A a Z por código contable
+        codigosOrdenados.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+        // Recorrer la lista ORDENADA en lugar del objeto directo
+        codigosOrdenados.forEach(cod => {
             let item = agrupacionContable[cod];
             let fila = document.createElement('tr');
             fila.style.cursor = "pointer";
@@ -1065,7 +1073,7 @@ function renderTablaStock(globalStock) {
                     ${totalFormateado} kg <i class='bx bx-chevron-right' style='vertical-align: middle; color: #a0aec0; font-size: 16px;'></i>
                 </td>`;
             tbody.appendChild(fila);
-        }
+        });
 
         // Fila de sumatoria total de bodega
         let filaTotal = document.createElement('tr');
@@ -1590,87 +1598,98 @@ function dibujarContenidoModal() {
         }
 
     } else {
-        // ====================================================================
-        // 🌐 MODO: VER STOCK GENERAL COMPLETO
-        // ====================================================================
-        const elTitulo = document.getElementById('modal-contable-titulo');
-        const elSubtitulo = document.getElementById('modal-contable-sub');
 
-        if (elTitulo) elTitulo.style.display = "none";
-        if (elSubtitulo) {
-            elSubtitulo.innerText = "DETALLE DE STOCK POR MATERIAL Y PP EN ESTA BODEGA";
-        }
 
-        if (tHeaders) {
-            tHeaders.innerHTML = `
-                <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
-                <th style="padding: 8px 20px; border-bottom: 2px solid #cbd5e0; text-align: right; background: #edf2f7; width: 120px;">Kilos</th>
-            `;
-        }
+// ====================================================================
+// 🌐 MODO: VER STOCK GENERAL COMPLETO (ORDENADO ALFABÉTICAMENTE)
+// ====================================================================
+const elTitulo = document.getElementById('modal-contable-titulo');
+const elSubtitulo = document.getElementById('modal-contable-sub');
 
-        let granSumatoriaKg = 0;
+if (elTitulo) elTitulo.style.display = "none";
+if (elSubtitulo) {
+    elSubtitulo.innerText = "DETALLE DE STOCK POR MATERIAL Y PP EN ESTA BODEGA";
+}
 
-        if (window.datosContablesActuales) {
-            for (let cod in window.datosContablesActuales) {
-                let item = window.datosContablesActuales[cod];
-                let subtotalCodigo = 0;
+if (tHeaders) {
+    tHeaders.innerHTML = `
+        <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
+        <th style="padding: 8px 20px; border-bottom: 2px solid #cbd5e0; text-align: right; background: #edf2f7; width: 120px;">Kilos</th>
+    `;
+}
 
-                tBodyModal.innerHTML += `
-                    <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
-                        <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
-                            <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; vertical-align: middle; line-height: 1;">${cod}</span>
-                            <span style="vertical-align: middle;">${item.nombre}</span>
-                        </td>
-                    </tr>`;
+let granSumatoriaKg = 0;
 
-                if (Array.isArray(item.desgloses)) {
-                    item.desgloses.forEach(d => {
-                        subtotalCodigo += d.kg;
-                        granSumatoriaKg += d.kg;
+if (window.datosContablesActuales) {
+    // 1. Extraemos las claves (códigos contables) en un arreglo
+    let codigosOrdenados = Object.keys(window.datosContablesActuales);
 
-                        let kgFormateado = typeof fmt === 'function' ? fmt(d.kg) : d.kg;
+    // 2. Ordenamos los códigos de A a Z de forma alfanumérica
+    codigosOrdenados.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
-                        tBodyModal.innerHTML += `
-                            <tr style="border-bottom: 1px solid #edf2f7;">
-                                <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
-                                    🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
-                                </td>
-                                <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
-                                    ${kgFormateado} kg
-                                </td>
-                            </tr>`;
-                    });
-                }
+    // 3. Recorremos el arreglo ya ordenado
+    codigosOrdenados.forEach(cod => {
+        let item = window.datosContablesActuales[cod];
+        let subtotalCodigo = 0;
 
-                let subtotalFormateado = typeof fmt === 'function' ? fmt(subtotalCodigo) : subtotalCodigo;
-
-                tBodyModal.innerHTML += `
-                    <tr style="border-bottom: 2px solid #cbd5e0;">
-                        <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
-                            SUBTOTAL ${cod}:
-                        </td>
-                        <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 14px; background: #fbfbfb;">
-                            ${subtotalFormateado} kg
-                        </td>
-                    </tr>`;
-            }
-        }
-let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
-            ? 'BODEGA PRINCIPAL' 
-            : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
-
-        let granSumatoriaFormateada = typeof fmt === 'function' ? fmt(granSumatoriaKg) : granSumatoriaKg;
-
-        // 🔵 FILA DE STOCK TOTAL EN AZUL Y CIFRA EN NEGRITA
         tBodyModal.innerHTML += `
-            <tr style="background: #ebf8ff; border-top: 3px double #3182ce; font-weight: bold;">
-                <td style="padding: 12px 10px; color: #2c5282; font-size: 14px; text-align: right;">
-                    🔵 STOCK TOTAL ${nombreBodegaFinal}:
-                </td>
-                <td style="padding: 12px 20px; text-align: right; color: #2b6cb0; font-size: 15px; font-family: monospace; font-weight: bold;">
-                    ${granSumatoriaFormateada} kg
+            <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
+                <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
+                    <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; vertical-align: middle; line-height: 1;">${cod}</span>
+                    <span style="vertical-align: middle;">${item.nombre}</span>
                 </td>
             </tr>`;
+
+        if (Array.isArray(item.desgloses)) {
+            item.desgloses.forEach(d => {
+                subtotalCodigo += d.kg;
+                granSumatoriaKg += d.kg;
+
+                let kgFormateado = typeof fmt === 'function' ? fmt(d.kg) : d.kg;
+
+                tBodyModal.innerHTML += `
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
+                            🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
+                        </td>
+                        <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
+                            ${kgFormateado} kg
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        let subtotalFormateado = typeof fmt === 'function' ? fmt(subtotalCodigo) : subtotalCodigo;
+
+        tBodyModal.innerHTML += `
+            <tr style="border-bottom: 2px solid #cbd5e0;">
+                <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
+                    SUBTOTAL ${cod}:
+                </td>
+                <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 14px; background: #fbfbfb;">
+                    ${subtotalFormateado} kg
+                </td>
+            </tr>`;
+    });
+}
+
+let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
+    ? 'BODEGA PRINCIPAL' 
+    : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
+
+let granSumatoriaFormateada = typeof fmt === 'function' ? fmt(granSumatoriaKg) : granSumatoriaKg;
+
+// 🔵 FILA DE STOCK TOTAL EN AZUL Y CIFRA EN NEGRITA
+tBodyModal.innerHTML += `
+    <tr style="background: #ebf8ff; border-top: 3px double #3182ce; font-weight: bold;">
+        <td style="padding: 12px 10px; color: #2c5282; font-size: 14px; text-align: right;">
+            🔵 STOCK TOTAL ${nombreBodegaFinal}:
+        </td>
+        <td style="padding: 12px 20px; text-align: right; color: #2b6cb0; font-size: 15px; font-family: monospace; font-weight: bold;">
+            ${granSumatoriaFormateada} kg
+        </td>
+    </tr>`;
+
     }
 }
 
@@ -2054,12 +2073,29 @@ document.addEventListener("click", function(e) {
 // ↩️ 22. DESHACER MOVIMIENTO (SINK AUTOMÁTICO EN CLOUD FIREBASE)
 // ====================================================================
 function deshacer() {
+    // 1. Verificamos si existen registros en el historial
     if (typeof logs === 'undefined' || logs.length === 0) {
         return alert("No hay movimientos para deshacer");
     }
 
+    // 2. Extraemos los datos del último movimiento para mostrárelos al usuario
     const ultimoLog = logs[0]; 
     const { tipo, pp, kg, ubi } = ultimoLog;
+
+    // 3. Solicitamos confirmación explícita al operador antes de proceder
+    const mensajeConfirmacion = `¿Estás seguro de deshacer el último movimiento?\n\n` +
+                                `• Tipo: ${tipo.toUpperCase()}\n` +
+                                `• Material: ${pp}\n` +
+                                `• Cantidad: ${kg} kg\n` +
+                                `• Ubicación: ${ubi}`;
+
+    const usuarioConfirma = confirm(mensajeConfirmacion);
+
+    // Si el usuario presiona "Cancelar", cancelamos la función sin alterar los datos
+    if (!usuarioConfirma) {
+        return; 
+    }
+
     const pesos = typeof pesosValidos !== 'undefined' ? pesosValidos : [1000];
 
     // Reversión matemática de stock y bultos según tipo de acción
@@ -2099,10 +2135,10 @@ function deshacer() {
         db[origOriginal][pp].bultos += (kg / pesoBulto);
     }
 
-    // 1. Quitamos del historial local en memoria
+    // 4. Quitamos del historial local en memoria
     logs.shift(); 
 
-    // 2. Transmisión de datos actualizados directamente a la nube en Firebase
+    // 5. Transmisión de datos actualizados directamente a la nube en Firebase
     if (typeof dbRef !== 'undefined' && dbRef.set) {
         dbRef.set({
             inventario: db,
@@ -2112,7 +2148,7 @@ function deshacer() {
             if (typeof render === 'function') render(); 
             alert(`Se ha deshecho el último ${tipo}: ${pp} en ${ubi}`);
         }).catch((error) => {
-            console.error("Error al sincronizar con la nube:", error);
+            console.error("Error al synchronizar con la nube:", error);
             alert("Error al intentar deshacer en la nube de Firebase: " + error.message);
         });
     } else {
