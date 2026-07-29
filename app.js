@@ -1158,8 +1158,28 @@ function renderHistorial() {
  * Formateador auxiliar localizado utilizando la notación estándar alemana (de-DE)
  * que utiliza puntos para miles y comas para decimales, ideal para pesajes en kgs.
  */
+// ====================================================================
+// 🔢 FORMATEADOR NUMÉRICO CON SOPORTE DE DECIMALES
+// ====================================================================
+
+/**
+ * Formatea un número agregando separadores de miles y hasta 2 decimales.
+ * 
+ * @param {number|string} n - El número o valor a formatear.
+ * @returns {string} Texto formateado (ej: "1.250,75" o "500").
+ */
 function fmt(n) { 
-    return new Intl.NumberFormat('de-DE').format(Math.round(n)); 
+    // Convertir a número por seguridad en caso de recibir un string
+    let numero = parseFloat(n);
+
+    // Si el valor no es un número válido, retornar "0"
+    if (isNaN(numero)) return "0";
+
+    // Formatear usando el estándar local (separador de miles '.' y decimal ',')
+    return new Intl.NumberFormat('de-DE', {
+        minimumFractionDigits: 0, // Si es entero exacto, no muestra decimales (.00)
+        maximumFractionDigits: 2  // Muestra hasta 2 decimales si existen
+    }).format(numero); 
 }
 
 

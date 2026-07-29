@@ -1,5 +1,4 @@
-
-    :root {
+:root {
         --bg-body: #f4f7fc; --bg-card: #ffffff; --text-main: #333333;
         --text-muted: #718096; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         --radius: 6px; --primary: #2b6cb0; --success: #38a169; --danger: #e53e3e;
