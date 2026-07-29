@@ -3144,3 +3144,158 @@ document.addEventListener('click', function(e) {
         imprimirReporteFIFO();
     }
 });
+
+// ====================================================================
+// 🏷️ GESTIÓN DEL MAESTRO DE PRODUCTOS (EDICIÓN Y ELIMINACIÓN)
+// ====================================================================
+
+/**
+ * Abre el modal de administración del maestro de productos y renderiza la lista.
+ */
+function abrirModalGestionMaestro() {
+    let modal = document.getElementById('modal-gestion-maestro');
+    if (!modal) return;
+    
+    renderTablaGestionMaestro();
+    modal.style.display = 'flex';
+}
+
+/**
+ * Cierra el modal de administración del maestro.
+ */
+function cerrarModalGestionMaestro() {
+    let modal = document.getElementById('modal-gestion-maestro');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Renderiza dinámicamente las filas del maestro de productos registradas.
+ */
+function renderTablaGestionMaestro() {
+    let tbody = document.getElementById('tbody-gestion-maestro');
+    if (!tbody) return;
+    
+    tbody.innerHTML = "";
+
+    if (typeof maestroProductos === 'undefined' || Object.keys(maestroProductos).length === 0) {
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:15px; color:#718096;'>No hay PP registradas en el maestro.</td></tr>";
+        return;
+    }
+
+    // Ordenar las PP alfabéticamente
+    let listaPP = Object.keys(maestroProductos).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+    listaPP.forEach(pp => {
+        let item = maestroProductos[pp];
+        let fila = document.createElement('tr');
+        fila.style.borderBottom = "1px solid #edf2f7";
+
+        fila.innerHTML = `
+            <td style="padding: 8px; font-weight: bold; font-family: monospace; color: #2b6cb0; white-space: nowrap;">${pp}</td>
+            <td style="padding: 8px; font-family: monospace; font-weight: bold; white-space: nowrap;">${item.codigo || 'SIN-CODIGO'}</td>
+            <td style="padding: 8px; color: #4a5568; font-size: 12px; line-height: 1.3;">${item.nombre || ''}</td>
+            <td style="padding: 8px; text-align: center; white-space: nowrap;">
+                <button onclick="editarRegistroMaestro('${pp}')" title="Editar asignación" style="background: #3182ce; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 3px; font-size: 12px;">
+                    ✏️ Editar
+                </button>
+                <button onclick="eliminarRegistroMaestro('${pp}')" title="Eliminar registro" style="background: #e53e3e; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    🗑️
+                </button>
+            </td>
+        `;
+        tbody.appendChild(fila);
+    });
+}
+
+/**
+ * Filtra las filas de la tabla según el texto ingresado en el buscador.
+ */
+function filtrarTablaMaestro() {
+    let filtro = document.getElementById('input-buscar-maestro').value.toLowerCase();
+    let filas = document.querySelectorAll('#tbody-gestion-maestro tr');
+
+    filas.forEach(fila => {
+        let textoFila = fila.textContent.toLowerCase();
+        fila.style.display = textoFila.includes(filtro) ? '' : 'none';
+    });
+}
+
+/**
+ * Permite cambiar la asignación del código contable de una PP existente.
+ * @param {string} pp - La PP a editar.
+ */
+function editarRegistroMaestro(pp) {
+    if (!maestroProductos[pp]) return;
+
+    // Obtener lista de catálogo disponible si existe un selector base
+    let selectOriginal = document.getElementById('sel-maestro-producto');
+    let opcionesTexto = "";
+    
+    if (selectOriginal && selectOriginal.options.length > 0) {
+        for (let i = 0; i < selectOriginal.options.length; i++) {
+            let opt = selectOriginal.options[i];
+            opcionesTexto += `\n ${i + 1}. ${opt.text}`;
+        }
+    }
+
+    let nuevoCodigo = prompt(`Modificando PP: ${pp}\nCódigo actual: ${maestroProductos[pp].codigo}\n\nIngresa el nuevo CÓDIGO CONTABLE para esta PP:`, maestroProductos[pp].codigo);
+
+    if (nuevoCodigo !== null && nuevoCodigo.trim() !== "") {
+        nuevoCodigo = nuevoCodigo.trim().toUpperCase();
+
+        let nuevoNombre = prompt(`Ingresa la DESCRIPCIÓN/NOMBRE para el código ${nuevoCodigo}:`, maestroProductos[pp].nombre || "");
+
+        // Actualizar objeto en memoria
+        maestroProductos[pp] = {
+            codigo: nuevoCodigo,
+            nombre: nuevoNombre ? nuevoNombre.trim() : "Producto Registrado"
+        };
+
+        // Persistir en Firebase si está configurado
+        if (typeof db !== 'undefined' && db.ref) {
+            db.ref('maestroProductos/' + pp.replace(/\./g, '_')).set(maestroProductos[pp]);
+        }
+        
+        // Persistir en localStorage como respaldo
+        localStorage.setItem('maestroProductos', JSON.stringify(maestroProductos));
+
+        alert(`✅ La PP ${pp} fue actualizada correctamente.`);
+        
+        renderTablaGestionMaestro();
+
+        // Actualizar tablas principales en caliente si existen
+        if (typeof globalStock !== 'undefined' && typeof renderTablaStock === 'function') {
+            renderTablaStock(globalStock);
+        }
+    }
+}
+
+/**
+ * Elimina una asignación del maestro de productos tras confirmación.
+ * @param {string} pp - La PP a eliminar.
+ */
+function eliminarRegistroMaestro(pp) {
+    if (confirm(`⚠️ ¿Estás seguro de que deseas eliminar la PP ${pp} del maestro de productos?\n\nSi eliminas esta relación, la PP volverá a figurar como "SIN-CODIGO" en las consultas.`)) {
+        
+        delete maestroProductos[pp];
+
+        // Eliminar en Firebase si está configurado
+        if (typeof db !== 'undefined' && db.ref) {
+            db.ref('maestroProductos/' + pp.replace(/\./g, '_')).remove();
+        }
+
+        // Actualizar localStorage
+        localStorage.setItem('maestroProductos', JSON.stringify(maestroProductos));
+
+        renderTablaGestionMaestro();
+
+        // Actualizar tablas principales en caliente
+        if (typeof globalStock !== 'undefined' && typeof renderTablaStock === 'function') {
+            renderTablaStock(globalStock);
+        }
+    }
+}
+
+
+
+
