@@ -16,7 +16,7 @@
     .btn-nav.active { background: white; color: var(--primary); font-weight: 700; }
 
 .top-grid { 
-    display: grid; 
+    display: grid;
     /* El uso de 0min permite que las columnas se encojan al máximo */
     grid-template-columns: repeat(4, minmax(0, 1fr)); 
     gap: 5px; /* Espacio reducido entre tarjetas */

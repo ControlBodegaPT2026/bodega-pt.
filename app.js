@@ -1553,7 +1553,7 @@ function dibujarContenidoModal() {
     
     // El flujo continuará con el bloque de procesamiento y llenado de datos del modal...
 
-// ====================================================================
+    // ====================================================================
     // 📊 MODO: VER GRÁFICO (CON DESCRIPCIÓN ESTRUCTURAL)
     // ====================================================================
     if (window.tabActualModal === 'grafico') {
@@ -1579,13 +1579,32 @@ function dibujarContenidoModal() {
     if (contenedorTabla) contenedorTabla.style.display = "block";
     if (contenedorGrafico) contenedorGrafico.style.display = "none";
 
-    // ====================================================================
-    // 📦 MODO: DETALLE MATERIAL
+
+// ====================================================================
+    // 📦 MODO: DETALLE MATERIAL (SINCRONIZADO EN TIEMPO REAL CON BODEGA ACTIVA)
     // ====================================================================
     if (window.tabActualModal === 'material') {
+        // 1. Obtener la bodega activa actual
+        let bActual = String(window.bodegaActual || bodegaActual || 'principal').toLowerCase();
+
+        // 2. Determinar el layout correspondiente
+        let layoutActivo = (bActual === 'principal') ? layoutPrin : layoutAdo;
+
+        // Extraer ubicaciones válidas de la bodega activa
+        let ubicacionesActivas = [];
+        if (Array.isArray(layoutActivo)) {
+            layoutActivo.forEach(item => {
+                if (Array.isArray(item) && item[0]) {
+                    ubicacionesActivas.push(item[0]);
+                }
+            });
+        }
+
+        // 3. Obtener los datos contables recién calculados por render()
         let datos = window.datosContablesActuales ? window.datosContablesActuales[window.codigoContableSeleccionado] : null;
         if (!datos) return;
 
+        // Configurar títulos en el modal
         const elTitulo = document.getElementById('modal-contable-titulo');
         const elSubtitulo = document.getElementById('modal-contable-sub');
 
@@ -1594,31 +1613,67 @@ function dibujarContenidoModal() {
             elTitulo.innerText = `CÓDIGO CONTABLE: ${window.codigoContableSeleccionado}`;
         }
         if (elSubtitulo) {
-            elSubtitulo.innerText = datos.nombre;
+            let nombreBodegaTexto = (bActual === 'principal') ? 'PRINCIPAL' : 'ADOQUINES';
+            elSubtitulo.innerText = `${datos.nombre} (BODEGA ${nombreBodegaTexto})`;
         }
 
+        // Encabezados de la tabla
         if (tHeaders) {
             tHeaders.innerHTML = `
-                <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left;">PP</th>
-                <th style="padding: 8px 36px; border-bottom: 2px solid #ddd; text-align: right;">Total Kilos</th>
+                <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: left;">UBICACIÓN</th>
+                <th style="padding: 8px 6px; border-bottom: 2px solid #ddd; text-align: center;">PP</th>
+                <th style="padding: 8px 12px; border-bottom: 2px solid #ddd; text-align: right;">CANTIDAD (KG)</th>
             `;
         }
 
+        tBodyModal.innerHTML = ''; // Limpiar filas anteriores
+
+        // 4. Recorrer la base de datos 'db' filtrando estrictamente por las ubicaciones activas
+        let fuenteDatos = (typeof db !== 'undefined' && db) ? db : {};
+        let filasAgregadas = 0;
+
         if (Array.isArray(datos.desgloses)) {
             datos.desgloses.forEach(d => {
-                let kilosFormateados = typeof fmt === 'function' ? fmt(d.kg) : d.kg;
-                tBodyModal.innerHTML += `
-                    <tr style="border-bottom: 1px solid #edf2f7;">
-                        <td style="padding: 8px 6px;">
-                            <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold;">${d.pp}</span>
-                        </td>
-                        <td style="padding: 8px 36px; text-align: right; font-weight: bold; color: #38a169;">${kilosFormateados} kg</td>
-                    </tr>`;
+                let ppBuscada = String(d.pp || '').trim();
+
+                ubicacionesActivas.forEach(idUbi => {
+                    if (fuenteDatos[idUbi] && fuenteDatos[idUbi][ppBuscada]) {
+                        let infoPP = fuenteDatos[idUbi][ppBuscada];
+                        let kilosEnUbi = parseFloat(infoPP.kg || 0);
+
+                        if (kilosEnUbi > 0) {
+                            filasAgregadas++;
+                            let kgTexto = typeof fmt === 'function' ? fmt(kilosEnUbi) : kilosEnUbi.toLocaleString('es-CL');
+
+                            tBodyModal.innerHTML += `
+                                <tr style="border-bottom: 1px solid #edf2f7;">
+                                    <td style="padding: 8px 6px; font-weight: bold; color: #2b6cb0;">
+                                        📍 ${idUbi}
+                                    </td>
+                                    <td style="padding: 8px 6px; text-align: center;">
+                                        <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold;">${ppBuscada}</span>
+                                    </td>
+                                    <td style="padding: 8px 12px; text-align: right; font-weight: bold; color: #38a169;">
+                                        ${kgTexto} kg
+                                    </td>
+                                </tr>`;
+                        }
+                    }
+                });
             });
         }
 
-    } else {
+        // Mensaje preventivo si no hay registros en la bodega activa
+        if (filasAgregadas === 0) {
+            tBodyModal.innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 15px; color: #718096;">
+                        No hay existencias para este material en la bodega <strong>${bActual.toUpperCase()}</strong>.
+                    </td>
+                </tr>`;
+        }
 
+    } else {
 
 // ====================================================================
 // 🌐 MODO: VER STOCK GENERAL COMPLETO (ORDENADO ALFABÉTICAMENTE)
