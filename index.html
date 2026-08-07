@@ -263,23 +263,26 @@
     <!-- Modal Detalle Contable -->
     <div id="modal-detalle-contable" style="display: none; position: fixed; z-index: 11000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: flex-start; justify-content: center; padding-top: 40px; box-sizing: border-box;" class="modal-fade-in">
         <div style="background: white; padding: 10px; border-radius: 8px; width: 95%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); box-sizing: border-box; display: flex; flex-direction: column; max-height: 85vh;" class="modal-slide-up">
-            <div style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 12px; gap: 5px;">
-                <div id="tab-material" onclick="cambiarTabModal('material')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
-                    📋 Detalle Material
-                </div>
-                <div id="tab-general" onclick="cambiarTabModal('general')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
-                    🌐 Stock General
-                </div>
-                <div id="tab-grafico" onclick="cambiarTabModal('grafico')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 14px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
-                    📊 Ver Gráfico
-                </div>
-            </div>
+<div style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 12px; gap: 5px;">
+    <div id="tab-material" onclick="cambiarTabModal('material')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
+        📋 Detalle Material
+    </div>
+    <div id="tab-general" onclick="cambiarTabModal('general')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
+        🌐 Stock Bodega
+    </div>
+    <div id="tab-consolidado" onclick="cambiarTabModal('consolidado')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
+        🌎 Stock Total
+    </div>
+    <div id="tab-grafico" onclick="cambiarTabModal('grafico')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
+        📊 Ver Gráfico
+    </div>
+</div>
 
             <h3 id="modal-contable-titulo" style="margin-top: 0; margin-bottom: 2px; color: var(--primary);"></h3>
             <div id="modal-contable-sub" style="font-size: 13px; color: var(--text-muted); font-weight: bold; margin-bottom: 15px;"></div>
 
             <button id="btn-imprimir-stock-general" style="display: none; width: 100%; padding: 10px; background: #2b6cb0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 14px;">
-                🖨️ Imprimir Stock General (Solo Admin)
+                🖨️ Imprimir Stock Bodega (Solo Admin)
             </button>
 
             <div id="modal-contable-contenedor-tabla" style="overflow-y: auto; flex-grow: 1; margin-bottom: 15px;">

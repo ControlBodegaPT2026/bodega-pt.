@@ -465,36 +465,45 @@ button[onclick="deshacer()"]:active {
 }
 
 /* ====================================================================
-   📋🌐 EFECTO HOVER INTENSO PARA LAS PESTAÑAS DEL MODAL (Notebook)
+   📋🌐 ESTILOS Y ESTADOS PARA LAS PESTAÑAS DEL MODAL (Notebook)
    ==================================================================== */
 
-/* Efecto al pasar el mouse por encima de cualquier pestaña del modal (Se incluyó #tab-grafico) */
+/* 1. ESTADO NORMAL (Todas las pestañas cuando NO están seleccionadas) */
+#tab-material, 
+#tab-general,
+#tab-consolidado,
+#tab-grafico {
+    color: #4a5568 !important;              /* Texto en gris oscuro legible */
+    background-color: transparent !important; /* Fondo limpio */
+    border-bottom: 3px solid transparent;   /* Borde oculto por defecto */
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* 2. ESTADO HOVER (Al pasar el ratón por encima de cualquier pestaña) */
 #tab-material:hover, 
 #tab-general:hover,
+#tab-consolidado:hover,
 #tab-grafico:hover {
-    /* Fondo azulino translúcido mucho más notable y nítido */
-    background-color: rgba(43, 108, 176, 0.08) !important; 
-    
-    /* Forzamos el azul corporativo puro en el texto para máxima legibilidad */
-    color: var(--primary, #2b6cb0) !important; 
-    
+    background-color: rgba(43, 108, 176, 0.08) !important; /* Fondo azul suave */
+    color: var(--primary, #2b6cb0) !important;              /* Texto en azul corporativo */
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s, border-color 0.15s ease !important;
 }
 
-/* Pestaña "Detalle Material" cuando NO está activa: Línea inferior azul más viva */
-#tab-material[style*="border-bottom: 3px solid transparent"]:hover {
-    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
-}
-
-/* Pestaña "Ver Stock General" cuando NO está activa: Línea inferior azul más viva */
-#tab-general[style*="border-bottom: 3px solid transparent"]:hover {
-    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
-}
-
-/* 📊 Pestaña "Ver Gráfico" cuando NO está activa: Línea inferior azul más viva */
+/* Borde inferior azul claro al pasar el ratón (solo si la pestaña NO está activa) */
+#tab-material[style*="border-bottom: 3px solid transparent"]:hover,
+#tab-general[style*="border-bottom: 3px solid transparent"]:hover,
+#tab-consolidado[style*="border-bottom: 3px solid transparent"]:hover,
 #tab-grafico[style*="border-bottom: 3px solid transparent"]:hover {
-    border-bottom: 3px solid #63b3ed !important; /* Azul cielo intenso */
+    border-bottom: 3px solid #63b3ed !important; /* Línea azul cielo */
+}
+
+/* 3. ESTADO ACTIVO (Pestaña actualmente seleccionada) */
+/* (Esta clase o atributo se gestiona mediante cambiarTabModal en app.js) */
+.tab-modal-activa {
+    color: var(--primary, #2b6cb0) !important;
+    font-weight: bold !important;
+    border-bottom: 3px solid var(--primary, #2b6cb0) !important;
+    background-color: rgba(43, 108, 176, 0.05) !important;
 }
 
 /* 📦 FIJAR LÍNEAS HORIZONTALES EN LA TABLA DE STOCK */

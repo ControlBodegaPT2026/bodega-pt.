@@ -1308,6 +1308,7 @@ window.abrirModalContable = function(codigoContable) {
     // Configuración visual de pestañas en estado inicial
     const tMaterial = document.getElementById('tab-material');
     const tGeneral = document.getElementById('tab-general');
+    const tConsolidado = document.getElementById('tab-consolidado');
     const tGrafico = document.getElementById('tab-grafico');
 
     if (tMaterial) {
@@ -1317,6 +1318,10 @@ window.abrirModalContable = function(codigoContable) {
     if (tGeneral) {
         tGeneral.style.color = "#718096";
         tGeneral.style.borderBottom = "3px solid transparent";
+    }
+    if (tConsolidado) {
+        tConsolidado.style.color = "#718096";
+        tConsolidado.style.borderBottom = "3px solid transparent";
     }
     if (tGrafico) {
         tGrafico.style.color = "#718096";
@@ -1350,17 +1355,18 @@ window.cerrarModalContable = function() {
  * Alterna dinámicamente la pestaña activa dentro del modal contable,
  * refrescando inmediatamente el contenedor visual correspondiente.
  * 
- * @param {string} tab - Identificador de la pestaña ('material', 'general' o 'grafico').
+ * @param {string} tab - Identificador de la pestaña ('material', 'general', 'consolidado' o 'grafico').
  */
 window.cambiarTabModal = function(tab) {
     window.tabActualModal = tab;
     
     let btnMaterial = document.getElementById('tab-material');
     let btnGeneral = document.getElementById('tab-general');
+    let btnConsolidado = document.getElementById('tab-consolidado');
     let btnGrafico = document.getElementById('tab-grafico');
 
     // Inicializamos todos los botones en estado inactivo verificando su existencia previa
-    [btnMaterial, btnGeneral, btnGrafico].forEach(btn => {
+    [btnMaterial, btnGeneral, btnConsolidado, btnGrafico].forEach(btn => {
         if (btn) {
             btn.style.color = "#718096";
             btn.style.borderBottom = "3px solid transparent";
@@ -1374,12 +1380,15 @@ window.cambiarTabModal = function(tab) {
     } else if (tab === 'general' && btnGeneral) {
         btnGeneral.style.color = "var(--primary, #2b6cb0)";
         btnGeneral.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
+    } else if (tab === 'consolidado' && btnConsolidado) {
+        btnConsolidado.style.color = "var(--primary, #2b6cb0)";
+        btnConsolidado.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
     } else if (tab === 'grafico' && btnGrafico) {
         btnGrafico.style.color = "var(--primary, #2b6cb0)";
         btnGrafico.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
     }
     
-    // 🔥 PASO ADICIONAL INTEGRADO: Validamos el rol y la pestaña para mostrar u ocultar el botón
+    // Validamos el rol y la pestaña para mostrar u ocultar el botón de impresión
     gestionarBotonImpresionStock(tab);
 
     if (typeof dibujarContenidoModal === 'function') {
@@ -1391,24 +1400,23 @@ window.cambiarTabModal = function(tab) {
 // 🔐 FUNCIÓN AUXILIAR: VISIBILIDAD E INYECCIÓN DINÁMICA DE IMPRESIÓN
 // ====================================================================
 function gestionarBotonImpresionStock(tabActiva) {
-    // 1. Extraer el rol actual directamente desde la URL de la misma forma que sección 4
     const urlParams = new URLSearchParams(window.location.search);
     const rol = urlParams.get('rol');
     const esAdministrador = (rol === 'admin');
 
-    // 2. Intentamos buscar si ya existe el botón en la interfaz
+    // Definimos las pestañas que permiten impresión para administradores
+    const permiteImpresion = (tabActiva === 'general' || tabActiva === 'consolidado') && esAdministrador;
+
     let btnImprimir = document.getElementById('btn-imprimir-stock-general');
 
-    // 3. Si no existe, la pestaña es la correcta y es administrador, lo creamos dinámicamente
-    if (!btnImprimir && tabActiva === 'general' && esAdministrador) {
+    // 1. Si no existe en el DOM y se cumple la condición, lo creamos dinámicamente
+    if (!btnImprimir && permiteImpresion) {
         const contenedorTitulo = document.getElementById('modal-contable-titulo')?.parentElement;
         
         if (contenedorTitulo) {
             btnImprimir = document.createElement('button');
             btnImprimir.id = 'btn-imprimir-stock-general';
-            btnImprimir.innerText = '🖨️ Imprimir Stock';
             
-            // Asignación de estilos adaptados al diseño de tu interfaz
             btnImprimir.style.backgroundColor = 'var(--primary, #2b6cb0)';
             btnImprimir.style.color = '#ffffff';
             btnImprimir.style.border = 'none';
@@ -1420,7 +1428,6 @@ function gestionarBotonImpresionStock(tabActiva) {
             btnImprimir.style.marginLeft = '15px';
             btnImprimir.style.transition = 'background-color 0.2s';
 
-            // Insertar el botón al lado del título del modal
             contenedorTitulo.appendChild(btnImprimir);
         } else {
             console.error("No se encontró el contenedor del título del modal para adjuntar el botón.");
@@ -1428,9 +1435,15 @@ function gestionarBotonImpresionStock(tabActiva) {
         }
     }
 
-    // 4. Control estricto de visibilidad (Solo se muestra en pestaña general y si es administrador)
+    // 2. Ajustamos texto y visibilidad del botón según la pestaña activa
     if (btnImprimir) {
-        if (tabActiva === 'general' && esAdministrador) {
+        if (permiteImpresion) {
+            // Personalizamos el texto del botón según la pestaña
+            if (tabActiva === 'consolidado') {
+                btnImprimir.innerText = '🖨️ Imprimir Stock Total';
+            } else {
+                btnImprimir.innerText = '🖨️ Imprimir Stock Bodega';
+            }
             btnImprimir.style.setProperty('display', 'inline-block', 'important');
         } else {
             btnImprimir.style.setProperty('display', 'none', 'important');
@@ -1439,58 +1452,51 @@ function gestionarBotonImpresionStock(tabActiva) {
 }
 
 // ====================================================================
-// 🗂️ ALGORITMO DE IMPRESIÓN DE STOCK GENERAL CON DETECCIÓN DE BODEGA
+// 🗂️ ALGORITMO DE IMPRESIÓN DINÁMICA (BODEGA ESPECÍFICA Y STOCK TOTAL)
 // ====================================================================
 function ejecutarImpresionStockGeneral() {
     const tbody = document.getElementById('modal-contable-tabla-body');
     const headersOriginales = document.getElementById('modal-contable-headers');
-    const tituloInforme = "DETALLE DE STOCK POR MATERIAL Y PP EN ESTA BODEGA";
 
     if (!tbody || tbody.children.length === 0) {
         alert("No hay datos disponibles en la tabla para imprimir.");
         return;
     }
 
-    // 🏬 ALGORITMO DE DETECCIÓN DINÁMICA DE BODEGA
-    let bodegaDetectada = "NO ESPECIFICADA";
-    
-    // Buscamos los botones de navegación del WMS
-    const botonesNav = document.querySelectorAll('.btn-nav');
-    botonesNav.forEach(btn => {
-        const textoBtn = btn.innerText.toUpperCase();
-        
-        // Evaluamos si el botón es de una bodega conocida y si está activo/visible
-        // Nota: Si tu sistema usa otra clase como '.active' o '.selected', puedes agregarla aquí
-        if (textoBtn.includes('PRINCIPAL') || textoBtn.includes('ADOQUINES')) {
-            // Verificación por estilos: si el botón no está oculto por el script de roles
-            if (btn.style.display !== 'none' && window.getComputedStyle(btn).display !== 'none') {
-                // Si el botón tiene un estilo de fondo activo o si es el que interactúa el usuario
-                // Por defecto, tomamos el texto del botón que está operativo en la interfaz
-                if (textoBtn.includes('PRINCIPAL')) bodegaDetectada = "PRINCIPAL";
-                if (textoBtn.includes('ADOQUINES')) bodegaDetectada = "ADOQUINES";
-            }
-        }
-    });
+    // Detección de pestaña actual ('general' o 'consolidado')
+    const esConsolidado = (window.tabActualModal === 'consolidado');
+    const tituloInforme = esConsolidado ? "INFORME STOCK TOTAL" : "INFORME STOCK BODEGA";
 
-    // Respaldar detección: Si hay un título en la pantalla principal que dice la bodega, lo usamos de apoyo
-    if (bodegaDetectada === "NO ESPECIFICADA") {
-        const tituloPantalla = document.querySelector('h1, h2, .titulo-bodega')?.innerText.toUpperCase() || "";
-        if (tituloPantalla.includes('PRINCIPAL')) bodegaDetectada = "PRINCIPAL";
-        if (tituloPantalla.includes('ADOQUINES')) bodegaDetectada = "ADOQUINES";
+    // 🏬 Detección de bodega activa (solo si no es consolidado)
+    let bodegaDetectada = "PRINCIPAL";
+    if (typeof window.bodegaActual !== 'undefined' && window.bodegaActual) {
+        bodegaDetectada = String(window.bodegaActual).toUpperCase();
+    } else if (typeof bodegaActual !== 'undefined' && bodegaActual) {
+        bodegaDetectada = String(bodegaActual).toUpperCase();
     }
 
-    // Configuración del documento de impresión
+    // Configuración del encabezado según el tipo de informe
+    const HTMLBodega = esConsolidado 
+        ? `<div><strong>BODEGA:</strong> <span class="bodega-tag">🌎 TODAS LAS BODEGAS</span></div>`
+        : `<div><strong>BODEGA:</strong> <span class="bodega-tag">🏢 ${bodegaDetectada}</span></div>`;
+
+    // Ventana y documento de impresión
     const ventanaImpresion = window.open('', '_blank');
     const fechaHoy = new Date().toLocaleDateString('es-ES', {
-        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit'
     });
 
     ventanaImpresion.document.write(`
+        <!DOCTYPE html>
         <html>
         <head>
             <title>Informe - ${tituloInforme}</title>
             <style>
-                body { font-family: sans-serif; color: #2d3748; padding: 10px; margin: 0; }
+                body { font-family: Arial, sans-serif; color: #2d3748; padding: 15px; margin: 0; }
                 .header { border-bottom: 3px solid #2b6cb0; padding-bottom: 12px; margin-bottom: 20px; }
                 .title { font-size: 18px; font-weight: bold; color: #1a365d; margin: 0; }
                 .meta-info { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: #4a5568; }
@@ -1504,10 +1510,10 @@ function ejecutarImpresionStockGeneral() {
         </head>
         <body>
             <div class="header">
-                <div class="title">🌐 STOCK GENERAL: ${tituloInforme}</div>
+                <div class="title">🌐 ${tituloInforme}</div>
                 <div class="meta-info">
-                    <div><strong>BODEGA:</strong> <span class="bodega-tag">🏢 ${bodegaDetectada}</span></div>
-                    <div><strong>Fecha:</strong> ${fechaHoy}</div>
+                    ${HTMLBodega}
+                    <div><strong>Fecha de emisión:</strong> ${fechaHoy}</div>
                 </div>
             </div>
             <table>
@@ -1531,38 +1537,33 @@ function ejecutarImpresionStockGeneral() {
     }, 250);
 }
 
-// Escuchador global asignado al botón de impresión de stock general
+// Escuchador global de eventos asignado al botón de impresión
 document.addEventListener('click', function(e) {
-    if (e.target && e.target.id === 'btn-imprimir-stock-general') {
+    if (e.target && (e.target.id === 'btn-imprimir-stock-general' || e.target.closest('#btn-imprimir-stock-general'))) {
         ejecutarImpresionStockGeneral();
     }
 });
 
-/**
- * Controla la inyección y el dibujo dinámico del contenido interno del modal
- * de acuerdo con la pestaña que se encuentre seleccionada actualmente.
- */
+// ====================================================================
+// 📊 DIBUJO Y CONTROL DINÁMICO DEL MODAL CONTABLE
+// ====================================================================
 function dibujarContenidoModal() {
     let tHeaders = document.getElementById('modal-contable-headers');
     let tBodyModal = document.getElementById('modal-contable-tabla-body');
     let contenedorTabla = document.getElementById('modal-contable-contenedor-tabla');
     let contenedorGrafico = document.getElementById('modal-contable-contenedor-grafico');
-    
+
     if (!tBodyModal) return;
     tBodyModal.innerHTML = "";
-    
-    // El flujo continuará con el bloque de procesamiento y llenado de datos del modal...
 
-    // ====================================================================
-    // 📊 MODO: VER GRÁFICO (CON DESCRIPCIÓN ESTRUCTURAL)
-    // ====================================================================
+    // MODO: GRÁFICO
     if (window.tabActualModal === 'grafico') {
         if (contenedorTabla) contenedorTabla.style.display = "none";
-        if (contenedorGrafico) contenedorGrafico.style.display = "flex";
-        
+        if (contenedorGrafico) contenedorGrafico.style.display = "block";
+
         const elTitulo = document.getElementById('modal-contable-titulo');
         const elSubtitulo = document.getElementById('modal-contable-sub');
-        
+
         if (elTitulo) elTitulo.style.display = "none"; 
         if (elSubtitulo) {
             elSubtitulo.innerText = "DISTRIBUCIÓN PORCENTUAL DEL STOCK TOTAL POR TIPO DE MATERIAL EN ESTA BODEGA";
@@ -1572,10 +1573,10 @@ function dibujarContenidoModal() {
         if (datos && typeof dibujarGraficoModal === 'function') {
             dibujarGraficoModal(datos);
         }
-        return; 
+        return; // Ahora este return es 100% válido porque está dentro de dibujarContenidoModal()
     }
 
-    // Si no es gráfico, restablecemos de forma segura la visibilidad de la tabla
+    // Restablecemos visibilidad para vistas de tabla (material, consolidado, general)
     if (contenedorTabla) contenedorTabla.style.display = "block";
     if (contenedorGrafico) contenedorGrafico.style.display = "none";
 
@@ -1673,98 +1674,269 @@ function dibujarContenidoModal() {
                 </tr>`;
         }
 
-    } else {
+} else if (window.tabActualModal === 'consolidado') {
 
-// ====================================================================
-// 🌐 MODO: VER STOCK GENERAL COMPLETO (ORDENADO ALFABÉTICAMENTE)
-// ====================================================================
-const elTitulo = document.getElementById('modal-contable-titulo');
-const elSubtitulo = document.getElementById('modal-contable-sub');
+        // ====================================================================
+        // 🌎 MODO: STOCK TOTAL (SUMA GLOBAL DE BODEGA PRINCIPAL + ADOQUINES)
+        // ====================================================================
+        const elTitulo = document.getElementById('modal-contable-titulo');
+        const elSubtitulo = document.getElementById('modal-contable-sub');
 
-if (elTitulo) elTitulo.style.display = "none";
-if (elSubtitulo) {
-    elSubtitulo.innerText = "DETALLE DE STOCK POR MATERIAL Y PP EN ESTA BODEGA";
-}
+        if (elTitulo) {
+            elTitulo.style.display = "block";
+            elTitulo.innerText = `INFORME STOCK TOTAL`;
+        }
+        if (elSubtitulo) {
+            elSubtitulo.innerText = `INFORME GLOBAL (BODEGA PRINCIPAL + ADOQUINES)`;
+        }
 
-if (tHeaders) {
-    tHeaders.innerHTML = `
-        <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
-        <th style="padding: 8px 20px; border-bottom: 2px solid #cbd5e0; text-align: right; background: #edf2f7; width: 120px;">Kilos</th>
-    `;
-}
+        if (tHeaders) {
+            tHeaders.innerHTML = `
+                <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
+                <th style="padding: 8px 20px; border-bottom: 2px solid #cbd5e0; text-align: right; background: #edf2f7; width: 120px;">Kilos</th>
+            `;
+        }
 
-let granSumatoriaKg = 0;
+        tBodyModal.innerHTML = '';
 
-if (window.datosContablesActuales) {
-    // 1. Extraemos las claves (códigos contables) en un arreglo
-    let codigosOrdenados = Object.keys(window.datosContablesActuales);
+        // 1. Obtener la fuente de datos (Prioridad: variable en memoria 'db', Respaldo: localStorage)
+        let fuenteDatos = {};
 
-    // 2. Ordenamos los códigos de A a Z de forma alfanumérica
-    codigosOrdenados.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        if (typeof db !== 'undefined' && db && Object.keys(db).length > 0) {
+            fuenteDatos = db;
+        } else {
+            try {
+                let datosRaw = localStorage.getItem('bodega_db');
+                if (datosRaw) fuenteDatos = JSON.parse(datosRaw);
+            } catch (e) {
+                console.error("Error al obtener datos para el Stock Total:", e);
+            }
+        }
 
-    // 3. Recorremos el arreglo ya ordenado
-    codigosOrdenados.forEach(cod => {
-        let item = window.datosContablesActuales[cod];
-        let subtotalCodigo = 0;
+        // 2. Acumuladores de datos
+        let consolidado = {};
+        let granTotalGeneral = 0;
 
-        tBodyModal.innerHTML += `
-            <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
-                <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
-                    <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; vertical-align: middle; line-height: 1;">${cod}</span>
-                    <span style="vertical-align: middle;">${item.nombre}</span>
-                </td>
-            </tr>`;
+        // 3. Recorrer todos los casilleros de la base de datos (sin filtrar por bodega)
+        for (let casilleroId in fuenteDatos) {
+            let casillero = fuenteDatos[casilleroId];
+            if (!casillero || typeof casillero !== 'object') continue;
 
-        if (Array.isArray(item.desgloses)) {
-            item.desgloses.forEach(d => {
-                subtotalCodigo += d.kg;
-                granSumatoriaKg += d.kg;
+            // Recorrer las PPs dentro del casillero
+            for (let ppKey in casillero) {
+                let registro = casillero[ppKey];
+                if (!registro) continue;
 
-                let kgFormateado = typeof fmt === 'function' ? fmt(d.kg) : d.kg;
+                // Extraer kilos asegurando que sea un valor numérico válido
+                let kilos = 0;
+                if (typeof registro === 'object' && registro.kg !== undefined) {
+                    kilos = parseFloat(registro.kg) || 0;
+                } else if (typeof registro === 'number' || typeof registro === 'string') {
+                    kilos = parseFloat(registro) || 0;
+                }
+
+                if (kilos > 0) {
+                    granTotalGeneral += kilos;
+                    let ppLimpia = String(ppKey).trim();
+
+                    // Buscar el producto en el maestro de productos
+                    let infoProd = (typeof maestroProductos !== 'undefined' && maestroProductos[ppLimpia]) 
+                        ? maestroProductos[ppLimpia] 
+                        : null;
+
+                    let codContable = infoProd ? infoProd.codigo : "SIN-CODIGO";
+                    let nombreProd = infoProd ? infoProd.nombre : `PP: ${ppLimpia}`;
+
+                    // Crear el grupo por Código Contable si no existe
+                    if (!consolidado[codContable]) {
+                        consolidado[codContable] = {
+                            nombre: nombreProd,
+                            totalKg: 0,
+                            pps: {}
+                        };
+                    }
+
+                    // Acumular total por Código Contable
+                    consolidado[codContable].totalKg += kilos;
+
+                    // Acumular kilos por PP individual
+                    if (!consolidado[codContable].pps[ppLimpia]) {
+                        consolidado[codContable].pps[ppLimpia] = 0;
+                    }
+                    consolidado[codContable].pps[ppLimpia] += kilos;
+                }
+            }
+        }
+
+        // 4. Renderizar los resultados en la tabla con la estética de "Stock Bodega"
+        let codigosOrdenados = Object.keys(consolidado);
+
+        if (codigosOrdenados.length > 0) {
+            // Ordenar alfabéticamente por Código Contable
+            codigosOrdenados.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+            codigosOrdenados.forEach(cod => {
+                let grupo = consolidado[cod];
+
+                // --- FILA 1: Encabezado del Material (Igual a Stock Bodega) ---
+                tBodyModal.innerHTML += `
+                    <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
+                        <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
+                            <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; vertical-align: middle; line-height: 1;">${cod}</span>
+                            <span style="vertical-align: middle;">${grupo.nombre}</span>
+                        </td>
+                    </tr>`;
+
+                // --- FILA 2: Desglose por PP ---
+                for (let pp in grupo.pps) {
+                    let kgPP = grupo.pps[pp];
+                    let kgPPFormateado = typeof fmt === 'function' ? fmt(kgPP) : kgPP.toLocaleString('es-CL');
+
+                    tBodyModal.innerHTML += `
+                        <tr style="border-bottom: 1px solid #edf2f7;">
+                            <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
+                                🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${pp}</span>
+                            </td>
+                            <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
+                                ${kgPPFormateado} kg
+                            </td>
+                        </tr>`;
+                }
+
+                // --- FILA 3: Fila de Subtotal por Código Contable (Igual a Stock Bodega) ---
+                let subtotalFormateado = typeof fmt === 'function' ? fmt(grupo.totalKg) : grupo.totalKg.toLocaleString('es-CL');
 
                 tBodyModal.innerHTML += `
-                    <tr style="border-bottom: 1px solid #edf2f7;">
-                        <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
-                            🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
+                    <tr style="border-bottom: 2px solid #cbd5e0;">
+                        <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
+                            SUBTOTAL ${cod}:
                         </td>
-                        <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
-                            ${kgFormateado} kg
+                        <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 14px; background: #fbfbfb;">
+                            ${subtotalFormateado} kg
+                        </td>
+                    </tr>`;
+            });
+
+// --- FILA FINAL: Gran Total de Stock Consolidado ---
+            let granTotalFormateado = typeof fmt === 'function' ? fmt(granTotalGeneral) : granTotalGeneral.toLocaleString('es-CL');
+            tBodyModal.innerHTML += `
+            <tr style="background: #ebf8ff; border-top: 3px double #3182ce; font-weight: bold;">
+                <td style="padding: 12px 10px; color: #2c5282; font-size: 14px; text-align: right;">
+                        🌎 STOCK TOTAL:
+                    </td>
+                <td style="padding: 12px 10px; text-align: right; color: #2b6cb0; font-size: 15px; font-family: monospace; font-weight: bold;">
+                        ${granTotalFormateado} kg
+                    </td>
+                </tr>`;
+
+        } else {
+            tBodyModal.innerHTML = `
+                <tr>
+                    <td colspan="2" style="padding: 15px; text-align: center; color: #718096;">
+                        No hay registros de stock acumulado en ninguna bodega.
+                    </td>
+                </tr>`;
+        }
+
+} else if (window.tabActualModal === 'general') {
+
+        // ====================================================================
+        // 🌐 MODO: STOCK BODEGA (DETALLE DE LA BODEGA SELECCIONADA)
+        // ====================================================================
+        const elTitulo = document.getElementById('modal-contable-titulo');
+        const elSubtitulo = document.getElementById('modal-contable-sub');
+
+        // 1. Hacemos visible el título principal y actualizamos su texto
+        if (elTitulo) {
+            elTitulo.style.display = "block";
+            elTitulo.innerText = `INFORME STOCK BODEGA`;
+        }
+
+        // 2. Detectamos la bodega activa para mostrarla en el subtítulo
+        if (elSubtitulo) {
+            let nombreBodegaTexto = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
+                ? 'PRINCIPAL' 
+                : (typeof bodegaActual !== 'undefined' ? bodegaActual.toUpperCase() : 'ACTUAL');
+            
+            elSubtitulo.innerText = `DETALLE DE STOCK EN BODEGA ${nombreBodegaTexto}`;
+        }
+
+        // 3. Encabezados de la tabla
+        if (tHeaders) {
+            tHeaders.innerHTML = `
+                <th style="padding: 8px 10px; border-bottom: 2px solid #cbd5e0; text-align: left; background: #edf2f7;">Cód. Contable / Material</th>
+                <th style="padding: 8px 20px; border-bottom: 2px solid #cbd5e0; text-align: right; background: #edf2f7; width: 120px;">Kilos</th>
+            `;
+        }
+
+        let granSumatoriaKg = 0;
+
+        // 4. Recorrido y renderizado de materiales en la bodega activa
+        if (window.datosContablesActuales) {
+            let codigosOrdenados = Object.keys(window.datosContablesActuales);
+            codigosOrdenados.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+            codigosOrdenados.forEach(cod => {
+                let item = window.datosContablesActuales[cod];
+                let subtotalCodigo = 0;
+
+                tBodyModal.innerHTML += `
+                    <tr style="background: #e6f2ff; border-top: 2px solid #bee3f8; border-bottom: 1px solid #bee3f8;">
+                        <td colspan="2" style="padding: 12px 10px; font-weight: bold; color: #1a365d; font-size: 13px; line-height: 1.5; vertical-align: middle;">
+                            <span style="display: inline-block; font-family: monospace; background: #2b6cb0; color: #ffffff; padding: 3px 7px; border-radius: 4px; font-weight: 800; margin-right: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; vertical-align: middle; line-height: 1;">${cod}</span>
+                            <span style="vertical-align: middle;">${item.nombre}</span>
+                        </td>
+                    </tr>`;
+
+                if (Array.isArray(item.desgloses)) {
+                    item.desgloses.forEach(d => {
+                        subtotalCodigo += d.kg;
+                        granSumatoriaKg += d.kg;
+
+                        let kgFormateado = typeof fmt === 'function' ? fmt(d.kg) : d.kg;
+
+                        tBodyModal.innerHTML += `
+                            <tr style="border-bottom: 1px solid #edf2f7;">
+                                <td style="padding: 6px 10px 6px 35px; color: #4a5568; font-size: 11px;">
+                                    🔹PP <span style="font-family: monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-left: 5px;">${d.pp}</span>
+                                </td>
+                                <td style="padding: 6px 20px; text-align: right; font-family: monospace; color: #2d3748; font-size: 13px;">
+                                    ${kgFormateado} kg
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                let subtotalFormateado = typeof fmt === 'function' ? fmt(subtotalCodigo) : subtotalCodigo;
+
+                tBodyModal.innerHTML += `
+                    <tr style="border-bottom: 2px solid #cbd5e0;">
+                        <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
+                            SUBTOTAL ${cod}:
+                        </td>
+                        <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 14px; background: #fbfbfb;">
+                            ${subtotalFormateado} kg
                         </td>
                     </tr>`;
             });
         }
 
-        let subtotalFormateado = typeof fmt === 'function' ? fmt(subtotalCodigo) : subtotalCodigo;
+        // 5. Totalizador general para la bodega activa
+        let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
+            ? 'BODEGA PRINCIPAL' 
+            : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
+
+        let granSumatoriaFormateada = typeof fmt === 'function' ? fmt(granSumatoriaKg) : granSumatoriaKg;
 
         tBodyModal.innerHTML += `
-            <tr style="border-bottom: 2px solid #cbd5e0;">
-                <td style="padding: 6px 10px 6px 35px; font-weight: bold; color: #4a5568; font-size: 14px; text-align: right;">
-                    SUBTOTAL ${cod}:
+            <tr style="background: #ebf8ff; border-top: 3px double #3182ce; font-weight: bold;">
+                <td style="padding: 12px 10px; color: #2c5282; font-size: 14px; text-align: right;">
+                    🔵 STOCK TOTAL ${nombreBodegaFinal}:
                 </td>
-                <td style="padding: 6px 20px; text-align: right; font-weight: bold; color: #2b6cb0; font-family: monospace; font-size: 14px; background: #fbfbfb;">
-                    ${subtotalFormateado} kg
+                <td style="padding: 12px 10px; text-align: right; color: #2b6cb0; font-size: 15px; font-family: monospace; font-weight: bold;">
+                    ${granSumatoriaFormateada} kg
                 </td>
             </tr>`;
-    });
-}
-
-let nombreBodegaFinal = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') 
-    ? 'BODEGA PRINCIPAL' 
-    : `BODEGA ${(typeof bodegaActual !== 'undefined' ? bodegaActual : 'ACTUAL').toUpperCase()}`;
-
-let granSumatoriaFormateada = typeof fmt === 'function' ? fmt(granSumatoriaKg) : granSumatoriaKg;
-
-// 🔵 FILA DE STOCK TOTAL EN AZUL Y CIFRA EN NEGRITA
-tBodyModal.innerHTML += `
-    <tr style="background: #ebf8ff; border-top: 3px double #3182ce; font-weight: bold;">
-        <td style="padding: 12px 10px; color: #2c5282; font-size: 14px; text-align: right;">
-            🔵 STOCK TOTAL ${nombreBodegaFinal}:
-        </td>
-        <td style="padding: 12px 20px; text-align: right; color: #2b6cb0; font-size: 15px; font-family: monospace; font-weight: bold;">
-            ${granSumatoriaFormateada} kg
-        </td>
-    </tr>`;
-
     }
 }
 
