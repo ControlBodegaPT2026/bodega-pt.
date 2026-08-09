@@ -2216,7 +2216,7 @@ function formatearMascara(input, esBusqueda = false) {
 }
 
 // ====================================================================================
-// 🔍 20. BUSCADOR INTERACTIVO Y RESALTADO DE TARJETAS (CON MATERIAL INCLUIDO)
+// 🔍 20. BUSCADOR INTERACTIVO Y RESALTADO DE TARJETAS (CON SOPORTE HISTÓRICO / MAESTRO)
 // ====================================================================================
 function buscar() {
     const inputBusqueda = document.getElementById('busqueda');
@@ -2236,7 +2236,7 @@ function buscar() {
     let encontrado = false;
     let totalKg = 0;
 
-    // Búsqueda proactiva en el maestro de productos para rescatar metadatos del material
+    // 1. Búsqueda proactiva en el maestro de productos para rescatar metadatos del material
     let infoMaestro = (typeof maestroProductos !== 'undefined' ? maestroProductos[q] : null) 
                    || (window.maestroProductos ? window.maestroProductos[q] : null);
 
@@ -2247,7 +2247,7 @@ function buscar() {
             </div>`;
     }
 
-    // Recorrido de la base de datos de stock para ubicar lotes coincidentes
+    // 2. Recorrido de la base de datos de stock activo para ubicar casilleros coincidentes
     if (typeof db !== 'undefined') {
         for (let ubi in db) {
             if (db[ubi] && db[ubi][q]) {
@@ -2263,7 +2263,7 @@ function buscar() {
         }
     }
 
-    // Aplicación de clases CSS de realce en el layout visual
+    // 3. Aplicación de clases CSS de realce en el layout visual de tarjetas
     todasLasCards.forEach(card => {
         let idUbi = card.dataset.id; 
 
@@ -2276,8 +2276,10 @@ function buscar() {
         }
     });
     
+    // 4. Renderización de resultados según los datos encontrados
     if (resContenedor) {
         if (encontrado) {
+            // Caso A: Se encontró stock en uno o más casilleros
             if (!infoMaestro) {
                 resultadosHTML = `
                     <div style="background: #fffaf0; padding: 6px 12px; border-radius: 6px; border-left: 4px solid #dd6b20; margin-bottom: 10px; font-family: sans-serif; font-size: 13px; color: #dd6b20;">
@@ -2291,7 +2293,20 @@ function buscar() {
                     TOTAL GENERAL: ${totalFormateado} kg
                 </div>`;
             resContenedor.innerHTML = resultadosHTML;
+
+        } else if (infoMaestro) {
+            // Caso B: No hay stock activo en casilleros, pero SI existe en el maestro de productos
+            resultadosHTML += `
+                <div style="background: #ebf8ff; padding: 6px 12px; border-radius: 6px; border-left: 4px solid #3182ce; margin-bottom: 8px; font-family: sans-serif; font-size: 12px; color: #2c5282;">
+                    ℹ️ Sin stock activo en ubicaciones.
+                </div>
+                <div style="border-top: 2px solid #333; margin-top: 8px; padding-top: 5px; font-family: monospace; font-size: 14px; font-weight: bold; color: #d32f2f;">
+                    TOTAL GENERAL: 0 kg
+                </div>`;
+            resContenedor.innerHTML = resultadosHTML;
+
         } else {
+            // Caso C: No tiene stock ni tampoco existe en el maestro
             resContenedor.innerText = "No encontrado";
         }
     }
@@ -3522,7 +3537,4 @@ function eliminarRegistroMaestro(pp) {
         }
     }
 }
-
-
-
 
