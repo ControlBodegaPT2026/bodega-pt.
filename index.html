@@ -9,9 +9,11 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- === INICIO DE SCRIPTS DE FIREBASE === -->
+<!-- === INICIO DE SCRIPTS DE FIREBASE === -->
     <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
+    <!-- SDK DE AUTENTICACIÓN AÑADIDO -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
     <!-- === FIN DE SCRIPTS DE FIREBASE === -->
 
     <!-- Archivo de diseño unificado -->
@@ -448,8 +450,36 @@
         </div>
     </div>
 
+<!-- 🔐 MODAL DE INICIO DE SESIÓN PARA ADMINISTRADOR -->
+    <div id="modal-login-admin" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 25px; border-radius: 12px; max-width: 360px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2); box-sizing: border-box;">
+            
+            <h3 style="margin-top: 0; color: #2d3748; text-align: center; font-size: 18px;">🔑 Acceso Administrador</h3>
+            
+            <form id="form-login-admin" onsubmit="ejecutarLoginAdmin(event)">
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 4px;">Correo electrónico:</label>
+                    <input type="email" id="input-login-email" required placeholder="admin@empresa.com" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 13px;">
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: bold; color: #4a5568; margin-bottom: 4px;">Contraseña:</label>
+                    <input type="password" id="input-login-password" required placeholder="••••••••" style="width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 13px;">
+                </div>
+
+                <div id="msg-login-error" style="display: none; color: #e53e3e; font-size: 12px; margin-bottom: 12px; text-align: center; font-weight: bold;"></div>
+
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button type="button" onclick="cerrarModalLoginAdmin()" style="flex: 1; background: #e2e8f0; color: #4a5568; border: none; padding: 10px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold;">Cancelar</button>
+                    <button type="submit" style="flex: 1; background: #3182ce; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold;">Iniciar Sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 <!-- Enlace directo a tu lógica externa -->
     <script src="app.js"></script>
+
     
 </body>
 </html>

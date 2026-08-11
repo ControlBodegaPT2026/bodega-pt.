@@ -3570,3 +3570,119 @@ function eliminarRegistroMaestro(pp) {
         }
     }
 }
+
+// ====================================================================
+// 🔐 AUTENTICACIÓN Y CONTROL DE SESIÓN CON FIREBASE AUTH
+// ====================================================================
+
+/**
+ * Escuchador global de Firebase que detecta cambios en el estado de autenticación.
+ * Se ejecuta automáticamente al cargar la página o al iniciar/cerrar sesión.
+ */
+firebase.auth().onAuthStateChanged((user) => {
+    const btnLogin = document.getElementById('btn-login-admin-menu');
+    const btnLogout = document.getElementById('btn-logout-admin-menu');
+
+    if (user) {
+        console.log("✅ Sesión activa como Administrador:", user.email);
+        
+        // Oculta la opción de iniciar sesión y muestra la de cerrar sesión
+        if (btnLogin) btnLogin.style.display = 'none';
+        if (btnLogout) btnLogout.style.display = 'flex';
+
+        // Activa todos los elementos visuales del administrador
+        activarModoAdministrador(true);
+    } else {
+        console.log("ℹ️ Navegando en modo Operador (Lectura).");
+
+        // Muestra la opción de iniciar sesión y oculta la de cerrar sesión
+        if (btnLogin) btnLogin.style.display = 'flex';
+        if (btnLogout) btnLogout.style.display = 'none';
+
+        // Oculta todos los elementos visuales del administrador
+        activarModoAdministrador(false);
+    }
+});
+
+/**
+ * Abre el modal emergente de inicio de sesión para el administrador.
+ */
+function abrirModalLoginAdmin() {
+    const modal = document.getElementById('modal-login-admin');
+    const errorDiv = document.getElementById('msg-login-error');
+    
+    // Limpia mensajes de error previos
+    if (errorDiv) {
+        errorDiv.innerText = '';
+        errorDiv.style.display = 'none';
+    }
+
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        console.error("No se encontró el elemento #modal-login-admin en index.html");
+    }
+}
+
+/**
+ * Cierra el modal de inicio de sesión.
+ */
+function cerrarModalLoginAdmin() {
+    const modal = document.getElementById('modal-login-admin');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Procesa el formulario e inicia sesión en Firebase con Email y Contraseña.
+ * @param {Event} e - Evento submit del formulario HTML.
+ */
+function ejecutarLoginAdmin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('input-login-email').value.trim();
+    const password = document.getElementById('input-login-password').value;
+    const errorDiv = document.getElementById('msg-login-error');
+
+    // Autenticación oficial mediante el SDK de Firebase
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            console.log("Acceso concedido:", userCredential.user.email);
+            cerrarModalLoginAdmin();
+            
+            // Limpia los campos del formulario
+            document.getElementById('input-login-email').value = '';
+            document.getElementById('input-login-password').value = '';
+        })
+        .catch((error) => {
+            console.error("Error al autenticar:", error.code, error.message);
+            if (errorDiv) {
+                errorDiv.innerText = "Correo o contraseña incorrectos.";
+                errorDiv.style.display = 'block';
+            }
+        });
+}
+
+/**
+ * Cierra la sesión activa del administrador en Firebase.
+ */
+function cerrarSesionAdmin() {
+    firebase.auth().signOut()
+        .then(() => {
+            console.log("Sesión cerrada con éxito.");
+        })
+        .catch((error) => {
+            console.error("Error al cerrar sesión:", error);
+        });
+}
+
+/**
+ * Muestra u oculta los elementos etiquetados con la clase '.admin-only'.
+ * @param {boolean} esAdmin - True si hay un usuario autenticado, False si no.
+ */
+function activarModoAdministrador(esAdmin) {
+    const elementosAdminOnly = document.querySelectorAll('.admin-only');
+
+    elementosAdminOnly.forEach(el => {
+        el.style.setProperty('display', esAdmin ? 'flex' : 'none', 'important');
+    });
+}
