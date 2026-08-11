@@ -233,10 +233,17 @@ function verificarAcceso() {
     const tarjetaSalida = document.getElementById('tarjeta-salida');
     const panelHistorial = document.getElementById('panel-historial-contenedor');
     const menuOpciones = document.querySelectorAll('.menu-opciones');
+    
+    // Selección de botones específicos del menú
     const btnMov = document.getElementById('btn-movimiento-interno');
     const btnTareaMenu = document.getElementById('btn-tarea-admin-menu'); 
+    const btnGestionMaestro = document.getElementById('btn-gestion-maestro-menu');
+
+    // Selección general de cualquier elemento con clase admin-only
+    const elementosAdminOnly = document.querySelectorAll('.admin-only');
 
     if (rol === 'admin') {
+        // --- MODO ADMINISTRADOR ---
         if (contenedorGrid) contenedorGrid.style.setProperty('display', 'grid', 'important');
         if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'block', 'important');
         if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'block', 'important');
@@ -244,11 +251,19 @@ function verificarAcceso() {
         
         menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
         
+        // Mostrar botones específicos
         if (btnMov) btnMov.style.setProperty('display', 'flex', 'important'); 
         if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'flex', 'important');
-        console.log("Acceso: ADMINISTRADOR");
+        if (btnGestionMaestro) btnGestionMaestro.style.setProperty('display', 'flex', 'important'); // 👈 Se activa para Admin
+
+        // Mostrar cualquier otro elemento marcado como admin-only
+        elementosAdminOnly.forEach(el => {
+            el.style.setProperty('display', 'flex', 'important');
+        });
+
+        console.log("Acceso: ADMINISTRADOR (Todas las funciones activas)");
     } else {
-        // Modo Operador: Oculta selectivamente funcionalidades críticas
+        // --- MODO OPERADOR ---
         if (contenedorGrid) {
             contenedorGrid.style.setProperty('display', 'grid', 'important');
             contenedorGrid.style.setProperty('grid-template-columns', '1fr 1fr', 'important');
@@ -259,8 +274,15 @@ function verificarAcceso() {
         
         menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
         
+        // Ocultar botones específicos
         if (btnMov) btnMov.style.setProperty('display', 'none', 'important'); 
         if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'none', 'important'); 
+        if (btnGestionMaestro) btnGestionMaestro.style.setProperty('display', 'none', 'important'); // 👈 Se oculta para Operador
+
+        // Ocultar de forma general todos los elementos con clase admin-only
+        elementosAdminOnly.forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+        });
         
         document.querySelectorAll('.btn-nav').forEach(btn => {
             const texto = btn.innerText.toUpperCase();
@@ -3487,18 +3509,23 @@ function editarRegistroMaestro(pp) {
 
         let nuevoNombre = prompt(`Ingresa la DESCRIPCIÓN/NOMBRE para el código ${nuevoCodigo}:`, maestroProductos[pp].nombre || "");
 
-        // Actualizar objeto en memoria
+        // 1. Actualizar objeto en la memoria del navegador
         maestroProductos[pp] = {
             codigo: nuevoCodigo,
             nombre: nuevoNombre ? nuevoNombre.trim() : "Producto Registrado"
         };
 
-        // Persistir en Firebase si está configurado
-        if (typeof db !== 'undefined' && db.ref) {
-            db.ref('maestroProductos/' + pp.replace(/\./g, '_')).set(maestroProductos[pp]);
+        // 2. CORRECCIÓN: Persistir en Firebase usando la referencia correcta 'maestroRef'
+        if (typeof maestroRef !== 'undefined') {
+            let ppClave = pp.replace(/\./g, '_');
+            maestroRef.child(ppClave).set(maestroProductos[pp])
+                .then(() => console.log(`✅ Registro ${pp} guardado en Firebase.`))
+                .catch(err => console.error(`❌ Error guardando en Firebase:`, err));
+        } else {
+            console.warn("⚠️ maestroRef no está definido. No se pudo guardar en Firebase.");
         }
         
-        // Persistir en localStorage como respaldo
+        // 3. Persistir en localStorage como respaldo local
         localStorage.setItem('maestroProductos', JSON.stringify(maestroProductos));
 
         alert(`✅ La PP ${pp} fue actualizada correctamente.`);
@@ -3519,14 +3546,20 @@ function editarRegistroMaestro(pp) {
 function eliminarRegistroMaestro(pp) {
     if (confirm(`⚠️ ¿Estás seguro de que deseas eliminar la PP ${pp} del maestro de productos?\n\nSi eliminas esta relación, la PP volverá a figurar como "SIN-CODIGO" en las consultas.`)) {
         
+        // 1. Eliminar de la memoria local
         delete maestroProductos[pp];
 
-        // Eliminar en Firebase si está configurado
-        if (typeof db !== 'undefined' && db.ref) {
-            db.ref('maestroProductos/' + pp.replace(/\./g, '_')).remove();
+        // 2. CORRECCIÓN: Eliminar en Firebase usando la referencia correcta 'maestroRef'
+        if (typeof maestroRef !== 'undefined') {
+            let ppClave = pp.replace(/\./g, '_');
+            maestroRef.child(ppClave).remove()
+                .then(() => console.log(`🗑️ Registro ${pp} eliminado de Firebase.`))
+                .catch(err => console.error(`❌ Error eliminando de Firebase:`, err));
+        } else {
+            console.warn("⚠️ maestroRef no está definido. No se pudo eliminar de Firebase.");
         }
 
-        // Actualizar localStorage
+        // 3. Actualizar localStorage
         localStorage.setItem('maestroProductos', JSON.stringify(maestroProductos));
 
         renderTablaGestionMaestro();
@@ -3537,4 +3570,3 @@ function eliminarRegistroMaestro(pp) {
         }
     }
 }
-

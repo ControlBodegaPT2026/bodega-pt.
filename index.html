@@ -39,8 +39,8 @@
         <span>📋</span> Tarea del Día
     </div>
     <!-- 🌟 NUEVA OPCIÓN: GESTIÓN DEL MAESTRO DE PRODUCTOS -->
-    <div onclick="abrirModalGestionMaestro(); toggleMenu();" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-        <span>🏷️</span> Gestionar Maestro PP
+    <div id="btn-gestion-maestro-menu" class="admin-only" onclick="abrirModalGestionMaestro(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
+    <span>🏷️</span> Gestionar Maestro PP
     </div>
     <div onclick="verReporteFIFO(); toggleMenu();" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
         <span>⏳</span> Reporte FIFO (+5M)
