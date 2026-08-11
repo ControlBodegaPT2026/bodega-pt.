@@ -32,6 +32,15 @@
                 <button class="btn-nav btn-nav-small" onclick="toggleMenu()">⚙</button>
 
 <div id="menuDropdown" class="menu-dropdown">
+<!-- 🔑 OPCIÓN PARA INICIAR SESIÓN COMO ADMINISTRADOR -->
+<div id="btn-login-admin-menu" onclick="abrirModalLoginAdmin(); toggleMenu();" style="display: flex; align-items: center; gap: 8px; cursor: pointer; border-top: 1px solid #edf2f7; margin-top: 6px; padding-top: 8px;">
+    <span>🔑</span> Iniciar Sesión Admin
+</div>
+
+<!-- 🔒 OPCIÓN PARA CERRAR SESIÓN (SOLO VISIBLE CUANDO HAY SESIÓN ACTIVA) -->
+<div id="btn-logout-admin-menu" class="admin-only" onclick="cerrarSesionAdmin(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer; color: #e53e3e;">
+    <span>🔒</span> Cerrar Sesión
+</div>
     <div id="btn-movimiento-interno" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirModalMovimiento(); toggleMenu();">
         <span>🔄</span> Movimiento Interno
     </div>
