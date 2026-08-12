@@ -208,7 +208,9 @@ dbRef.on('value', (snapshot) => {
         db = data.inventario || {};
         logs = data.historial || [];
         if (typeof render === 'function') render();
-        verificarAcceso();
+        
+        // ❌ Se removió la llamada a 'verificarAcceso()' para evitar interferencias
+        // con el nuevo sistema de autenticación de Firebase Auth.
     }
 });
 
@@ -224,74 +226,14 @@ maestroRef.on('value', (snapshot) => {
 // ====================================================================
 // 🔐 4. CONTROL DE ACCESOS Y ROLES (ADMIN / OPERADOR)
 // ====================================================================
+
+/**
+ * @deprecated Función obsoleta.
+ * La visibilidad de la interfaz de usuario ahora se gestiona de forma segura a través de:
+ * 'firebase.auth().onAuthStateChanged()' y la función 'activarModoAdministrador()'.
+ */
 function verificarAcceso() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const rol = urlParams.get('rol');
-
-    const contenedorGrid = document.querySelector('.top-grid');
-    const tarjetaIngreso = document.getElementById('tarjeta-ingreso');
-    const tarjetaSalida = document.getElementById('tarjeta-salida');
-    const panelHistorial = document.getElementById('panel-historial-contenedor');
-    const menuOpciones = document.querySelectorAll('.menu-opciones');
-    
-    // Selección de botones específicos del menú
-    const btnMov = document.getElementById('btn-movimiento-interno');
-    const btnTareaMenu = document.getElementById('btn-tarea-admin-menu'); 
-    const btnGestionMaestro = document.getElementById('btn-gestion-maestro-menu');
-
-    // Selección general de cualquier elemento con clase admin-only
-    const elementosAdminOnly = document.querySelectorAll('.admin-only');
-
-    if (rol === 'admin') {
-        // --- MODO ADMINISTRADOR ---
-        if (contenedorGrid) contenedorGrid.style.setProperty('display', 'grid', 'important');
-        if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'block', 'important');
-        if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'block', 'important');
-        if (panelHistorial) panelHistorial.style.setProperty('display', 'block', 'important');
-        
-        menuOpciones.forEach(el => el.style.setProperty('display', 'block', 'important'));
-        
-        // Mostrar botones específicos
-        if (btnMov) btnMov.style.setProperty('display', 'flex', 'important'); 
-        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'flex', 'important');
-        if (btnGestionMaestro) btnGestionMaestro.style.setProperty('display', 'flex', 'important'); // 👈 Se activa para Admin
-
-        // Mostrar cualquier otro elemento marcado como admin-only
-        elementosAdminOnly.forEach(el => {
-            el.style.setProperty('display', 'flex', 'important');
-        });
-
-        console.log("Acceso: ADMINISTRADOR (Todas las funciones activas)");
-    } else {
-        // --- MODO OPERADOR ---
-        if (contenedorGrid) {
-            contenedorGrid.style.setProperty('display', 'grid', 'important');
-            contenedorGrid.style.setProperty('grid-template-columns', '1fr 1fr', 'important');
-        }
-        if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', 'none', 'important');
-        if (tarjetaSalida) tarjetaSalida.style.setProperty('display', 'none', 'important');
-        if (panelHistorial) panelHistorial.style.setProperty('display', 'none', 'important');
-        
-        menuOpciones.forEach(el => el.style.setProperty('display', 'none', 'important'));
-        
-        // Ocultar botones específicos
-        if (btnMov) btnMov.style.setProperty('display', 'none', 'important'); 
-        if (btnTareaMenu) btnTareaMenu.style.setProperty('display', 'none', 'important'); 
-        if (btnGestionMaestro) btnGestionMaestro.style.setProperty('display', 'none', 'important'); // 👈 Se oculta para Operador
-
-        // Ocultar de forma general todos los elementos con clase admin-only
-        elementosAdminOnly.forEach(el => {
-            el.style.setProperty('display', 'none', 'important');
-        });
-        
-        document.querySelectorAll('.btn-nav').forEach(btn => {
-            const texto = btn.innerText.toUpperCase();
-            if (!texto.includes('PRINCIPAL') && !texto.includes('ADOQUINES')) {
-                btn.style.display = 'none';
-            }
-        });
-        console.log("Acceso: OPERADOR (Con Buscador y Stock PP)");
-    }
+    // Función vacía para evitar errores de ejecución en caso de ser llamada por eventos antiguos.
 }
 
 // ====================================================================
@@ -419,13 +361,9 @@ function cambiarBodega(tipo) {
 // ⚡ 8. PROCESO DE REGISTRO E INGRESO (ACCIÓN)
 // ====================================================================
 function accion(tipo) {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('rol') !== 'admin') {
-        const pass = prompt("Introduce la clave de autorización para modificar stock:");
-        if (pass !== "Qb2049Qb") { 
-            alert("Clave incorrecta. No tienes permiso para esta acción.");
-            return;
-        }
+    if (!firebase.auth().currentUser) {
+        alert("Debes iniciar sesión como administrador para modificar el stock.");
+        return;
     }
 
     const ppInput = document.getElementById(tipo === 'ingreso' ? 'pp_in' : 'pp_out');
@@ -1422,9 +1360,7 @@ window.cambiarTabModal = function(tab) {
 // 🔐 FUNCIÓN AUXILIAR: VISIBILIDAD E INYECCIÓN DINÁMICA DE IMPRESIÓN
 // ====================================================================
 function gestionarBotonImpresionStock(tabActiva) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const rol = urlParams.get('rol');
-    const esAdministrador = (rol === 'admin');
+    const esAdministrador = !!firebase.auth().currentUser;
 
     // Definimos las pestañas que permiten impresión para administradores
     const permiteImpresion = (tabActiva === 'general' || tabActiva === 'consolidado') && esAdministrador;
@@ -2477,6 +2413,10 @@ function exportarExcel() {
 // ====================================================================
 // 💾 24. RESPALDOS LOGÍSTICOS MANUALES Y AUTOMÁTICOS
 // ====================================================================
+
+/**
+ * Genera y descarga un archivo JSON con la copia de seguridad del inventario e historial.
+ */
 function crearBackup() {
     if (typeof db === 'undefined' || typeof logs === 'undefined') return;
     
@@ -2501,8 +2441,23 @@ function crearBackup() {
     }
 }
 
+/**
+ * Lee un archivo JSON de respaldo y sobrescribe los datos en Firebase si el usuario es Administrador.
+ * @param {File} archivo - Archivo .json cargado desde el navegador.
+ */
 function restaurarBackup(archivo) {
     if (!archivo) return;
+
+    // Validación de seguridad previa: solo administradores autenticados pueden restaurar datos
+    const usuarioActual = firebase.auth().currentUser;
+    if (!usuarioActual) {
+        if (typeof notificar === 'function') {
+            notificar("⚠️ Se requieren permisos de Administrador para restaurar un respaldo.", "error");
+        } else {
+            alert("⚠️ Se requieren permisos de Administrador para restaurar un respaldo.");
+        }
+        return;
+    }
     
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -2546,6 +2501,9 @@ function restaurarBackup(archivo) {
     reader.readAsText(archivo);
 }
 
+/**
+ * Almacena una copia rápida local en el navegador (localStorage).
+ */
 function autoBackup() {
     if (typeof db === 'undefined' || typeof logs === 'undefined') return;
     
@@ -2563,13 +2521,14 @@ function autoBackup() {
     }
 
     localStorage.setItem("bodega_backups", JSON.stringify(backups));
-    console.log("💾 Auto-backup guardado");
+    console.log("💾 Auto-backup guardado en almacenamiento local");
 }
 
-// Inicialización de la pantalla
-if (typeof verificarAcceso === 'function') verificarAcceso(); 
-if (typeof render === 'function') render();          
-
+// ====================================================================
+// 🚀 INICIALIZACIÓN DE LA APLICACIÓN
+// ====================================================================
+// Dibujar la tabla por primera vez al cargar la página
+if (typeof render === 'function') render();
 // ====================================================================================
 // 🚀 25. MÓDULO LOGÍSTICO INTERCONECTADO Y DETECTOR DE DATOS ASOCIADOS
 // ====================================================================================
@@ -3676,13 +3635,31 @@ function cerrarSesionAdmin() {
 }
 
 /**
- * Muestra u oculta los elementos etiquetados con la clase '.admin-only'.
- * @param {boolean} esAdmin - True si hay un usuario autenticado, False si no.
+ * Controla la visibilidad de TODOS los elementos administrativos según el estado real de Firebase Auth.
+ * @param {boolean} esAdmin - True si hay un administrador autenticado en Firebase, False si no.
  */
 function activarModoAdministrador(esAdmin) {
+    // 1. Elementos específicos etiquetados con la clase '.admin-only'
     const elementosAdminOnly = document.querySelectorAll('.admin-only');
-
     elementosAdminOnly.forEach(el => {
         el.style.setProperty('display', esAdmin ? 'flex' : 'none', 'important');
     });
+
+    // 2. Paneles principales (usando los IDs reales definidos en index.html)
+    const tarjetaIngreso = document.getElementById('tarjeta-ingreso');
+    const tarjetaSalida = document.getElementById('tarjeta-salida');
+    if (tarjetaIngreso) tarjetaIngreso.style.setProperty('display', esAdmin ? 'block' : 'none', 'important');
+    if (tarjetaSalida) tarjetaSalida.style.setProperty('display', esAdmin ? 'block' : 'none', 'important');
+
+    // 3. Panel de historial
+    const panelHistorial = document.getElementById('panel-historial-contenedor');
+    if (panelHistorial) panelHistorial.style.setProperty('display', esAdmin ? 'block' : 'none', 'important');
+
+    // 4. Ícono del menú de opciones (⚙): visible si hay sesión activa o si se usa el atajo en la URL
+    const menuOpciones = document.querySelector('.menu-opciones');
+    const urlParams = new URLSearchParams(window.location.search);
+    const mostrarIconoMenu = esAdmin || urlParams.get('acceso') === 'panel';
+    if (menuOpciones) menuOpciones.style.setProperty('display', mostrarIconoMenu ? 'flex' : 'none', 'important');
+
+    console.log(`🔐 Modo de interfaz actualizado: ${esAdmin ? 'ADMINISTRADOR (Acceso Total)' : 'OPERADOR (Solo Lectura)'}`);
 }
