@@ -46,15 +46,21 @@
     <div id="btn-movimiento-interno" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirModalMovimiento(); toggleMenu();">
         <span>🔄</span> Movimiento Interno
     </div>
+    <div id="btn-material-critico-menu" class="admin-only" onclick="abrirModalMaterialCritico(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
+        <span>⚠️</span> Material Crítico
+    </div>
+    <div id="btn-informe-personalizado-menu" class="admin-only" onclick="abrirModalInformePersonalizado(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
+        <span>📊</span> Informe Personalizado
+    </div>
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
     <!-- 🌟 NUEVA OPCIÓN: GESTIÓN DEL MAESTRO DE PRODUCTOS -->
     <div id="btn-gestion-maestro-menu" class="admin-only" onclick="abrirModalGestionMaestro(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
-    <span>🏷️</span> Gestionar Maestro PP
+        <span>🏷️</span> Gestionar Maestro PP
     </div>
     <div id="btn-fifo-menu" class="admin-only" onclick="verReporteFIFO(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
-    <span>⏳</span> Reporte FIFO (+5M)
+        <span>⏳</span> Reporte FIFO (+5M)
     </div>
     <div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px;"><span>📊</span> Exportar</div>
     <div onclick="crearBackup()" style="display: flex; align-items: center; gap: 8px;"><span>💾</span> Backup</div>
@@ -353,7 +359,6 @@
                 </h3>
                 <button onclick="cerrarModalGestionMaestro()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #a0aec0;">×</button>
             </div>
-
             <!-- Buscador interno -->
             <div style="margin-bottom: 12px;">
                 <input type="text" id="input-buscar-maestro" oninput="filtrarTablaMaestro()" placeholder="🔍 Buscar por PP o Código Contable..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
@@ -387,9 +392,64 @@
                     Cerrar
                 </button>
             </div>
-
         </div>
     </div>
+
+<!-- ⚠️ MODAL DE INFORME DE MATERIAL CRÍTICO -->
+<div id="modal-material-critico" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 900px; width: 92%; max-height: 85vh; overflow-y: auto; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #2d3748;">⚠️ Material Crítico</h3>
+            <button onclick="cerrarModalMaterialCritico()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+        </div>
+        <div id="contenedor-material-critico"></div>
+    </div>
+</div>
+
+<div id="modal-informe-personalizado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 900px; width: 92%; max-height: 85vh; overflow-y: auto; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #2d3748;">📊 Informe Personalizado</h3>
+            <button onclick="abrirModalConfigInforme()" title="Configurar" style="background: #718096; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; margin-left: 8px;">⚙️</button>
+            <button onclick="cerrarModalInformePersonalizado()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+        </div>
+        <div id="contenedor-informe-personalizado"></div>
+    </div>
+</div>
+
+<div id="modal-config-informe" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 600px; width: 92%; max-height: 85vh; overflow-y: auto; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #2d3748;">⚙️ Configurar Informe Personalizado</h3>
+            <button onclick="cerrarModalConfigInforme()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+        </div>
+        <div id="lista-bloques-config" style="margin-bottom: 15px;"></div>
+        <button onclick="abrirFormularioBloque()" style="width: 100%; background: #38a169; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">+ Agregar Bloque</button>
+        <button onclick="guardarConfigInforme()" style="width: 100%; background: #3182ce; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">💾 Guardar Configuración</button>
+    </div>
+</div>
+
+<div id="modal-formulario-bloque" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10002; justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:10px; max-width:500px; width:92%; max-height:85vh; overflow-y:auto; box-sizing:border-box;">
+        <h3 style="margin-top:0; color:#2d3748;">Bloque del Informe</h3>
+
+        <label style="display:block; font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:4px;">Título del bloque:</label>
+        <input type="text" id="input-titulo-bloque" placeholder="Ej: SACOS CHINOS GI" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; margin-bottom:12px; box-sizing:border-box;">
+
+        <label style="display:block; font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:4px;">Tipo de agrupación:</label>
+        <select id="select-tipo-bloque" onchange="cambiarTipoFormularioBloque()" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; margin-bottom:12px; box-sizing:border-box;">
+            <option value="porPP">Desglosado por PP</option>
+            <option value="porCodigo">Agrupado por código</option>
+        </select>
+
+        <div id="campos-especificos-bloque" style="margin-bottom:15px;"></div>
+
+        <div style="display:flex; gap:10px;">
+            <button type="button" onclick="cerrarFormularioBloque()" style="flex:1; background:#e2e8f0; color:#4a5568; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;">Cancelar</button>
+            <button type="button" onclick="guardarBloqueDesdeFormulario()" style="flex:1; background:#38a169; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;">Guardar Bloque</button>
+        </div>
+    </div>
+</div>
 
     <!-- Botón Flotante Chat Asistente -->
 <button id="btn-chat-asistente" style="position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: transparent; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10020; padding: 0; overflow: hidden; transition: transform 0.2s;">
@@ -479,6 +539,7 @@
 
 <!-- Enlace directo a tu lógica externa -->
     <script src="app.js"></script>
+    <script src="material-critico.js"></script>
     
 </body>
 </html>

@@ -1183,7 +1183,7 @@ window.abrirSemaforoMovil = function() {
         let obtenerColorBarra = (pctTexto) => {
             let num = parseInt(pctTexto) || 0;
             if (num >= 90) return "#e53e3e"; // Rojo
-            if (num >= 70) return "#dd6b20"; // Naranja
+            if (num >= 70) return "#d69e2e"; // Naranja
             return "#38a169"; // Verde
         };
 
@@ -3080,8 +3080,8 @@ document.addEventListener("DOMContentLoaded", () => {
             "PTAB031010": ["sacas de 1100 gi", "sacas 1100 gi", "1100 gi", "sacas 1100 granular", "sacas 1100 kg gi"],
             "PTAB030610": ["sacas de 1000 gi", "sacas 1000 gi", "1000 gi", "sacas 1000 granular", "sacas 1000 kg gi"],
             "PTAB030310": ["saco etiquetado", "sacos verdes etiquetados", "sacos etiquetados"],
-            "PTAB040310": ["saco polvo gi", "saco 25 kilos polvo", "polvo gi"],
-            "PTAB158001": ["sacas de 2400 gi", "sacas 2400 gi", "2400 gi", "sacas 2400 sin logo", "sacas 2400 kilos gi sin logo"],
+            "PTAB040310": ["saco polvo gi", "saco 25 kilos polvo", "saco 25 kg polvo", "polvo gi"],
+            "PTAB158001": ["sacas de 2400 gi", "sacas 2400 gi", "2400 gi", "sacas 2400 lbs", "sacas 2400 sin logo", "sacas 2400 lbs gi sin logo"],
             "PTUL321001": ["sacas 1100 ulexita", "ulexita 1100 kilos", "saca 1100 kilos sin logo ulexita", "ulexita"],
             "PTAB101010": ["sacas 1100 rechazo polvo", "1100 polvo rechazo", "rechazo polvo", "rechazo caja manga", "caja manga rechazo", "caja manga"],
             "PTAB941010": ["sacas 1100 rechazo granular", "1100 granular rechazo", "rechazo granular", "rechazo sobremalla", "sobremalla rechazo", "sobremalla"],
