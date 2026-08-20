@@ -87,18 +87,19 @@ function calcularInformePersonalizado() {
 }
 
 function renderTablaMaterialCritico(bloque) {
-    let tabla = `<div style="margin-bottom: 25px; border: 1px solid #cbd5e0; border-radius: 6px; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    let tabla = `<div style="margin-bottom: 25px; border: 1px solid #cbd5e0; border-radius: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <table style="width: 100%; min-width: 480px; border-collapse: collapse; font-size: 13px;">
             <thead>
                 <tr style="background: #e2e8f0;">
-                    <th style="padding: 8px; text-align: center; border: 1px solid #cbd5e0;">${bloque.titulo}</th>`;
-
+                    <th style="padding: 8px; text-align: center; border: 1px solid #cbd5e0; white-space: nowrap;">${bloque.titulo}</th>`;
+                    
     let nombresColumnas = bloque.tipo === "porPP"
         ? bloque.columnas
         : Object.values(bloque.datos).map(c => c.nombre);
 
     nombresColumnas.forEach(nombre => {
-        tabla += `<th style="padding: 8px; text-align: center; border: 1px solid #cbd5e0;">${nombre}</th>`;
+        
+        tabla += `<th style="padding: 8px; text-align: center; border: 1px solid #cbd5e0; white-space: nowrap;">${nombre}</th>`;
     });
     tabla += `<th style="padding: 8px; text-align: center; border: 1px solid #cbd5e0;">TOTAL (MT)</th></tr></thead><tbody>`;
 

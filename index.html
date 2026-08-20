@@ -62,7 +62,17 @@
     <div id="btn-fifo-menu" class="admin-only" onclick="verReporteFIFO(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
         <span>⏳</span> Reporte FIFO (+5M)
     </div>
-    <div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px;"><span>📊</span> Exportar</div>
+<div onclick="exportarExcel()" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <!-- Cuerpo principal en verde claro (#21A366) -->
+        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="#21A366"/>
+        <!-- Solapa superior en verde medio (#107C41) -->
+        <path d="M14 2V8H20L14 2Z" fill="#107C41"/>
+        <!-- Letra 'X' central en blanco -->
+        <path d="M8 12L10.5 15.5L8 19H9.8L11.3 16.7L12.8 19H14.6L12.1 15.5L14.6 12H12.8L11.3 14.3L9.8 12H8Z" fill="white"/>
+    </svg>
+    <span>Exportar</span>
+</div>
     <div onclick="crearBackup()" style="display: flex; align-items: center; gap: 8px;"><span>💾</span> Backup</div>
     <input type="file" id="inputBackup" style="display:none" onchange="restaurarBackup(this.files[0])">
     <div onclick="document.getElementById('inputBackup').click()" style="display: flex; align-items: center; gap: 8px;"><span>📥</span> Restaurar</div>
@@ -167,7 +177,7 @@
     </div>
 
     <!-- Modal Movimiento Interno -->
-    <div id="modal-movimiento" class="modal-backup-lista" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+    <div id="modal-movimiento" class="modal-backup-lista" style="display: none; position: fixed; z-index: 100000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
         <div style="background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); box-sizing: border-box; color: var(--text-main); font-family: sans-serif;">
             <h3 style="margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary);">
                 <i class='bx bx-transfer-alt'></i> MOVIMIENTO INTERNO
@@ -396,7 +406,7 @@
     </div>
 
 <!-- ⚠️ MODAL DE INFORME DE MATERIAL CRÍTICO -->
-<div id="modal-material-critico" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+<div id="modal-material-critico" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100000; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 10px; max-width: 900px; width: 92%; max-height: 85vh; overflow-y: auto; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0; color: #2d3748;">⚠️ Material Crítico</h3>
@@ -406,7 +416,7 @@
     </div>
 </div>
 
-<div id="modal-informe-personalizado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+<div id="modal-informe-personalizado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100000; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 10px; max-width: 900px; width: 92%; max-height: 85vh; overflow-y: auto; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0; color: #2d3748;">📊 Informe Personalizado</h3>
@@ -479,7 +489,7 @@
     </div>
 
     <!-- Modal Tarea Operador -->
-    <div id="modal-tarea-operador" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+    <div id="modal-tarea-operador" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="background: white; width: 100%; max-width: 450px; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: fadeUp 0.3s ease;">
             <div style="background: #e53e3e; color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 18px;">
                 <i class='bx bx-error-circle' style="font-size: 22px;"></i> INSTRUCCIÓN DE JEFATURA
@@ -494,7 +504,7 @@
     </div>
 
     <!-- Modal Admin Tarea -->
-    <div id="modal-admin-tarea" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+    <div id="modal-admin-tarea" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); box-sizing: border-box;">
             <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #2d3748; display: flex; align-items: center; gap: 6px;"><i class='bx bx-edit' style="color:#2b6cb0;"></i> Asignar Tarea del Día</h3>
             <textarea id="txt-nueva-tarea" placeholder="Ej: Descargar PP 05-05-26 en pasillo central..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 13px; outline: none; resize: none; box-sizing: border-box; margin-bottom: 15px;"></textarea>
