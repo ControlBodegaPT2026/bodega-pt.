@@ -370,4 +370,59 @@ function guardarConfigInforme() {
         });
 }
 
+function abrirVentanaImpresionInforme(bloques, tituloInforme) {
+    if (!bloques || bloques.length === 0) {
+        alert("No hay datos para imprimir.");
+        return;
+    }
+
+    const ventanaImpresion = window.open('', '_blank');
+    const fechaHoy = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const contenidoTablas = bloques.map(renderTablaMaterialCritico).join('');
+
+    ventanaImpresion.document.write(`
+        <html>
+        <head>
+            <title>${tituloInforme}</title>
+            <style>
+                body { font-family: sans-serif; color: #2d3748; padding: 30px; margin: 0; }
+                .header { border-bottom: 3px solid #2b6cb0; padding-bottom: 12px; margin-bottom: 20px; }
+                .title { font-size: 22px; font-weight: bold; color: #2d3748; }
+                .date { font-size: 12px; color: #718096; margin-top: 5px; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="title">${tituloInforme}</div>
+                <div class="date">Fecha de impresión: ${fechaHoy}</div>
+            </div>
+            ${contenidoTablas}
+        </body>
+        </html>
+    `);
+
+    ventanaImpresion.document.close();
+    ventanaImpresion.focus();
+
+    setTimeout(() => {
+        ventanaImpresion.print();
+        ventanaImpresion.close();
+    }, 250);
+}
+
+function imprimirMaterialCritico() {
+    abrirVentanaImpresionInforme(calcularMaterialCritico(), "⚠️ Informe de Material Crítico");
+}
+
+function imprimirInformePersonalizado() {
+    if (configInformePersonalizado.length === 0) {
+        alert("No hay bloques configurados en el informe personalizado.");
+        return;
+    }
+    abrirVentanaImpresionInforme(calcularInformePersonalizado(), "📊 Informe Personalizado");
+}
+
 
