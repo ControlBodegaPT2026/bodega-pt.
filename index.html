@@ -431,11 +431,13 @@
 
 <div id="modal-informe-personalizado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100000; justify-content: center; align-items: center;">
     <div style="background: white; padding: 20px; border-radius: 10px; max-width: 900px; width: 92%; max-height: 85vh; overflow-y: auto; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2d3748;">📊 Informe Personalizado</h3>
-            <button onclick="abrirModalConfigInforme()" title="Configurar" style="background: #718096; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; margin-right: 8px;">⚙️</button>
-            <button onclick="cerrarModalInformePersonalizado()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
-        </div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h3 style="margin: 0; color: #2d3748;">📊 Informe Personalizado</h3>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <button onclick="abrirModalConfigInforme()" title="Configurar" style="background: #718096; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer;">⚙️</button>
+        <button onclick="cerrarModalInformePersonalizado()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+    </div>
+</div>
         <div id="contenedor-informe-personalizado"></div>
 
 <div style="text-align: right; border-top: 1px solid #edf2f7; padding-top: 12px; margin-top: 15px;">
@@ -459,7 +461,7 @@
     </div>
 </div>
 
-<div id="modal-formulario-bloque" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10002; justify-content:center; align-items:center;">
+<div id="modal-formulario-bloque" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:100002; justify-content:center; align-items:center;">
     <div style="background:white; padding:20px; border-radius:10px; max-width:500px; width:92%; max-height:85vh; overflow-y:auto; box-sizing:border-box;">
         <h3 style="margin-top:0; color:#2d3748;">Bloque del Informe</h3>
 

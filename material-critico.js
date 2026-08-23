@@ -282,15 +282,15 @@ function renderCamposFormularioBloque() {
 
     if (tipo === 'porPP') {
         contenedor.innerHTML = `
-            <label style="display:block; font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:6px;">Selecciona los códigos (se desglosará por cada PP encontrada):</label>
-            <div style="max-height:180px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
-                ${codigos.map(c => `
-                    <label style="display:flex; align-items:center; gap:6px; padding:4px 0; font-size:12px; cursor:pointer;">
-                        <input type="checkbox" value="${c.codigo}" class="chk-codigo-bloque">
-                        <span><b>${c.codigo}</b> — ${c.nombre}</span>
-                    </label>
-                `).join('')}
-            </div>`;
+    <label style="display:block; font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:6px;">Selecciona los códigos (se desglosará por cada PP encontrada):</label>
+    <div style="max-height:180px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
+        ${codigos.map(c => `
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:5px 0; font-size:12px; cursor:pointer; line-height:1.4;">
+                <input type="checkbox" value="${c.codigo}" class="chk-codigo-bloque" style="width:14px; height:14px; margin:2px 0 0 0; flex-shrink:0;">
+                <span><b>${c.codigo}</b> — ${c.nombre}</span>
+            </label>
+        `).join('')}
+    </div>`;
     } else {
         contenedor.innerHTML = `
             <label style="display:block; font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:6px;">Columnas del bloque:</label>
