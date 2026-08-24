@@ -269,7 +269,7 @@ min-height: 220px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     display: none;
     min-width: 160px;
-    z-index: 1000;
+    z-index: 10000;
     overflow: hidden;
 
     /* animación */
@@ -1009,8 +1009,9 @@ button[onclick*="seccion-reporte-fifo"]:active {
     #modal-graficos > div,
     #modal-tarea-operador > div,
     #modal-admin-tarea > div,
-    #modal-login-admin > div {
-        width: 94% !important;
-        max-width: 94% !important;
+    #modal-login-admin > div,
+    #seccion-reporte-fifo > div {
+        width: 100% !important;
+        max-width: 100% !important;
     }
 }
