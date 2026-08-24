@@ -1323,10 +1323,9 @@ window.cambiarTabModal = function(tab) {
     let btnMaterial = document.getElementById('tab-material');
     let btnGeneral = document.getElementById('tab-general');
     let btnConsolidado = document.getElementById('tab-consolidado');
-    let btnGrafico = document.getElementById('tab-grafico');
-
+    
     // Inicializamos todos los botones en estado inactivo verificando su existencia previa
-    [btnMaterial, btnGeneral, btnConsolidado, btnGrafico].forEach(btn => {
+    [btnMaterial, btnGeneral, btnConsolidado].forEach(btn => {
         if (btn) {
             btn.style.color = "#718096";
             btn.style.borderBottom = "3px solid transparent";
@@ -1343,9 +1342,6 @@ window.cambiarTabModal = function(tab) {
     } else if (tab === 'consolidado' && btnConsolidado) {
         btnConsolidado.style.color = "var(--primary, #2b6cb0)";
         btnConsolidado.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
-    } else if (tab === 'grafico' && btnGrafico) {
-        btnGrafico.style.color = "var(--primary, #2b6cb0)";
-        btnGrafico.style.borderBottom = "3px solid var(--primary, #2b6cb0)";
     }
     
     // Validamos el rol y la pestaña para mostrar u ocultar el botón de impresión
@@ -1513,26 +1509,6 @@ function dibujarContenidoModal() {
 
     if (!tBodyModal) return;
     tBodyModal.innerHTML = "";
-
-    // MODO: GRÁFICO
-    if (window.tabActualModal === 'grafico') {
-        if (contenedorTabla) contenedorTabla.style.display = "none";
-        if (contenedorGrafico) contenedorGrafico.style.display = "block";
-
-        const elTitulo = document.getElementById('modal-contable-titulo');
-        const elSubtitulo = document.getElementById('modal-contable-sub');
-
-        if (elTitulo) elTitulo.style.display = "none"; 
-        if (elSubtitulo) {
-            elSubtitulo.innerText = "DISTRIBUCIÓN PORCENTUAL DEL STOCK TOTAL POR TIPO DE MATERIAL EN ESTA BODEGA";
-        }
-
-        let datos = window.datosContablesActuales ? window.datosContablesActuales[window.codigoContableSeleccionado] : null;
-        if (datos && typeof dibujarGraficoModal === 'function') {
-            dibujarGraficoModal(datos);
-        }
-        return; // Ahora este return es 100% válido porque está dentro de dibujarContenidoModal()
-    }
 
     // Restablecemos visibilidad para vistas de tabla (material, consolidado, general)
     if (contenedorTabla) contenedorTabla.style.display = "block";

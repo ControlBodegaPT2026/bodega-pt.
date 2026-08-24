@@ -52,6 +52,11 @@
     <div id="btn-informe-personalizado-menu" class="admin-only" onclick="abrirModalInformePersonalizado(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
         <span>📊</span> Informe Personalizado
     </div>
+
+<div id="btn-graficos-menu" class="admin-only" onclick="abrirModalGraficos(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
+    <span>📊</span> Gráficos
+</div>
+
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
@@ -306,9 +311,6 @@
     <div id="tab-consolidado" onclick="cambiarTabModal('consolidado')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
         🌎 Stock Total
     </div>
-    <div id="tab-grafico" onclick="cambiarTabModal('grafico')" style="flex: 1; text-align: center; padding: 10px 5px; font-weight: bold; font-size: 13px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.5s;">
-        📊 Ver Gráfico
-    </div>
 </div>
 
             <h3 id="modal-contable-titulo" style="margin-top: 0; margin-bottom: 2px; color: var(--primary);"></h3>
@@ -325,10 +327,6 @@
                     </thead>
                     <tbody id="modal-contable-tabla-body"></tbody>
                 </table>
-            </div>
-
-            <div id="modal-contable-contenedor-grafico" style="display: none; justify-content: center; align-items: center; flex-grow: 1; margin-bottom: 15px; background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0;">
-                <canvas id="canvas-grafico-modal" width="500" height="260" style="max-width: 100%; height: auto;"></canvas>
             </div>
 
             <button type="button" onclick="cerrarModalContable()" style="width: 100%; padding: 12px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--text-main); transition: all 0.15s;">
@@ -482,6 +480,31 @@
         </div>
     </div>
 </div>
+
+<div id="modal-graficos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box;">
+    <div style="background: white; padding: 20px; border-radius: 10px; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #2d3748;">📊 Gráficos</h3>
+            <button onclick="cerrarModalGraficos()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+        </div>
+
+        <h4 style="color: #4a5568; margin-bottom: 5px;">Bodega Principal</h4>
+        <div style="background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; overflow-x: auto;">
+            <canvas id="canvas-grafico-principal" width="500" height="260" style="max-width: 100%; height: auto;"></canvas>
+        </div>
+
+        <h4 style="color: #4a5568; margin-bottom: 5px;">Bodega Adoquines</h4>
+        <div style="background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; overflow-x: auto;">
+            <canvas id="canvas-grafico-adoquines" width="500" height="260" style="max-width: 100%; height: auto;"></canvas>
+        </div>
+
+        <h4 style="color: #4a5568; margin-bottom: 5px;">Total General</h4>
+        <div style="background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; overflow-x: auto;">
+            <canvas id="canvas-grafico-total" width="500" height="260" style="max-width: 100%; height: auto;"></canvas>
+        </div>
+    </div>
+</div>
+
 
     <!-- Botón Flotante Chat Asistente -->
 <button id="btn-chat-asistente" style="position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: transparent; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10020; padding: 0; overflow: hidden; transition: transform 0.2s;">

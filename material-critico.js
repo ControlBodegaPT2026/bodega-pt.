@@ -425,4 +425,118 @@ function imprimirInformePersonalizado() {
     abrirVentanaImpresionInforme(calcularInformePersonalizado(), "📊 Informe Personalizado");
 }
 
+function calcularCategoriasStock(filtroBodega) {
+    let idsPrincipal = new Set();
+    let idsAdoquines = new Set();
+    layoutPrin.forEach(item => { if (Array.isArray(item)) idsPrincipal.add(item[0]); });
+    layoutAdo.forEach(item => { if (Array.isArray(item)) idsAdoquines.add(item[0]); });
 
+    const categorias = {
+        "ÁCIDO BÓRICO": 0, "RECHAZO": 0, "CALCINADO": 0,
+        "GRANULEX": 0, "ULEXITA": 0, "OTROS": 0
+    };
+    let stockTotalGeneral = 0;
+
+    for (let locId in db) {
+        let perteneceBodega = filtroBodega === 'total' ? true
+            : filtroBodega === 'principal' ? idsPrincipal.has(locId)
+            : idsAdoquines.has(locId);
+        if (!perteneceBodega) continue;
+
+        for (let pp in db[locId]) {
+            let kg = db[locId][pp].kg || 0;
+            let nombre = (maestroProductos[pp] && maestroProductos[pp].nombre) ? maestroProductos[pp].nombre.toLowerCase() : '';
+
+            if (nombre.includes("acido") || nombre.includes("ácido")) categorias["ÁCIDO BÓRICO"] += kg;
+            else if (nombre.includes("rechazo") || nombre.includes("manga") || nombre.includes("mangas")) categorias["RECHAZO"] += kg;
+            else if (nombre.includes("calcinado")) categorias["CALCINADO"] += kg;
+            else if (nombre.includes("granulex")) categorias["GRANULEX"] += kg;
+            else if (nombre.includes("ulexita")) categorias["ULEXITA"] += kg;
+            else categorias["OTROS"] += kg;
+
+            stockTotalGeneral += kg;
+        }
+    }
+    return { categorias, stockTotalGeneral };
+}
+
+function dibujarDonaEnCanvas(canvasId, categorias, stockTotalGeneral, tituloLeyenda) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (stockTotalGeneral === 0) {
+        ctx.fillStyle = "#718096";
+        ctx.font = "bold 16px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Sin existencias de stock para graficar", canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    const colores = {
+        "ÁCIDO BÓRICO": "#3182ce", "RECHAZO": "#e53e3e", "CALCINADO": "#d69e2e",
+        "GRANULEX": "#38a169", "ULEXITA": "#805ad5", "OTROS": "#718096"
+    };
+
+    const centerX = 100, centerY = canvas.height / 2, radius = 95, innerRadius = 45;
+    let startAngle = 0;
+
+    for (let cat in categorias) {
+        let kgCat = categorias[cat];
+        if (kgCat === 0) continue;
+        let sliceAngle = (kgCat / stockTotalGeneral) * (2 * Math.PI);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle, false);
+        ctx.arc(centerX, centerY, innerRadius, startAngle + sliceAngle, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = colores[cat];
+        ctx.fill();
+        startAngle += sliceAngle;
+    }
+
+    let legendX = 280, legendY = 50;
+    ctx.textAlign = "left";
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillStyle = "#1a202c";
+    ctx.fillText(tituloLeyenda, legendX, legendY - 28);
+
+    for (let cat in categorias) {
+        let kgCat = categorias[cat];
+        if (kgCat === 0) continue;
+        let pct = ((kgCat / stockTotalGeneral) * 100).toFixed(1);
+
+        ctx.fillStyle = colores[cat];
+        ctx.fillRect(legendX, legendY - 11, 14, 14);
+        ctx.fillStyle = "#2d3748";
+        ctx.font = "bold 15px sans-serif";
+        ctx.fillText(`${cat} (${pct}%)`, legendX + 22, legendY);
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "bold 15px monospace";
+        let kgCatFormateado = typeof fmt === 'function' ? fmt(Math.round(kgCat)) : Math.round(kgCat);
+        ctx.fillText(`${kgCatFormateado} kg`, legendX + 22, legendY + 15);
+
+        legendY += 45;
+    }
+}
+
+function abrirModalGraficos() {
+    let modal = document.getElementById('modal-graficos');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    let { categorias: catPrincipal, stockTotalGeneral: totalPrincipal } = calcularCategoriasStock('principal');
+    let { categorias: catAdoquines, stockTotalGeneral: totalAdoquines } = calcularCategoriasStock('adoquines');
+    let { categorias: catTotal, stockTotalGeneral: totalGeneral } = calcularCategoriasStock('total');
+
+    dibujarDonaEnCanvas('canvas-grafico-principal', catPrincipal, totalPrincipal, "BODEGA PRINCIPAL:");
+    dibujarDonaEnCanvas('canvas-grafico-adoquines', catAdoquines, totalAdoquines, "BODEGA ADOQUINES:");
+    dibujarDonaEnCanvas('canvas-grafico-total', catTotal, totalGeneral, "TOTAL GENERAL:");
+}
+
+function cerrarModalGraficos() {
+    document.getElementById('modal-graficos').style.display = 'none';
+}
