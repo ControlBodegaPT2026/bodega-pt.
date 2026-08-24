@@ -54,17 +54,17 @@
     </div>
 
 <div id="btn-graficos-menu" class="admin-only" onclick="abrirModalGraficos(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
-    <span>📊</span> Gráficos
+    <i class='bx bx-pie-chart-alt-2' style="font-size: 18px; color: #2b6cb0;"></i> Gráficos
 </div>
 
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
-    <div id="btn-gestion-maestro-menu" class="admin-only" onclick="abrirModalGestionMaestro(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
-        <span>🏷️</span> Gestionar Maestro PP
-    </div>
     <div id="btn-fifo-menu" class="admin-only" onclick="verReporteFIFO(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
         <span>⏳</span> Reporte FIFO (+5M)
+    </div>
+    <div id="btn-gestion-maestro-menu" class="admin-only" onclick="abrirModalGestionMaestro(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
+        <span>🏷️</span> Gestionar Maestro PP
     </div>
 
 <!-- 📊 EXPORTAR A EXCEL -->
@@ -484,7 +484,7 @@
 <div id="modal-graficos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box;">
     <div style="background: white; padding: 20px; border-radius: 10px; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2d3748;">📊 Gráficos</h3>
+            <h3 style="margin: 0; color: #2d3748;"><i class='bx bx-pie-chart-alt-2' style="color: #2b6cb0;"></i> Gráficos</h3>
             <button onclick="cerrarModalGraficos()" style="background: #e53e3e; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
         </div>
 
@@ -505,14 +505,13 @@
     </div>
 </div>
 
-
     <!-- Botón Flotante Chat Asistente -->
-<button id="btn-chat-asistente" style="position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: transparent; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10020; padding: 0; overflow: hidden; transition: transform 0.2s;">
+<button id="btn-chat-asistente" style="position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: transparent; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; padding: 0; overflow: hidden; transition: transform 0.2s;">
     <img src="chatbot.gif" alt="Asistente virtual" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
 </button>
 
     <!-- Ventana Chat Asistente -->
-    <div id="ventana-chat-asistente" style="display: none; flex-direction: column; position: fixed; bottom: 90px; right: 20px; width: 90%; max-width: 360px; height: 450px; background: white; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.25); z-index: 10020; overflow: hidden; font-family: sans-serif; border: 1px solid #e2e8f0;">
+    <div id="ventana-chat-asistente" style="display: none; flex-direction: column; position: fixed; bottom: 90px; right: 20px; width: 90%; max-width: 360px; height: 450px; background: white; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.25); z-index: 1000; overflow: hidden; font-family: sans-serif; border: 1px solid #e2e8f0;">
         <div style="background: var(--primary, #2b6cb0); color: white; padding: 15px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
             <span>🤖 Asistente de Bodega QB</span>
             <button id="btn-cerrar-chat" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>

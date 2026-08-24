@@ -996,3 +996,21 @@ button[onclick*="seccion-reporte-fifo"]:active {
             font-size: 10px !important;
         }
     }
+@media (max-width: 600px) {
+    #modal-movimiento > div,
+    #modal-detalle-contable > div,
+    #modal-semaforo-movil > div,
+    #modal-nuevo-maestro > div,
+    #modal-gestion-maestro > div,
+    #modal-material-critico > div,
+    #modal-informe-personalizado > div,
+    #modal-config-informe > div,
+    #modal-formulario-bloque > div,
+    #modal-graficos > div,
+    #modal-tarea-operador > div,
+    #modal-admin-tarea > div,
+    #modal-login-admin > div {
+        width: 94% !important;
+        max-width: 94% !important;
+    }
+}
