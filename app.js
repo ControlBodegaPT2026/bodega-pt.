@@ -3638,14 +3638,15 @@ function activarModoAdministrador(esAdmin) {
     if (menuOpciones) menuOpciones.style.setProperty('display', mostrarIconoMenu ? 'flex' : 'none', 'important');
 
     // 5. Ajustar el grid según el rol
-    const contenedorGrid = document.querySelector('.top-grid');
-    if (contenedorGrid) {
-        if (esAdmin) {
-            contenedorGrid.style.removeProperty('grid-template-columns'); // vuelve a las 4 columnas del CSS original
-        } else {
-            contenedorGrid.style.setProperty('grid-template-columns', '1fr 1fr', 'important');
-        }
+const contenedorGrid = document.querySelector('.top-grid');
+if (contenedorGrid) {
+    if (esAdmin) {
+        contenedorGrid.style.removeProperty('grid-template-columns');
+    } else {
+        let columnasOperador = window.screen.width <= 600 ? '1fr' : '1fr 1fr';
+        contenedorGrid.style.setProperty('grid-template-columns', columnasOperador, 'important');
     }
+}
 
     console.log(`🔐 Modo de interfaz actualizado: ${esAdmin ? 'ADMINISTRADOR (Acceso Total)' : 'OPERADOR (Solo Lectura)'}`);
 }
