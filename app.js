@@ -285,7 +285,7 @@ let bultoSeleccionado = {
     ingreso: null,
     salida: null
 };
-
+const EXCEPCIONES = ['C5', 'E5'];
 const layoutPrin = [
     "PASILLO 1", 
     ["A4", 160], ["A3", 160], ["A2", 155], ["A1", 91], 
@@ -298,7 +298,7 @@ const layoutPrin = [
     ["C2", 350], ["C4", 350], ["C1", 350], ["C3", 350],
 
     "EXCEPCIÓN",
-    ["EX-01", 250]
+    ["C5", 350]
 ];
 
 const layoutAdo = [
@@ -310,7 +310,7 @@ const layoutAdo = [
     ["E1", 80], ["E2", 80], ["E3", 250], ["E4", 250],
 
     "EXCEPCIÓN",
-    ["EX-02", 250]
+    ["E5", 350]
 ];
 
 // Estructura de datos interna en memoria
@@ -584,7 +584,7 @@ function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
         }).then(() => {
             console.log("Sincronizado exitosamente.");
             if (typeof notificar === 'function') {
-                notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg}kg en ${ubi}`, "success");
+                notificar(`${tipo.toUpperCase()} OK: ${pp} - ${kg} kg en ${ubi}`, "success");
             }
             render();
         }).catch((e) => {
@@ -596,7 +596,7 @@ function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
         });
     } else {
         if (typeof notificar === 'function') {
-            notificar(`${tipo.toUpperCase()} LOCAL OK (Sin conexión): ${pp} - ${kg}kg en ${ubi}`, "warning");
+            notificar(`${tipo.toUpperCase()} LOCAL OK (Sin conexión): ${pp} - ${kg} kg en ${ubi}`, "warning");
         }
         render();
     }
@@ -768,7 +768,7 @@ function render() {
                     // Formateo del pesaje detallado de cada PP en la tarjeta
                     let kgFormateado = typeof fmt === 'function' ? fmt(db[id][pp].kg) : db[id][pp].kg;
                     detallePP += `<div style="border-top: 1px dotted #ccc; margin-top: 2px; padding-top: 2px;">
-                                    ${pp}: <b>${kgFormateado}kg</b>
+                                    ${pp}: <b>${kgFormateado} kg</b>
                                   </div>`;
                 }
             }
@@ -778,7 +778,7 @@ function render() {
             
             // Separación lógica para estadísticas sectoriales (Principal vs Adoquines)
             if (bodegaActual === "principal") {
-                if (id.startsWith('C') || id.startsWith('EX')) { 
+                if (id.startsWith('C') || EXCEPCIONES.includes(id)) {
                     eB += usados; 
                     eC += cap; 
                 } else { 
@@ -786,7 +786,7 @@ function render() {
                     pC += cap; 
                 }
             } else {
-                if (id.startsWith('E') && !id.startsWith('EX')) { 
+                if (id.startsWith('E') && !EXCEPCIONES.includes(id)) {
                     eB += usados; 
                     eC += cap; 
                 } else { 
@@ -805,7 +805,7 @@ function render() {
             card.title = "HAZ CLIC PARA VER EL ESTADO DE OCUPACIÓN DETALLADO";
             card.style.position = 'relative';
 
-            if (id.startsWith('EX')) {
+            if (EXCEPCIONES.includes(id)) {
                 card.style.border = "2px dashed #555";
                 card.style.background = "#f7fafc";
             }
@@ -866,7 +866,7 @@ function render() {
                 <div style="font-size: 12px; line-height: 1.2;">
                     <div>${Math.round(usados)}/${cap} bultos</div>
                     <div style="color: #555;">Disp: <b>${Math.round(disponible)}</b></div>
-                    <div style="font-weight: bold; margin: 2px 0;">% ${pct}</div>
+                    <div style="font-weight: bold; margin: 2px 0;">${pct}%</div>
                     <div style="background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px; margin-top: 4px; font-size: 10px; text-align: left;">
                         ${detallePP || "Vacío"}
                     </div>
@@ -1102,7 +1102,7 @@ function renderHistorial() {
         return `<div style="${alertarStyle} padding:8px 5px; display: flex; align-items: center;">
                     <i class='bx ${iconClass}' style='color:${iconColor}; font-size: 24px; margin-right: 10px;'></i>
                     <div style="flex-grow: 1;">
-                        <b class="${fifoLog.alerta ? 'pp-antigua-texto' : ''}">${l.pp}</b>${badgeFIFO} - ${l.kg}kg en <b>${l.ubi}</b> 
+                        <b class="${fifoLog.alerta ? 'pp-antigua-texto' : ''}">${l.pp}</b>${badgeFIFO} - ${l.kg} kg en <b>${l.ubi}</b> 
                         <small style="display: block; color: #777;">${l.fecha}</small>
                     </div>
                 </div>`;
@@ -2367,7 +2367,7 @@ function exportarExcel() {
                 "PP": pp,
                 "Kilos": db[ubi][pp].kg,
                 "Bultos": Math.round(db[ubi][pp].bultos),
-                "Bodega": (ubi.startsWith('A') || ubi.startsWith('B') || ubi.startsWith('C')) ? 'Principal' : 'Adoquines'
+                "Bodega": layoutPrin.some(item => Array.isArray(item) && item[0] === ubi) ? 'Principal' : 'Adoquines'
             });
         }
     }
