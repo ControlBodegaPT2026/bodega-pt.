@@ -768,7 +768,7 @@ function render() {
                     // Formateo del pesaje detallado de cada PP en la tarjeta
                     let kgFormateado = typeof fmt === 'function' ? fmt(db[id][pp].kg) : db[id][pp].kg;
                     detallePP += `<div style="border-top: 1px dotted #ccc; margin-top: 2px; padding-top: 2px;">
-                                    ${pp}: <b>${kgFormateado} kg</b>
+                                    ${pp}: <b style="white-space: nowrap;">${kgFormateado} kg</b>
                                   </div>`;
                 }
             }
