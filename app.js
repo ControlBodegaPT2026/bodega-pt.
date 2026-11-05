@@ -285,7 +285,7 @@ let bultoSeleccionado = {
     ingreso: null,
     salida: null
 };
-const EXCEPCIONES = ['C5', 'E5'];
+const EXCEPCIONES = ['C6', 'C7', 'D8', 'D9'];
 const layoutPrin = [
     "PASILLO 1", 
     ["A4", 160], ["A3", 160], ["A2", 155], ["A1", 91], 
@@ -296,9 +296,10 @@ const layoutPrin = [
     ["B8", 200], ["B7", 160], ["B6", 160], ["B5", 115],    
     "PATIO", 
     ["C2", 350], ["C4", 350], ["C1", 350], ["C3", 350],
+    ["C5", 350],
 
     "EXCEPCIÓN",
-    ["C5", 350]
+    ["C6", 100], ["C7", 100]
 ];
 
 const layoutAdo = [
@@ -310,7 +311,7 @@ const layoutAdo = [
     ["E1", 80], ["E2", 80], ["E3", 250], ["E4", 250],
 
     "EXCEPCIÓN",
-    ["E5", 350]
+    ["D8", 150], ["D9", 150]
 ];
 
 // Estructura de datos interna en memoria

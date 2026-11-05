@@ -169,6 +169,10 @@ min-height: 220px;
     }
     
     .card-ubi { background: white; border-radius: 5px; border: 1px solid #e2e8f0; padding: 10px; text-align: center; position: relative; border-top: 4px solid #cbd5e0; }
+
+.card-ubi[data-id="C5"] {
+    margin-top: 40px;
+}
     .ubi-green { border-top-color: var(--success); background: #f0fff4; }
     .ubi-yellow { border-top-color: #d69e2e; background: #fffaf0; }
     .ubi-red { border-top-color: var(--danger); background: #fff5f5; }
