@@ -579,7 +579,7 @@ function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
 
     // Sincronización en la nube con Firebase Database
     if (typeof dbRef !== 'undefined' && dbRef.set) {
-        dbRef.set({ 
+        dbRef.update({ 
             inventario: db, 
             historial: logs 
         }).then(() => {
@@ -2337,7 +2337,7 @@ function deshacer() {
 
     // 5. Transmisión de datos actualizados directamente a la nube en Firebase
     if (typeof dbRef !== 'undefined' && dbRef.set) {
-        dbRef.set({
+        dbRef.update({
             inventario: db,
             historial: logs
         }).then(() => {
@@ -2448,7 +2448,7 @@ function restaurarBackup(archivo) {
                     logs = backup.logs;
 
                     if (typeof dbRef !== 'undefined' && dbRef.set) {
-                        dbRef.set({
+                        dbRef.update({
                             inventario: db,  
                             historial: logs  
                         }).then(() => {
@@ -2705,7 +2705,7 @@ function ejecutarMovimientoInterno() {
 
     // 🔥 FIJAR EN LA NUBE (FIREBASE): Sincronización en tiempo real
     if (typeof dbRef !== 'undefined' && dbRef.set) {
-        dbRef.set({
+        dbRef.update({
             inventario: db,
             historial: logs
         }).then(() => {
@@ -2738,7 +2738,7 @@ function ejecutarMovimientoInterno() {
 // Función auxiliar para procesar el término de un movimiento e interactuar con Firebase
 function finalizarSincronizacionMovimiento(pp, origen, destino) {
     if (typeof dbRef !== 'undefined' && dbRef.set) {
-        dbRef.set({
+        dbRef.update({
             inventario: db,
             historial: logs
         }).then(() => {
