@@ -1156,48 +1156,100 @@ function fmt(n) {
  * exclusivo de dispositivos móviles, ejecutando animaciones de llenado.
  */
 window.abrirSemaforoMovil = function() {
-    if (window.innerWidth > 768) return;
-    const contenedor = document.getElementById('contenido-semaforo-clonado');
-    if (!contenedor) return;
+    if (window.innerWidth <= 768) {
+        let contenedorDestino = document.getElementById('contenido-semaforo-clonado');
+        if (!contenedorDestino) return;
+        
+        // Obtención robusta de etiquetas y datos del dashboard principal con fallback seguro
+        let labelPasillos = document.getElementById('label-p')?.innerText || "PASILLOS";
+        let labelPatio = document.getElementById('label-ext')?.innerText || "PATIO";
 
-    const o = calcularOcupacionBodegas();
+        let totalVal = document.getElementById('kpi-total')?.innerText || "0 / 0";
+        let totalPctRaw = document.getElementById('pct-total')?.innerText || "0%";
+        
+        let pVal = document.getElementById('kpi-p')?.innerText || "0 / 0";
+        let pPctRaw = document.getElementById('pct-p')?.innerText || "0%";
+        
+        let extVal = document.getElementById('kpi-ext')?.innerText || "0 / 0";
+        let extPctRaw = document.getElementById('pct-ext')?.innerText || "0%";
 
-    function filaBarra(etiqueta, b, c, detalle) {
-        const p = ocupPct(b, c);
-        const col = ocupColor(p);
-        return `
-            <div style="margin-bottom: 18px; font-family: sans-serif;">
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:5px; color:#2d3748;">
-                    <span>${etiqueta}</span>
-                    <span style="color:${col};">${Math.round(b)} / ${c} &nbsp;|&nbsp; ${p}%</span>
+        // Helper para extraer los números enteros del string de porcentaje
+        let limpiarPorcentaje = (textoRaw) => {
+            let coincidencia = textoRaw.match(/\d+/);
+            return coincidencia ? coincidencia[0] + "%" : "0%";
+        };
+
+        let totalPct = limpiarPorcentaje(totalPctRaw);
+        let pPct = limpiarPorcentaje(pPctRaw);
+        let extPct = limpiarPorcentaje(extPctRaw);
+
+        // Helper para definir colores según el porcentaje de ocupación
+        let obtenerColorBarra = (pctTexto) => {
+            let num = parseInt(pctTexto) || 0;
+            if (num >= 90) return "#e53e3e"; // Rojo
+            if (num >= 70) return "#d69e2e"; // Naranja
+            return "#38a169"; // Verde
+        };
+
+        // Inyección estructurada de barras de progreso móviles
+        contenedorDestino.innerHTML = `
+            <div style="margin-bottom: 20px; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
+                    <span>OCUPACIÓN TOTAL</span>
+                    <span style="color: ${obtenerColorBarra(totalPct)};">${totalVal} &nbsp; | &nbsp; ${totalPctRaw}</span>
                 </div>
-                <div style="background:#edf2f7; width:100%; height:14px; border-radius:7px; overflow:hidden;">
-                    <div class="barra-ocup-movil" data-pct="${Math.min(p, 100)}" style="background:${col}; width:0%; height:100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
+                <div style="background: #edf2f7; width: 100%; height: 14px; border-radius: 7px; overflow: hidden;">
+                    <div id="bar-movil-total" style="background: ${obtenerColorBarra(totalPct)}; width: 0%; height: 100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
                 </div>
-                ${detalle ? `<div style="display:flex; gap:16px; margin-top:6px; font-size:12px; color:#718096;">${detalle}</div>` : ''}
-            </div>`;
+            </div>
+
+            <div style="margin-bottom: 20px; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
+                    <span>${labelPasillos}</span>
+                    <span style="color: ${obtenerColorBarra(pPct)};">${pVal} &nbsp; | &nbsp; ${pPctRaw}</span>
+                </div>
+                <div style="background: #edf2f7; width: 100%; height: 14px; border-radius: 7px; overflow: hidden;">
+                    <div id="bar-movil-p" style="background: ${obtenerColorBarra(pPct)}; width: 0%; height: 100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 10px; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">
+                    <span>${labelPatio}</span>
+                    <span style="color: ${obtenerColorBarra(extPct)};">${extVal} &nbsp; | &nbsp; ${extPctRaw}</span>
+                </div>
+                <div style="background: #edf2f7; width: 100%; height: 14px; border-radius: 7px; overflow: hidden;">
+                    <div id="bar-movil-ext" style="background: ${obtenerColorBarra(extPct)}; width: 0%; height: 100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
+                </div>
+            </div>
+        `;
+        
+        const modalSemaforo = document.getElementById('modal-semaforo-movil');
+        if (modalSemaforo) {
+            modalSemaforo.style.display = 'flex';
+        }
+
+        // Retardo controlado para asegurar que la animación de la barra CSS se ejecute visiblemente
+        setTimeout(() => {
+            const barTotal = document.getElementById('bar-movil-total');
+            const barP = document.getElementById('bar-movil-p');
+            const barExt = document.getElementById('bar-movil-ext');
+            
+            if (barTotal) barTotal.style.width = totalPct;
+            if (barP) barP.style.width = pPct;
+            if (barExt) barExt.style.width = extPct;
+        }, 10);
     }
+};
 
-    function dato(nombre, b, c) {
-        const p = ocupPct(b, c);
-        return `<span>${nombre} <b style="color:${ocupColor(p)};">${p}%</b></span>`;
+/**
+ * Cierra de forma segura el modal de visualización del semáforo en pantallas móviles.
+ */
+window.cerrarSemaforoMovil = function() {
+    const modal = document.getElementById('modal-semaforo-movil');
+    if (modal) {
+        modal.style.display = 'none';
     }
-
-    const p = o.principal, a = o.adoquines;
-    contenedor.innerHTML =
-        filaBarra('TOTAL GENERAL', p.pB + p.eB + a.pB + a.eB, p.pC + p.eC + a.pC + a.eC) +
-        filaBarra('BODEGA PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
-            dato('Pasillos', p.pB, p.pC) + dato('Patio', p.eB, p.eC)) +
-        filaBarra('BODEGA ADOQUINES', a.pB + a.eB, a.pC + a.eC,
-            dato('Sectores', a.pB, a.pC) + dato('Galpón', a.eB, a.eC));
-
-    document.getElementById('modal-semaforo-movil').style.display = 'flex';
-
-    setTimeout(() => {
-        document.querySelectorAll('.barra-ocup-movil').forEach(el => {
-            el.style.width = el.dataset.pct + '%';
-        });
-    }, 10);
 };
 
 // ====================================================================================

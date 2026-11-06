@@ -74,34 +74,34 @@ window.abrirSemaforoMovil = function() {
 
     const o = calcularOcupacionBodegas();
 
-    function filaBarra(etiqueta, b, c) {
+    function filaBarra(etiqueta, b, c, detalle) {
         const p = ocupPct(b, c);
         const col = ocupColor(p);
         return `
-            <div style="margin-bottom: 12px; font-family: sans-serif;">
-                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; margin-bottom:5px; color:#2d3748;">
+            <div style="margin-bottom: 18px; font-family: sans-serif;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:5px; color:#2d3748;">
                     <span>${etiqueta}</span>
                     <span style="color:${col};">${Math.round(b)} / ${c} &nbsp;|&nbsp; ${p}%</span>
                 </div>
                 <div style="background:#edf2f7; width:100%; height:14px; border-radius:7px; overflow:hidden;">
                     <div class="barra-ocup-movil" data-pct="${Math.min(p, 100)}" style="background:${col}; width:0%; height:100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
                 </div>
+                ${detalle ? `<div style="display:flex; gap:16px; margin-top:6px; font-size:12px; color:#718096;">${detalle}</div>` : ''}
             </div>`;
     }
 
-    function seccion(titulo, d, n1, n2) {
-        return `
-            <div style="font-size:12px; font-weight:bold; color:#2b6cb0; border-bottom:1px solid #edf2f7; padding-bottom:4px; margin:14px 0 10px;">${titulo}</div>
-            ${filaBarra('OCUPACIÓN TOTAL', d.pB + d.eB, d.pC + d.eC)}
-            ${filaBarra(n1, d.pB, d.pC)}
-            ${filaBarra(n2, d.eB, d.eC)}`;
+    function dato(nombre, b, c) {
+        const p = ocupPct(b, c);
+        return `<span>${nombre} <b style="color:${ocupColor(p)};">${p}%</b></span>`;
     }
 
     const p = o.principal, a = o.adoquines;
     contenedor.innerHTML =
         filaBarra('TOTAL GENERAL', p.pB + p.eB + a.pB + a.eB, p.pC + p.eC + a.pC + a.eC) +
-        seccion('BODEGA PRINCIPAL', p, 'PASILLOS', 'PATIO') +
-        seccion('BODEGA ADOQUINES', a, 'SECTORES', 'GALPÓN');
+        filaBarra('BODEGA PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
+            dato('Pasillos', p.pB, p.pC) + dato('Patio', p.eB, p.eC)) +
+        filaBarra('BODEGA ADOQUINES', a.pB + a.eB, a.pC + a.eC,
+            dato('Sectores', a.pB, a.pC) + dato('Galpón', a.eB, a.eC));
 
     document.getElementById('modal-semaforo-movil').style.display = 'flex';
 
