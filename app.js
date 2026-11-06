@@ -949,6 +949,9 @@ function render() {
     if (typeof renderHistorial === 'function') {
         renderHistorial();            
     }
+    if (typeof actualizarOcupacionAmbasBodegas === 'function') {
+        actualizarOcupacionAmbasBodegas();
+    }
 }
 
 // ====================================================================
