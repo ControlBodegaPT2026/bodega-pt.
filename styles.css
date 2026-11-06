@@ -1019,3 +1019,12 @@ button[onclick*="seccion-reporte-fifo"]:active {
         max-width: 100% !important;
     }
 }
+@media (min-width: 769px) {
+    .stats-container {
+        grid-template-columns: 1fr;
+        padding: 12px 20px;
+    }
+    .stats-container .kpi-block {
+        display: none;
+    }
+}

@@ -35,34 +35,50 @@ function actualizarOcupacionAmbasBodegas() {
     if (!el) return;
 
     const o = calcularOcupacionBodegas();
-    const total = {
-        b: o.principal.pB + o.principal.eB + o.adoquines.pB + o.adoquines.eB,
-        c: o.principal.pC + o.principal.eC + o.adoquines.pC + o.adoquines.eC
-    };
+    const p = o.principal, a = o.adoquines;
 
-    function bloque(nombre, b, c, detalle) {
-        const p = ocupPct(b, c);
-        const col = ocupColor(p);
+    function tarjeta(titulo, b, c, detalle, activa) {
+        const pct = ocupPct(b, c);
+        const col = ocupColor(pct);
+        const borde = activa ? '1px solid #2b6cb0' : '1px solid #e2e8f0';
+const fondo = activa ? '#f5faff' : '#ffffff';
         return `
-            <div style="margin-bottom: 8px; min-width: 230px;">
-                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:12px; color:#4a5568;">
-                    <span>${nombre}</span>
-                    <span style="color:${col};">${Math.round(b)}/${c} · ${p}% ${ocupEmoji(p)}</span>
+            <div style="border:${borde}; background:${fondo}; border-radius:10px; padding:12px 16px;">
+                <div style="font-size:13px; color:#4a5568; font-weight:600;">
+                    ${titulo}${activa ? ' <span style="font-size:11px; color:#2b6cb0; font-weight:normal;">(en pantalla)</span>' : ''}
                 </div>
-                <div style="height:10px; background:#edf2f7; border-radius:20px; overflow:hidden; margin:3px 0;">
-                    <div style="width:${Math.min(p, 100)}%; height:100%; background:${col}; border-radius:20px;"></div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin:4px 0 8px;">
+                    <span style="font-size:22px; font-weight:bold; color:#2d3748;">${Math.round(b)} <span style="font-size:15px; color:#718096; font-weight:600;">/ ${c}</span></span>
+                    <span style="display:inline-flex; align-items:center; gap:6px; background:${col}1a; padding:2px 10px; border-radius:12px; font-size:18px; font-weight:bold; color:${col};">
+                        ${pct}% <span style="width:12px; height:12px; border-radius:50%; background:${col}; display:inline-block;"></span>
+                    </span>
                 </div>
-                ${detalle ? `<div style="font-size:11px; color:#718096;">${detalle}</div>` : ''}
+                <div style="height:10px; background:#edf2f7; border-radius:20px; overflow:hidden;">
+                    <div style="width:${Math.min(pct, 100)}%; height:100%; background:${col}; border-radius:20px;"></div>
+                </div>
+                <div style="display:flex; gap:18px; margin-top:8px; font-size:12px; color:#718096;">${detalle}</div>
             </div>`;
     }
 
-    const p = o.principal, a = o.adoquines;
-    el.innerHTML =
-        bloque('PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
-            `Pasillos ${ocupPct(p.pB, p.pC)}% · Patio ${ocupPct(p.eB, p.eC)}%`) +
-        bloque('ADOQUINES', a.pB + a.eB, a.pC + a.eC,
-            `Sectores ${ocupPct(a.pB, a.pC)}% · Galpón ${ocupPct(a.eB, a.eC)}%`) +
-        bloque('TOTAL GENERAL', total.b, total.c, '');
+    function dato(nombre, b, c) {
+        const pct = ocupPct(b, c);
+        return `<span>${nombre} <b style="color:${ocupColor(pct)};">${pct}%</b> <span style="color:#a0aec0;">(${Math.round(b)}/${c})</span></span>`;
+    }
+
+    const totalB = p.pB + p.eB + a.pB + a.eB;
+    const totalC = p.pC + p.eC + a.pC + a.eC;
+
+    el.style.lineHeight = '1.3';
+    el.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;">
+            
+            ${tarjeta('BODEGA PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
+                dato('Pasillos', p.pB, p.pC) + dato('Patio', p.eB, p.eC), bodegaActual === 'principal')}
+            ${tarjeta('BODEGA ADOQUINES', a.pB + a.eB, a.pC + a.eC,
+                dato('Sectores', a.pB, a.pC) + dato('Galpón', a.eB, a.eC), bodegaActual === 'adoquines')}
+${tarjeta('TOTAL GENERAL', totalB, totalC,
+                `<span>Disponibles <b style="color:#4a5568;">${Math.round(totalC - totalB)}</b> bultos</span>`, false)}
+        </div>`;
 }
 
 // ---------- MÓVIL: ventana de detalle con ambas bodegas ----------
