@@ -174,7 +174,7 @@ min-height: 220px;
     margin-top: 40px;
 }
     .ubi-green { border-top-color: var(--success); background: #f0fff4; }
-    .ubi-yellow { border-top-color: #d69e2e; background: #fffaf0; }
+    .ubi-yellow { border-top-color: #facc15; background: #fffaf0; }
     .ubi-red { border-top-color: var(--danger); background: #fff5f5; }
 
     .bottom-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }

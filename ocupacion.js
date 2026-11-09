@@ -26,7 +26,9 @@ function calcularOcupacionBodegas() {
 }
 
 function ocupPct(b, c) { return c > 0 ? Math.round((b / c) * 100) : 0; }
-function ocupColor(p) { return p > 90 ? '#e53e3e' : (p > 70 ? '#d69e2e' : '#38a169'); }
+const OCUP_AMARILLO = '#facc15';
+function ocupColor(p) { return p > 90 ? '#e53e3e' : (p > 70 ? OCUP_AMARILLO : '#38a169'); }
+function ocupTexto(col) { return col === OCUP_AMARILLO ? '#eabc04' : col; }
 function ocupEmoji(p) { return p > 90 ? '🔴' : (p > 70 ? '🟡' : '🟢'); }
 function colorearInsigniasOcupacion() {
     const fondos = { verde: '#e6fffa', amarillo: '#fffee6', rojo: '#fed7d7' };
@@ -60,7 +62,7 @@ const fondo = activa ? '#f5faff' : '#ffffff';
                 </div>
                 <div style="display:flex; align-items:center; justify-content:space-between; margin:4px 0 8px;">
                     <span style="font-size:22px; font-weight:bold; color:#2d3748;">${Math.round(b)} <span style="font-size:15px; color:#718096; font-weight:600;">/ ${c}</span></span>
-                    <span style="display:inline-flex; align-items:center; gap:6px; background:${col}1a; padding:2px 10px; border-radius:12px; font-size:18px; font-weight:bold; color:${col};">
+                    <span style="display:inline-flex; align-items:center; gap:6px; background:${col}1a; padding:2px 10px; border-radius:12px; font-size:18px; font-weight:bold; color:${ocupTexto(col)};">
                         ${pct}% <span style="width:12px; height:12px; border-radius:50%; background:${col}; display:inline-block;"></span>
                     </span>
                 </div>
@@ -73,7 +75,7 @@ const fondo = activa ? '#f5faff' : '#ffffff';
 
     function dato(nombre, b, c) {
         const pct = ocupPct(b, c);
-        return `<span>${nombre} <b style="color:${ocupColor(pct)};">${pct}%</b> <span style="color:#a0aec0;">(${Math.round(b)}/${c})</span></span>`;
+        return `<span>${nombre} <b style="color:${ocupTexto(ocupColor(pct))};">${pct}%</b> <span style="color:#a0aec0;">(${Math.round(b)}/${c})</span></span>`;
     }
 
     const totalB = p.pB + p.eB + a.pB + a.eB;
@@ -108,7 +110,7 @@ window.abrirSemaforoMovil = function() {
             <div style="margin-bottom: 18px; font-family: sans-serif;">
                 <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:5px; color:#2d3748;">
                     <span>${etiqueta}</span>
-                    <span style="color:${col};">${Math.round(b)} / ${c} &nbsp;|&nbsp; ${p}%</span>
+                    <span style="color:${ocupTexto(col)};">${Math.round(b)} / ${c} &nbsp;|&nbsp; ${p}%</span>
                 </div>
                 <div style="background:#edf2f7; width:100%; height:14px; border-radius:7px; overflow:hidden;">
                     <div class="barra-ocup-movil" data-pct="${Math.min(p, 100)}" style="background:${col}; width:0%; height:100%; transition: width 2s cubic-bezier(0.1, 1, 0.1, 1);"></div>
