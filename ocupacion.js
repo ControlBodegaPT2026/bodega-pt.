@@ -29,7 +29,7 @@ function ocupPct(b, c) { return c > 0 ? Math.round((b / c) * 100) : 0; }
 function ocupColor(p) { return p > 90 ? '#e53e3e' : (p > 70 ? '#d69e2e' : '#38a169'); }
 function ocupEmoji(p) { return p > 90 ? '🔴' : (p > 70 ? '🟡' : '🟢'); }
 function colorearInsigniasOcupacion() {
-    const fondos = { verde: '#e6fffa', amarillo: '#fefcbf', rojo: '#fed7d7' };
+    const fondos = { verde: '#e6fffa', amarillo: '#fffee6', rojo: '#fed7d7' };
 
     ['pct-total', 'pct-p', 'pct-ext'].forEach(id => {
         const el = document.getElementById(id);

@@ -3619,6 +3619,7 @@ function cerrarSesionAdmin() {
  * @param {boolean} esAdmin - True si hay un administrador autenticado en Firebase, False si no.
  */
 function activarModoAdministrador(esAdmin) {
+document.body.classList.toggle('modo-operador', !esAdmin);
     // 1. Elementos específicos etiquetados con la clase '.admin-only'
     const elementosAdminOnly = document.querySelectorAll('.admin-only');
     elementosAdminOnly.forEach(el => {
