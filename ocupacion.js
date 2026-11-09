@@ -28,9 +28,20 @@ function calcularOcupacionBodegas() {
 function ocupPct(b, c) { return c > 0 ? Math.round((b / c) * 100) : 0; }
 function ocupColor(p) { return p > 90 ? '#e53e3e' : (p > 70 ? '#d69e2e' : '#38a169'); }
 function ocupEmoji(p) { return p > 90 ? '🔴' : (p > 70 ? '🟡' : '🟢'); }
+function colorearInsigniasOcupacion() {
+    const fondos = { verde: '#e6fffa', amarillo: '#fefcbf', rojo: '#fed7d7' };
 
+    ['pct-total', 'pct-p', 'pct-ext'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const pct = parseInt(el.innerText, 10) || 0;
+        el.style.background = pct > 90 ? fondos.rojo : (pct > 70 ? fondos.amarillo : fondos.verde);
+    });
+}
 // ---------- ESCRITORIO: mini gráfico con ambas bodegas ----------
 function actualizarOcupacionAmbasBodegas() {
+    colorearInsigniasOcupacion();
+
     const el = document.getElementById('mini-grafico');
     if (!el) return;
 
@@ -112,8 +123,11 @@ window.abrirSemaforoMovil = function() {
     }
 
     const p = o.principal, a = o.adoquines;
+    const separador = `<div style="border-top: 2px solid #cbd5e0; margin: 8px 0 24px;"></div>`;
+
     contenedor.innerHTML =
         filaBarra('TOTAL GENERAL', p.pB + p.eB + a.pB + a.eB, p.pC + p.eC + a.pC + a.eC) +
+        separador +
         filaBarra('BODEGA PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
             dato('Pasillos', p.pB, p.pC) + dato('Patio', p.eB, p.eC)) +
         filaBarra('BODEGA ADOQUINES', a.pB + a.eB, a.pC + a.eC,
