@@ -2824,7 +2824,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (clasesTarjeta.includes('rojo') || clasesTarjeta.includes('danger') || clasesTarjeta.includes('red')) {
                 colorBordeFuerte = "#dc2626"; 
             } else if (clasesTarjeta.includes('amarillo') || clasesTarjeta.includes('warning') || clasesTarjeta.includes('yellow')) {
-                colorBordeFuerte = "#d97706"; 
+                colorBordeFuerte = "#facc15"; 
             } else if (clasesTarjeta.includes('verde') || clasesTarjeta.includes('success') || clasesTarjeta.includes('green')) {
                 colorBordeFuerte = "#16a34a"; 
             } 
@@ -2837,7 +2837,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     let b = parseInt(rgbValores[2]);
 
                     if (r > 180 && g > 150) {
-                        colorBordeFuerte = "#d97706"; // Amarillo
+                        colorBordeFuerte = "#facc15"; // Amarillo
                     } else if (r > 150 && g < 120) {
                         colorBordeFuerte = "#dc2626"; // Rojo
                     } else if (g > 120 && r < 150) {
