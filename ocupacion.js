@@ -28,16 +28,23 @@ function calcularOcupacionBodegas() {
 function ocupPct(b, c) { return c > 0 ? Math.round((b / c) * 100) : 0; }
 const OCUP_AMARILLO = '#facc15';
 function ocupColor(p) { return p > 90 ? '#e53e3e' : (p > 70 ? OCUP_AMARILLO : '#38a169'); }
+function ocupBorde(p) { return p > 90 ? '#c53030' : (p > 70 ? '#d8aa00' : '#2f855a'); }
 function ocupTexto(col) { return col === OCUP_AMARILLO ? '#eabc04' : col; }
 function ocupEmoji(p) { return p > 90 ? '🔴' : (p > 70 ? '🟡' : '🟢'); }
 function colorearInsigniasOcupacion() {
-    const fondos = { verde: '#e6fffa', amarillo: '#fffee6', rojo: '#fed7d7' };
+    const estilos = {
+        verde:    { fondo: '#e6fffa', borde: '#2f855a' },
+        amarillo: { fondo: '#fefcbf', borde: '#d8aa00' },
+        rojo:     { fondo: '#fed7d7', borde: '#c53030' }
+    };
 
     ['pct-total', 'pct-p', 'pct-ext'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const pct = parseInt(el.innerText, 10) || 0;
-        el.style.background = pct > 90 ? fondos.rojo : (pct > 70 ? fondos.amarillo : fondos.verde);
+        const e = pct > 90 ? estilos.rojo : (pct > 70 ? estilos.amarillo : estilos.verde);
+        el.style.background = e.fondo;
+        el.style.border = `1.5px solid ${e.borde}`;
     });
 }
 // ---------- ESCRITORIO: mini gráfico con ambas bodegas ----------
@@ -62,7 +69,7 @@ const fondo = activa ? '#f5faff' : '#ffffff';
                 </div>
                 <div style="display:flex; align-items:center; justify-content:space-between; margin:4px 0 8px;">
                     <span style="font-size:22px; font-weight:bold; color:#2d3748;">${Math.round(b)} <span style="font-size:15px; color:#718096; font-weight:600;">/ ${c}</span></span>
-                    <span style="display:inline-flex; align-items:center; gap:6px; background:${col}1a; padding:2px 10px; border-radius:12px; font-size:18px; font-weight:bold; color:${ocupTexto(col)};">
+                    <span style="display:inline-flex; align-items:center; gap:6px; background:${col}1a; border:1.5px solid ${ocupBorde(pct)}; padding:2px 10px; border-radius:12px; font-size:18px; font-weight:bold; color:${ocupTexto(col)};">
                         ${pct}% <span style="width:12px; height:12px; border-radius:50%; background:${col}; display:inline-block;"></span>
                     </span>
                 </div>
