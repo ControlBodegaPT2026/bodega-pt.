@@ -1047,3 +1047,14 @@ button[onclick*="seccion-reporte-fifo"]:active {
     padding: 5px 9px !important;
     font-size: 15px !important;
 }
+#modal-mapa input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    box-shadow: none !important;
+    accent-color: #2b6cb0;
+    cursor: pointer;
+}
