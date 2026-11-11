@@ -26,10 +26,10 @@ function calcularOcupacionBodegas() {
 }
 
 function ocupPct(b, c) { return c > 0 ? Math.round((b / c) * 100) : 0; }
-const OCUP_AMARILLO = '#facc15';
+const OCUP_AMARILLO = '#eabc04';
 function ocupColor(p) { return p > 90 ? '#e53e3e' : (p > 70 ? OCUP_AMARILLO : '#38a169'); }
 function ocupBorde(p) { return p > 90 ? '#c53030' : (p > 70 ? '#d8aa00' : '#2f855a'); }
-function ocupTexto(col) { return col === OCUP_AMARILLO ? '#eabc04' : col; }
+function ocupTexto(col) { return col === OCUP_AMARILLO ? '#f0c105' : col; }
 function ocupEmoji(p) { return p > 90 ? '🔴' : (p > 70 ? '🟡' : '🟢'); }
 function colorearInsigniasOcupacion() {
     const estilos = {

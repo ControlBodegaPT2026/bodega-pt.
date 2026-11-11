@@ -1041,7 +1041,8 @@ button[onclick*="seccion-reporte-fifo"]:active {
         box-sizing: border-box;
     }
 }
-.btn-nav.btn-nav-mapa {
+.btn-nav.btn-nav-mapa,
+.btn-nav.btn-nav-menu {
     flex: 0 0 auto !important;
     padding: 5px 9px !important;
     font-size: 15px !important;
