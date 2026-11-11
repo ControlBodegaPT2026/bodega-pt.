@@ -50,6 +50,7 @@ function colorearInsigniasOcupacion() {
 // ---------- ESCRITORIO: mini gráfico con ambas bodegas ----------
 function actualizarOcupacionAmbasBodegas() {
     colorearInsigniasOcupacion();
+if (typeof actualizarMapaSiAbierto === 'function') actualizarMapaSiAbierto();
 
     const el = document.getElementById('mini-grafico');
     if (!el) return;

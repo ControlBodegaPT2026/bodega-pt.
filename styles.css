@@ -1011,6 +1011,7 @@ button[onclick*="seccion-reporte-fifo"]:active {
     #modal-config-informe > div,
     #modal-formulario-bloque > div,
     #modal-graficos > div,
+    #modal-mapa > div,
     #modal-tarea-operador > div,
     #modal-admin-tarea > div,
     #modal-login-admin > div,
@@ -1039,4 +1040,9 @@ button[onclick*="seccion-reporte-fifo"]:active {
         min-height: 48px;
         box-sizing: border-box;
     }
+}
+.btn-nav.btn-nav-mapa {
+    flex: 0 0 auto !important;
+    padding: 5px 9px !important;
+    font-size: 15px !important;
 }
