@@ -1,8 +1,8 @@
 // ====================================================================
 // 🗺️ MAPA DE OCUPACIÓN SOBRE EL PLANO REAL DE CADA BODEGA (con filtros de material)
-// Depende de app.js: db, maestroProductos, layoutPrin, layoutAdo
+// Depende de app.js: db, maestroProductos, layoutPrin, layoutAdo, layoutArg
 // Depende de ocupacion.js: ocupColor, ocupBorde
-// Imágenes necesarias en la misma carpeta: mapa-principal.jpg, mapa-adoquines.jpg
+// Imágenes necesarias en la misma carpeta: mapa-principal.jpg, mapa-adoquines.jpg, mapa-argentina.jpg
 // ====================================================================
 
 // Cada zona: [x, y, ancho, alto] medidos en píxeles sobre la imagen del mapa
@@ -59,6 +59,18 @@ const MAPAS_BODEGA = {
             D9: [804, 220, 76, 94],
             E3: [914, 264, 162, 44],
             E4: [1080, 264, 162, 43]
+        }
+    },
+    argentina: {
+        titulo: 'Bodega Argentina',
+        imagen: 'mapa-argentina.jpg',
+        ancho: 1294,
+        alto: 498,
+        layout: () => layoutArg,
+        zonas: {
+            F2: [111, 113, 735, 318],
+            F3: [217, 22, 629, 71],
+            F1: [893, 142, 260, 290]
         }
     }
 };

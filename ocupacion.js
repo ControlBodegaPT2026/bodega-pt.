@@ -1,12 +1,13 @@
 // ====================================================================
-// 📊 OCUPACIÓN DE AMBAS BODEGAS A LA VEZ
-// Depende de app.js: db, layoutPrin, layoutAdo, EXCEPCIONES
+// 📊 OCUPACIÓN DE TODAS LAS BODEGAS A LA VEZ
+// Depende de app.js: db, layoutPrin, layoutAdo, layoutArg, EXCEPCIONES
 // ====================================================================
 
 function calcularOcupacionBodegas() {
     const resultado = {
         principal: { pB: 0, pC: 0, eB: 0, eC: 0 },
-        adoquines: { pB: 0, pC: 0, eB: 0, eC: 0 }
+        adoquines: { pB: 0, pC: 0, eB: 0, eC: 0 },
+        argentina: { pB: 0, pC: 0, eB: 0, eC: 0 }
     };
 
     function acumular(layout, destino, esExterior) {
@@ -22,6 +23,7 @@ function calcularOcupacionBodegas() {
 
     acumular(layoutPrin, resultado.principal, id => id.startsWith('C') || EXCEPCIONES.includes(id));
     acumular(layoutAdo, resultado.adoquines, id => id.startsWith('E') && !EXCEPCIONES.includes(id));
+    acumular(layoutArg, resultado.argentina, () => false);
     return resultado;
 }
 
@@ -56,7 +58,7 @@ if (typeof actualizarMapaSiAbierto === 'function') actualizarMapaSiAbierto();
     if (!el) return;
 
     const o = calcularOcupacionBodegas();
-    const p = o.principal, a = o.adoquines;
+    const p = o.principal, a = o.adoquines, g = o.argentina;
 
     function tarjeta(titulo, b, c, detalle, activa) {
         const pct = ocupPct(b, c);
@@ -86,18 +88,20 @@ const fondo = activa ? '#f5faff' : '#ffffff';
         return `<span>${nombre} <b style="color:${ocupTexto(ocupColor(pct))};">${pct}%</b> <span style="color:#a0aec0;">(${Math.round(b)}/${c})</span></span>`;
     }
 
-    const totalB = p.pB + p.eB + a.pB + a.eB;
-    const totalC = p.pC + p.eC + a.pC + a.eC;
+    const totalB = p.pB + p.eB + a.pB + a.eB + g.pB + g.eB;
+    const totalC = p.pC + p.eC + a.pC + a.eC + g.pC + g.eC;
 
     el.style.lineHeight = '1.3';
     el.innerHTML = `
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:16px;">
             
             ${tarjeta('BODEGA PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
                 dato('Pasillos', p.pB, p.pC) + dato('Patio', p.eB, p.eC), bodegaActual === 'principal')}
             ${tarjeta('BODEGA ADOQUINES', a.pB + a.eB, a.pC + a.eC,
                 dato('Sectores', a.pB, a.pC) + dato('Galpón', a.eB, a.eC), bodegaActual === 'adoquines')}
-${tarjeta('TOTAL GENERAL', totalB, totalC,
+            ${tarjeta('BODEGA ARGENTINA', g.pB, g.pC,
+                `<span>Disponibles <b style="color:#4a5568;">${Math.round(g.pC - g.pB)}</b> bultos</span>`, bodegaActual === 'argentina')}
+            ${tarjeta('TOTAL GENERAL', totalB, totalC,
                 `<span>Disponibles <b style="color:#4a5568;">${Math.round(totalC - totalB)}</b> bultos</span>`, false)}
         </div>`;
 }
@@ -132,16 +136,17 @@ window.abrirSemaforoMovil = function() {
         return `<span>${nombre} <b style="color:${ocupColor(p)};">${p}%</b></span>`;
     }
 
-    const p = o.principal, a = o.adoquines;
+    const p = o.principal, a = o.adoquines, g = o.argentina;
     const separador = `<div style="border-top: 2px solid #cbd5e0; margin: 8px 0 24px;"></div>`;
 
     contenedor.innerHTML =
-        filaBarra('TOTAL GENERAL', p.pB + p.eB + a.pB + a.eB, p.pC + p.eC + a.pC + a.eC) +
+        filaBarra('TOTAL GENERAL', p.pB + p.eB + a.pB + a.eB + g.pB, p.pC + p.eC + a.pC + a.eC + g.pC) +
         separador +
         filaBarra('BODEGA PRINCIPAL', p.pB + p.eB, p.pC + p.eC,
             dato('Pasillos', p.pB, p.pC) + dato('Patio', p.eB, p.eC)) +
         filaBarra('BODEGA ADOQUINES', a.pB + a.eB, a.pC + a.eC,
-            dato('Sectores', a.pB, a.pC) + dato('Galpón', a.eB, a.eC));
+            dato('Sectores', a.pB, a.pC) + dato('Galpón', a.eB, a.eC)) +
+        filaBarra('BODEGA ARGENTINA', g.pB, g.pC);
 
     document.getElementById('modal-semaforo-movil').style.display = 'flex';
 

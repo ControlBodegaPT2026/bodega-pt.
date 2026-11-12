@@ -314,6 +314,50 @@ const layoutAdo = [
     ["D8", 150], ["D9", 150]
 ];
 
+// Bodega ARGENTINA: 3 ubicaciones de 1000 bultos (se muestran de izquierda a derecha: F3 | F2 | F1)
+const layoutArg = [
+    "UBICACIONES",
+    ["F3", 1000], ["F2", 1000], ["F1", 1000]
+];
+
+// ====================================================================
+// 🏬 REGISTRO DE BODEGAS
+// Para sumar otra bodega: definir su layout y agregarla en este registro.
+// ====================================================================
+const BODEGAS = {
+    principal: { nombre: 'PRINCIPAL', layout: layoutPrin },
+    adoquines: { nombre: 'ADOQUINES', layout: layoutAdo },
+    argentina: { nombre: 'ARGENTINA', layout: layoutArg }
+};
+
+function layoutDeBodega(clave) {
+    return (BODEGAS[clave] || BODEGAS.principal).layout;
+}
+
+function nombreDeBodega(clave) {
+    return (BODEGAS[clave] || BODEGAS.principal).nombre;
+}
+
+// Busca una ubicación en todas las bodegas y devuelve [id, capacidad]
+function buscarUbicacionEnLayouts(id) {
+    for (const clave in BODEGAS) {
+        const item = BODEGAS[clave].layout.find(it => Array.isArray(it) && it[0] === id);
+        if (item) return item;
+    }
+    return null;
+}
+
+// Devuelve "Principal", "Adoquines", "Argentina"... según la bodega a la que pertenece la ubicación
+function nombreBodegaDeUbicacion(id) {
+    for (const clave in BODEGAS) {
+        if (BODEGAS[clave].layout.some(it => Array.isArray(it) && it[0] === id)) {
+            const n = BODEGAS[clave].nombre;
+            return n.charAt(0) + n.slice(1).toLowerCase();
+        }
+    }
+    return 'Sin bodega';
+}
+
 // Estructura de datos interna en memoria
 let maestroProductos = {};
 let bodegaActual = "principal";
@@ -332,6 +376,8 @@ function cambiarBodega(tipo) {
     const btnAdo = document.getElementById('btnAdo');
     if (btnPrin) btnPrin.classList.toggle('active', tipo === 'principal');
     if (btnAdo) btnAdo.classList.toggle('active', tipo === 'adoquines');
+    const btnArg = document.getElementById('btnArg');
+    if (btnArg) btnArg.classList.toggle('active', tipo === 'argentina');
     
     const inputBusq = document.getElementById('busqueda');
     if (inputBusq) inputBusq.value = ""; 
@@ -513,7 +559,7 @@ function continuarProcesarAccion(tipo, pp, kg, ubi, ppInput) {
 
     // Validación preventiva de capacidad máxima en ubicaciones (solo para Ingresos)
     if (tipo === 'ingreso') {
-        let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+        let layout = layoutDeBodega(bodegaActual);
         let ubiData = layout.find(item => Array.isArray(item) && item[0] === ubi);
         let capMax = ubiData ? ubiData[1] : 0;
 
@@ -694,13 +740,11 @@ function autoSeleccionarBulto(tipo) {
  * por pasillos/patio/galpón, actualiza los KPIs numéricos y los selectores de ubicación.
  */
 function render() {
-    let layout = bodegaActual === "principal" ? layoutPrin : layoutAdo;
+    let layout = layoutDeBodega(bodegaActual);
     if (!db) db = {}; 
 
     // Título de cabecera dinámico de acuerdo al tipo de bodega activa
-    let titulo = bodegaActual === "principal" 
-        ? "LAYOUT BODEGA PRINCIPAL" 
-        : "LAYOUT BODEGA ADOQUINES";
+    let titulo = "LAYOUT BODEGA " + nombreDeBodega(bodegaActual);
 
     const elTitulo = document.getElementById("mapa-titulo");
     if (elTitulo) elTitulo.innerText = titulo;
@@ -752,6 +796,8 @@ function render() {
                 currentGrid.className = 'patio-grid';
             } else if (item === 'SECTORES') {
                 currentGrid.className = 'grid-sectores-d';
+            } else if (item === 'UBICACIONES') {
+                currentGrid.className = 'grid-argentina';
             } else {
                 currentGrid.className = 'grid-pasillos';
             }
@@ -786,6 +832,9 @@ function render() {
                     pB += usados; 
                     pC += cap; 
                 }
+            } else if (bodegaActual === "argentina") {
+                pB += usados; 
+                pC += cap; 
             } else {
                 if (id.startsWith('E') && !EXCEPCIONES.includes(id)) {
                     eB += usados; 
@@ -941,6 +990,20 @@ function render() {
     const elPctExt = document.getElementById('pct-ext');
     if (elKpiExt) elKpiExt.innerText = `${Math.round(eB)} / ${eC}`;
     if (elPctExt) elPctExt.innerText = `${pctExtVal}% ${getSemaforo(pctExtVal)}`;
+
+    // ARGENTINA no tiene subgrupos (pasillos/patio): se muestra solo la ocupación total
+    const soloTotal = (bodegaActual === "argentina");
+    ['kpi-p', 'kpi-ext'].forEach(idKpi => {
+        const elK = document.getElementById(idKpi);
+        const bloqueK = elK ? elK.closest('.kpi-block') : null;
+        if (bloqueK) bloqueK.style.display = soloTotal ? 'none' : '';
+    });
+    const bloqueTotal = elKpiTotal ? elKpiTotal.closest('.kpi-block') : null;
+    if (bloqueTotal) {
+        bloqueTotal.style.gridColumn = soloTotal ? '1 / -1' : '';
+        if (soloTotal) bloqueTotal.style.setProperty('border-right', 'none', 'important');
+        else bloqueTotal.style.removeProperty('border-right');
+    }
 
     // Invocación a los motores independientes de visualización de datos de stock e historial
     if (typeof renderTablaStock === 'function') {
@@ -1527,7 +1590,7 @@ function dibujarContenidoModal() {
         let bActual = String(window.bodegaActual || bodegaActual || 'principal').toLowerCase();
 
         // 2. Determinar el layout correspondiente
-        let layoutActivo = (bActual === 'principal') ? layoutPrin : layoutAdo;
+        let layoutActivo = layoutDeBodega(bActual);
 
         // Extraer ubicaciones válidas de la bodega activa
         let ubicacionesActivas = [];
@@ -1552,7 +1615,7 @@ function dibujarContenidoModal() {
             elTitulo.innerText = `CÓDIGO CONTABLE: ${window.codigoContableSeleccionado}`;
         }
         if (elSubtitulo) {
-            let nombreBodegaTexto = (bActual === 'principal') ? 'PRINCIPAL' : 'ADOQUINES';
+            let nombreBodegaTexto = nombreDeBodega(bActual);
             elSubtitulo.innerText = `${datos.nombre} (BODEGA ${nombreBodegaTexto})`;
         }
 
@@ -1615,7 +1678,7 @@ function dibujarContenidoModal() {
 } else if (window.tabActualModal === 'consolidado') {
 
         // ====================================================================
-        // 🌎 MODO: STOCK TOTAL (SUMA GLOBAL DE BODEGA PRINCIPAL + ADOQUINES)
+        // 🌎 MODO: STOCK TOTAL (SUMA GLOBAL DE TODAS LAS BODEGAS)
         // ====================================================================
         const elTitulo = document.getElementById('modal-contable-titulo');
         const elSubtitulo = document.getElementById('modal-contable-sub');
@@ -1625,7 +1688,7 @@ function dibujarContenidoModal() {
             elTitulo.innerText = `INFORME STOCK TOTAL`;
         }
         if (elSubtitulo) {
-            elSubtitulo.innerText = `INFORME GLOBAL (BODEGA PRINCIPAL + ADOQUINES)`;
+            elSubtitulo.innerText = `INFORME GLOBAL (TODAS LAS BODEGAS)`;
         }
 
         if (tHeaders) {
@@ -2371,7 +2434,7 @@ function exportarExcel() {
                 "PP": pp,
                 "Kilos": db[ubi][pp].kg,
                 "Bultos": Math.round(db[ubi][pp].bultos),
-                "Bodega": layoutPrin.some(item => Array.isArray(item) && item[0] === ubi) ? 'Principal' : 'Adoquines'
+                "Bodega": nombreBodegaDeUbicacion(ubi)
             });
         }
     }
@@ -2565,24 +2628,15 @@ function abrirModalMovimiento() {
     const selectDestino = document.getElementById('mov_destino');
     
     if (selectOrigen && selectDestino) {
-        let ubisPrin = [];
-        if (typeof layoutPrin !== 'undefined' && Array.isArray(layoutPrin)) {
-            layoutPrin.forEach(item => { if (Array.isArray(item)) ubisPrin.push(item[0]); });
-        }
-        ubisPrin.sort();
-
-        let ubisAdo = [];
-        if (typeof layoutAdo !== 'undefined' && Array.isArray(layoutAdo)) {
-            layoutAdo.forEach(item => { if (Array.isArray(item)) ubisAdo.push(item[0]); });
-        }
-        ubisAdo.sort();
-
-        let opcionesHTML = `<option value="">Seleccione</option>
-            <optgroup label="BOD. PRINCIPAL">`;
-        ubisPrin.forEach(id => { opcionesHTML += `<option value="${id}">${id}</option>`; });
-        opcionesHTML += `</optgroup><optgroup label="BOD. ADOQUINES">`;
-        ubisAdo.forEach(id => { opcionesHTML += `<option value="${id}">${id}</option>`; });
-        opcionesHTML += `</optgroup>`;
+        let opcionesHTML = `<option value="">Seleccione</option>`;
+        Object.keys(BODEGAS).forEach(clave => {
+            const ubis = [];
+            BODEGAS[clave].layout.forEach(item => { if (Array.isArray(item)) ubis.push(item[0]); });
+            ubis.sort();
+            opcionesHTML += `<optgroup label="BOD. ${BODEGAS[clave].nombre}">`;
+            ubis.forEach(id => { opcionesHTML += `<option value="${id}">${id}</option>`; });
+            opcionesHTML += `</optgroup>`;
+        });
 
         selectOrigen.innerHTML = opcionesHTML;
         selectDestino.innerHTML = opcionesHTML;
@@ -2659,13 +2713,7 @@ function ejecutarMovimientoInterno() {
     }
 
     // Validación de límites de capacidad del destino
-    let ubiData = null;
-    if (typeof layoutPrin !== 'undefined' && Array.isArray(layoutPrin)) {
-        ubiData = layoutPrin.find(item => Array.isArray(item) && item[0] === destino);
-    }
-    if (!ubiData && typeof layoutAdo !== 'undefined' && Array.isArray(layoutAdo)) {
-        ubiData = layoutAdo.find(item => Array.isArray(item) && item[0] === destino);
-    }
+    let ubiData = buscarUbicacionEnLayouts(destino);
     let capMax = ubiData ? ubiData[1] : 0;
 
     let bultosActualesDestino = 0;
@@ -3003,7 +3051,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             }
-            let bodNombre = (typeof bodegaActual !== 'undefined' && bodegaActual === 'principal') ? 'BODEGA PRINCIPAL' : 'BODEGA ADOQUINES';
+            let bodNombre = 'BODEGA ' + nombreDeBodega(typeof bodegaActual !== 'undefined' ? bodegaActual : 'principal');
             return `El stock acumulado actual en la **${bodNombre}** es de **${totalKg.toLocaleString()} kg**.`;
         }
 

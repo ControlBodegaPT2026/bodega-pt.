@@ -30,47 +30,49 @@ configInformeRef.on('value', (snap) => {
 });
 
 function calcularInforme(config) {
-    let idsPrincipal = new Set();
-    let idsAdoquines = new Set();
-    layoutPrin.forEach(item => { if (Array.isArray(item)) idsPrincipal.add(item[0]); });
-    layoutAdo.forEach(item => { if (Array.isArray(item)) idsAdoquines.add(item[0]); });
+    const clavesBodega = Object.keys(BODEGAS);
+    const idsBodega = {};
+    clavesBodega.forEach(clave => {
+        idsBodega[clave] = new Set();
+        BODEGAS[clave].layout.forEach(item => { if (Array.isArray(item)) idsBodega[clave].add(item[0]); });
+    });
 
-        return config.map(bloque => {
+    const nuevosTotales = () => { const o = {}; clavesBodega.forEach(c => { o[c] = 0; }); return o; };
+    const sumarKg = (destino, locId, kg) => {
+        for (const clave of clavesBodega) {
+            if (idsBodega[clave].has(locId)) { destino[clave] += kg; break; }
+        }
+    };
+    const totalDe = (o) => clavesBodega.reduce((suma, c) => suma + o[c], 0);
+
+    return config.map(bloque => {
         if (bloque.desglosarPorPP) {
             let listaPP = Object.keys(maestroProductos)
                 .filter(pp => bloque.codigos.includes(maestroProductos[pp].codigo))
                 .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
             let porPP = {};
-            listaPP.forEach(pp => porPP[pp] = { principal: 0, adoquines: 0 });
+            listaPP.forEach(pp => porPP[pp] = nuevosTotales());
 
             for (let locId in db) {
                 for (let pp in db[locId]) {
-                    if (porPP[pp]) {
-                        let kg = db[locId][pp].kg || 0;
-                        if (idsPrincipal.has(locId)) porPP[pp].principal += kg;
-                        else if (idsAdoquines.has(locId)) porPP[pp].adoquines += kg;
-                    }
+                    if (porPP[pp]) sumarKg(porPP[pp], locId, db[locId][pp].kg || 0);
                 }
             }
 
-            // 🆕 Filtrar las PP que no tienen stock en ninguna bodega
-            listaPP = listaPP.filter(pp => (porPP[pp].principal + porPP[pp].adoquines) > 0);
+            // Filtrar las PP que no tienen stock en ninguna bodega
+            listaPP = listaPP.filter(pp => totalDe(porPP[pp]) > 0);
 
             return { titulo: bloque.titulo, tipo: "porPP", columnas: listaPP, datos: porPP };
 
         } else {
             let porColumna = {};
-            bloque.columnas.forEach(col => porColumna[col.codigo] = { nombre: col.nombre, principal: 0, adoquines: 0 });
+            bloque.columnas.forEach(col => porColumna[col.codigo] = Object.assign({ nombre: col.nombre }, nuevosTotales()));
 
             for (let locId in db) {
                 for (let pp in db[locId]) {
                     let codigoPP = maestroProductos[pp] ? maestroProductos[pp].codigo : null;
-                    if (codigoPP && porColumna[codigoPP]) {
-                        let kg = db[locId][pp].kg || 0;
-                        if (idsPrincipal.has(locId)) porColumna[codigoPP].principal += kg;
-                        else if (idsAdoquines.has(locId)) porColumna[codigoPP].adoquines += kg;
-                    }
+                    if (codigoPP && porColumna[codigoPP]) sumarKg(porColumna[codigoPP], locId, db[locId][pp].kg || 0);
                 }
             }
             return { titulo: bloque.titulo, tipo: "porCodigo", datos: porColumna };
@@ -104,11 +106,11 @@ function renderTablaMaterialCritico(bloque) {
     tabla += `<th style="padding: 8px; text-align: center; border: 1px solid #cbd5e0;">TOTAL (MT)</th></tr></thead><tbody>`;
 
     let claves = bloque.tipo === "porPP" ? bloque.columnas : Object.keys(bloque.datos);
-    let totalPrincipal = 0, totalAdoquines = 0;
+    let totalGeneral = 0;
     let totalPorColumna = claves.map(() => 0);
 
-    ["principal", "adoquines"].forEach((bodegaKey, filaIdx) => {
-        let etiqueta = bodegaKey === "principal" ? "BODEGA PRINCIPAL" : "BODEGA ADOQUINES";
+    Object.keys(BODEGAS).forEach((bodegaKey) => {
+        let etiqueta = "BODEGA " + BODEGAS[bodegaKey].nombre;
         tabla += `<tr><td style="padding: 6px 8px; color: #2b6cb0; font-weight: bold; border: 1px solid #cbd5e0;">${etiqueta}</td>`;
 
         let totalFila = 0;
@@ -121,14 +123,14 @@ function renderTablaMaterialCritico(bloque) {
         });
         tabla += `<td style="padding: 6px 8px; text-align: right; font-weight: bold; border: 1px solid #cbd5e0;">${fmt(totalFila)}</td></tr>`;
 
-        if (bodegaKey === "principal") totalPrincipal = totalFila; else totalAdoquines = totalFila;
+        totalGeneral += totalFila;
     });
 
     tabla += `<tr style="background: #f7fafc; font-weight: bold;"><td style="padding: 6px 8px; border: 1px solid #cbd5e0;">TOTAL (MT)</td>`;
     totalPorColumna.forEach(t => {
         tabla += `<td style="padding: 6px 8px; text-align: right; border: 1px solid #cbd5e0;">${fmt(t)}</td>`;
     });
-    tabla += `<td style="padding: 6px 8px; text-align: right; border: 1px solid #cbd5e0;">${fmt(totalPrincipal + totalAdoquines)}</td></tr>`;
+    tabla += `<td style="padding: 6px 8px; text-align: right; border: 1px solid #cbd5e0;">${fmt(totalGeneral)}</td></tr>`;
 
     tabla += `</tbody></table></div>`;
     return tabla;
@@ -426,10 +428,9 @@ function imprimirInformePersonalizado() {
 }
 
 function calcularCategoriasStock(filtroBodega) {
-    let idsPrincipal = new Set();
-    let idsAdoquines = new Set();
-    layoutPrin.forEach(item => { if (Array.isArray(item)) idsPrincipal.add(item[0]); });
-    layoutAdo.forEach(item => { if (Array.isArray(item)) idsAdoquines.add(item[0]); });
+    const idsBodega = (filtroBodega !== 'total' && BODEGAS[filtroBodega])
+        ? new Set(BODEGAS[filtroBodega].layout.filter(item => Array.isArray(item)).map(item => item[0]))
+        : null;
 
     const categorias = {
         "ÁCIDO BÓRICO": 0, "RECHAZO": 0, "CALCINADO": 0,
@@ -438,9 +439,7 @@ function calcularCategoriasStock(filtroBodega) {
     let stockTotalGeneral = 0;
 
     for (let locId in db) {
-        let perteneceBodega = filtroBodega === 'total' ? true
-            : filtroBodega === 'principal' ? idsPrincipal.has(locId)
-            : idsAdoquines.has(locId);
+        let perteneceBodega = filtroBodega === 'total' ? true : (idsBodega ? idsBodega.has(locId) : false);
         if (!perteneceBodega) continue;
 
         for (let pp in db[locId]) {
@@ -530,10 +529,12 @@ function abrirModalGraficos() {
 
     let { categorias: catPrincipal, stockTotalGeneral: totalPrincipal } = calcularCategoriasStock('principal');
     let { categorias: catAdoquines, stockTotalGeneral: totalAdoquines } = calcularCategoriasStock('adoquines');
+    let { categorias: catArgentina, stockTotalGeneral: totalArgentina } = calcularCategoriasStock('argentina');
     let { categorias: catTotal, stockTotalGeneral: totalGeneral } = calcularCategoriasStock('total');
 
     dibujarDonaEnCanvas('canvas-grafico-principal', catPrincipal, totalPrincipal, "BODEGA PRINCIPAL:");
     dibujarDonaEnCanvas('canvas-grafico-adoquines', catAdoquines, totalAdoquines, "BODEGA ADOQUINES:");
+    dibujarDonaEnCanvas('canvas-grafico-argentina', catArgentina, totalArgentina, "BODEGA ARGENTINA:");
     dibujarDonaEnCanvas('canvas-grafico-total', catTotal, totalGeneral, "TOTAL GENERAL:");
 }
 

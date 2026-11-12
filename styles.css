@@ -1058,3 +1058,22 @@ button[onclick*="seccion-reporte-fifo"]:active {
     accent-color: #2b6cb0;
     cursor: pointer;
 }
+
+/* ARGENTINA: 3 ubicaciones en una sola fila (F3 | F2 | F1) */
+.grid-argentina {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    row-gap: 50px;
+    background: #e2e8f0;
+    padding: 20px;
+    border-radius: 5px;
+    border: 2px solid #cbd5e0;
+    margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+    .grid-argentina {
+        padding: 12px;
+        gap: 6px;
+    }
+}

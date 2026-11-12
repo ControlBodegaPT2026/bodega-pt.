@@ -1,17 +1,17 @@
 // ====================================================================
 // 📏 CAPACIDADES EDITABLES POR UBICACIÓN
-// Depende de variables de app.js: layoutPrin, layoutAdo, db, render()
+// Depende de variables de app.js: BODEGAS (layoutPrin, layoutAdo, layoutArg), db, render()
 // ====================================================================
 
 const capacidadesRef = firebase.database().ref('config_capacidades');
 const capacidadesPorDefecto = {};
 
-[...layoutPrin, ...layoutAdo].forEach(item => {
+Object.values(BODEGAS).flatMap(b => b.layout).forEach(item => {
     if (Array.isArray(item)) capacidadesPorDefecto[item[0]] = item[1];
 });
 
 function aplicarCapacidades(overrides) {
-    [...layoutPrin, ...layoutAdo].forEach(item => {
+    Object.values(BODEGAS).flatMap(b => b.layout).forEach(item => {
         if (!Array.isArray(item)) return;
         let id = item[0];
         item[1] = (overrides && overrides[id] !== undefined) ? overrides[id] : capacidadesPorDefecto[id];
@@ -29,10 +29,7 @@ function abrirModalCapacidades() {
     if (!contenedor) return;
 
     let html = '';
-    [
-        { titulo: 'BODEGA PRINCIPAL', layout: layoutPrin },
-        { titulo: 'BODEGA ADOQUINES', layout: layoutAdo }
-    ].forEach(bloque => {
+    Object.keys(BODEGAS).map(clave => ({ titulo: 'BODEGA ' + BODEGAS[clave].nombre, layout: BODEGAS[clave].layout })).forEach(bloque => {
         html += `<h4 style="margin: 15px 0 5px 0; color: #2b6cb0;">${bloque.titulo}</h4>`;
         bloque.layout.forEach(item => {
             if (!Array.isArray(item)) {
