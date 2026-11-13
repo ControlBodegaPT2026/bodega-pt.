@@ -1077,3 +1077,26 @@ button[onclick*="seccion-reporte-fifo"]:active {
         gap: 6px;
     }
 }
+@media (max-width: 600px) {
+    .header-nav {
+        gap: 0 !important;
+    }
+    #btnPrin, #btnAdo, #btnArg {
+        border-radius: 0 !important;
+        margin: 0 !important;
+        border-left-width: 0 !important;
+    }
+    #btnPrin {
+        border-radius: 8px 0 0 8px !important;
+        border-left-width: 1px !important;
+    }
+    #btnArg {
+        border-radius: 0 8px 8px 0 !important;
+    }
+    .btn-nav-mapa {
+        margin-left: 8px !important;
+    }
+    .menu-opciones {
+        margin-left: 6px !important;
+    }
+}
