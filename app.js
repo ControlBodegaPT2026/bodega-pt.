@@ -288,36 +288,36 @@ let bultoSeleccionado = {
 const EXCEPCIONES = ['C6', 'C7', 'D8', 'D9'];
 const layoutPrin = [
     "PASILLO 1", 
-    ["A4", 160], ["A3", 160], ["A2", 155], ["A1", 91], 
-    ["A8", 115], ["A7", 115], ["A6", 155], ["A5", 140], 
+    ["A4", 88], ["A3", 114], ["A2", 125], ["A1", 82], 
+    ["A8", 90], ["A7", 93], ["A6", 125], ["A5", 114], 
     
     "PASILLO 2", 
-    ["B4", 115], ["B3", 120], ["B2", 155], ["B1", 140], 
-    ["B8", 200], ["B7", 160], ["B6", 160], ["B5", 115],    
+    ["B4", 90], ["B3", 93], ["B2", 125], ["B1", 114], 
+    ["B8", 158], ["B7", 93], ["B6", 96], ["B5", 93],    
     "PATIO", 
-    ["C2", 350], ["C4", 350], ["C1", 350], ["C3", 350],
-    ["C5", 350],
+    ["C2", 222], ["C4", 212], ["C1", 222], ["C3", 318],
+    ["C5", 290],
 
     "EXCEPCIÓN",
-    ["C6", 100], ["C7", 100]
+    ["C6", 68], ["C7", 34]
 ];
 
 const layoutAdo = [
     "SECTORES",
-    ["D1", 350], ["D2", 350], ["D3", 350], ["D4", 350], ["D5", 350], ["D6", 350], 
+    ["D1", 232], ["D2", 232], ["D3", 232], ["D4", 350], ["D5", 350], ["D6", 350], 
     ["D7", 300],
 
     "GALPÓN",
-    ["E1", 80], ["E2", 80], ["E3", 250], ["E4", 250],
+    ["E1", 75], ["E2", 75], ["E3", 223], ["E4", 223],
 
     "EXCEPCIÓN",
-    ["D8", 150], ["D9", 150]
+    ["D8", 275], ["D9", 496]
 ];
 
 // Bodega ARGENTINA: 3 ubicaciones de 1000 bultos (se muestran de izquierda a derecha: F3 | F2 | F1)
 const layoutArg = [
     "UBICACIONES",
-    ["F3", 1000], ["F2", 1000], ["F1", 1000]
+    ["F3", 1000], ["F2", 1640], ["F1", 1000]
 ];
 
 // ====================================================================
@@ -2091,12 +2091,13 @@ function dibujarGraficoModal() {
  * @param {string} tipo - Tipo de notificación ('success', 'error', 'warning', 'info').
  */
 function notificar(msg, tipo = "info") {
-    const colores = {
-        success: "#38a169",
-        error: "#e53e3e",
-        warning: "#d69e2e",
-        info: "#2b6cb0"
+    const estilos = {
+        success: { fondo: "#f0fff4", texto: "#276749", borde: "#9ae6b4", acento: "#38a169" },
+        error:   { fondo: "#fff5f5", texto: "#9b2c2c", borde: "#feb2b2", acento: "#e53e3e" },
+        warning: { fondo: "#fffbea", texto: "#8a6d00", borde: "#f6e05e", acento: "#eabc04" },
+        info:    { fondo: "#ebf8ff", texto: "#2c5282", borde: "#bee3f8", acento: "#2b6cb0" }
     };
+    const e = estilos[tipo] || estilos.info;
 
     let n = document.createElement("div");
     n.innerText = msg;
@@ -2105,12 +2106,15 @@ function notificar(msg, tipo = "info") {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        background: ${colores[tipo] || colores.info};
-        color: white;
+        background: ${e.fondo};
+        color: ${e.texto};
+        border: 1px solid ${e.borde};
+        border-left: 4px solid ${e.acento};
         padding: 12px 16px;
         border-radius: 8px;
         font-size: 13px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        font-weight: 500;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.12);
         z-index: 9999;
         opacity: 0;
         transform: translateY(20px);
