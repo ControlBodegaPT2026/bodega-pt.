@@ -1100,3 +1100,12 @@ button[onclick*="seccion-reporte-fifo"]:active {
         margin-left: 6px !important;
     }
 }
+@media (max-width: 600px) {
+    .grid-pasillos {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        padding: 20px 10px;
+    }
+    .grid-pasillos .card-ubi {
+        padding: 8px 5px;
+    }
+}
