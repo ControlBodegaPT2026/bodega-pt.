@@ -497,6 +497,19 @@ function dibujarDonaEnCanvas(canvasId, categorias, stockTotalGeneral, tituloLeye
         startAngle += sliceAngle;
     }
 
+    // Total de la bodega en el centro de la dona
+    const totalTexto = typeof fmt === 'function' ? fmt(Math.round(stockTotalGeneral)) : Math.round(stockTotalGeneral);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#718096";
+    ctx.font = "bold 10px sans-serif";
+    ctx.fillText("TOTAL", centerX, centerY - 13);
+    ctx.fillStyle = "#1a202c";
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillText(totalTexto, centerX, centerY + 4);
+    ctx.fillStyle = "#718096";
+    ctx.font = "bold 10px sans-serif";
+    ctx.fillText("kg", centerX, centerY + 18);
+
     let legendX = 280, legendY = 50;
     ctx.textAlign = "left";
     ctx.font = "bold 15px sans-serif";
