@@ -89,26 +89,27 @@ const MAPA_CATEGORIAS = [
 // Filtros por producto: los mismos materiales del diccionario del asistente virtual.
 // Para agregar uno nuevo, añade una línea con su código contable y un nombre corto.
 const MAPA_PRODUCTOS = [
-    { codigo: 'PTAB030315', nombre: 'Chino' },
-    { codigo: 'PTAB031110', nombre: 'Sacas 1200 GI' },
-    { codigo: 'PTAB031010', nombre: 'Sacas 1100 GI' },
-    { codigo: 'PTAB030610', nombre: 'Sacas 1000 GI' },
-    { codigo: 'PTAB030310', nombre: 'Saco etiquetado' },
-    { codigo: 'PTAB040310', nombre: 'Saco polvo GI' },
-    { codigo: 'PTAB158001', nombre: 'Sacas 2400 GI' },
-    { codigo: 'PTUL321001', nombre: 'Ulexita 1100 kg' },
-    { codigo: 'PTAB101010', nombre: 'Rechazo polvo (caja manga)' },
-    { codigo: 'PTAB941010', nombre: 'Rechazo granular (sobremalla)' },
-    { codigo: 'PTAB030328', nombre: 'Saco McCassab' },
-    { codigo: 'PTGR210601', nombre: 'Granulex 1000 kg' },
-    { codigo: 'PTGR211401', nombre: 'Granulex 2000 lb' },
-    { codigo: 'PTGR210501', nombre: 'Granulex 50 lb' },
-    { codigo: 'PTAB150548', nombre: 'Saco 50 lb Borates Plus' },
-    { codigo: 'PTAB170310', nombre: 'Saco bajo en sulfato' },
-    { codigo: 'PTAB111111', nombre: 'Sacas 1100 estándar' },
-    { codigo: 'PTAB111110', nombre: 'Sacas 1200 estándar' },
-    { codigo: 'PTAB110602', nombre: 'Sacas 1000 estándar' },
-    { codigo: 'PTAB300610', nombre: 'Sacas 1000 calcinado' }
+    { codigo: 'PTAB030315', nombre: 'SACO CHINO' },
+    { codigo: 'PTAB030310', nombre: 'SACO ETIQUETADO' },
+    { codigo: 'PTAB030328', nombre: 'SACO MCASSAB' },
+    { codigo: 'PTAB150548', nombre: 'SACO 50 LB BORATES PLUS' },
+    { codigo: 'PTAB040310', nombre: 'SACO POLVO GI' },
+    { codigo: 'PTAB170310', nombre: 'SACO BAJO EN SULFATO' },
+    { codigo: 'PTAB030610', nombre: 'SACA 1000 GI' },
+    { codigo: 'PTAB031010', nombre: 'SACA 1100 GI' },
+    { codigo: 'PTAB031110', nombre: 'SACA 1200 GI' },
+    { codigo: 'PTAB158001', nombre: 'SACA 2400 GI' },
+    { codigo: 'PTAB110602', nombre: 'SACA 1000 ESTÁNDAR' },
+    { codigo: 'PTAB111111', nombre: 'SACA 1100 ESTÁNDAR' },
+    { codigo: 'PTAB111110', nombre: 'SACA 1200 ESTÁNDAR' },
+    { codigo: 'PTAB941010', nombre: 'SACA 1100 RECHAZO GRANULAR (sobremalla)' },
+    { codigo: 'PTAB101010', nombre: 'SACA 1100 RECHAZO POLVO (caja manga)' },
+    { codigo: 'PTUL321001', nombre: 'ULEXITA 1100 kg' },
+    { codigo: 'PTAB300610', nombre: 'SACA 1000 CALCINADO' },
+    { codigo: 'PTGR210501', nombre: 'SACO 50 LB GRANULEX' },
+    { codigo: 'PTGR210601', nombre: 'SACA 1000 GRANULEX' },
+    { codigo: 'PTGR211401', nombre: 'SACA 2000 LB GRANULEX' }
+
 ];
 
 // Colores para los productos (distintos a los 5 de las categorías)

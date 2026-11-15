@@ -59,11 +59,12 @@
     <div id="btn-informe-personalizado-menu" class="admin-only" onclick="abrirModalInformePersonalizado(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
         <span>📊</span> Informe Personalizado
     </div>
-
 <div id="btn-graficos-menu" class="admin-only" onclick="abrirModalGraficos(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
     <i class='bx bx-pie-chart-alt-2' style="font-size: 18px; color: #2b6cb0;"></i> Gráficos
 </div>
-
+<div id="btn-resumen-pdf-menu" class="admin-only" onclick="exportarResumenPDF(); toggleMenu();" style="display: none; align-items: center; gap: 8px; cursor: pointer;">
+    <span>📄</span> Resumen PDF
+</div>
     <div id="btn-tarea-admin-menu" class="admin-only" style="display: none; align-items: center; gap: 8px;" onclick="abrirConfigTareaAdmin(); toggleMenu();">
         <span>📋</span> Tarea del Día
     </div>
@@ -649,7 +650,8 @@
     <script src="material-critico.js?v=3"></script>
     <script src="capacidades.js?v=3"></script>
     <script src="ocupacion.js?v=3"></script>
-<script src="mapa.js?v=3"></script>
-<script src="graficos.js?v=3"></script>
+    <script src="mapa.js?v=3"></script>
+    <script src="graficos.js?v=3"></script>
+    <script src="resumen-pdf.js?v=1"></script>
 </body>
 </html>
