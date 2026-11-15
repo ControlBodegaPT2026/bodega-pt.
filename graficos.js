@@ -86,6 +86,43 @@ function calcularPorcionesFiltradas(filtroBodega) {
     return { porciones, colores, total };
 }
 
+// ---------- Utilidades de color para el efecto de brillo ----------
+
+// Convierte cualquier color CSS (#hex, hsl, rgb) a [r, g, b]
+function graficosRgb(ctx, color) {
+    const previo = ctx.fillStyle;
+    ctx.fillStyle = color;
+    const normal = String(ctx.fillStyle);
+    ctx.fillStyle = previo;
+    let m = /^#([0-9a-f]{6})$/i.exec(normal);
+    if (m) {
+        const n = parseInt(m[1], 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    m = normal.match(/[\d.]+/g);
+    if (m && m.length >= 3) return [Math.round(m[0]), Math.round(m[1]), Math.round(m[2])];
+    return [113, 128, 150];
+}
+
+// Mezcla un color con otro (blanco para aclarar, negro para oscurecer); t va de 0 a 1
+function graficosMezclar(rgb, destino, t) {
+    return rgb.map((v, i) => Math.round(v + (destino[i] - v) * t));
+}
+
+function graficosRgbCss(rgb) {
+    return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+}
+
+function graficosRectRedondeado(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
 function dibujarDonaEnCanvas(canvasId, categorias, stockTotalGeneral, tituloLeyenda, colores, mensajeVacio) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -110,18 +147,73 @@ function dibujarDonaEnCanvas(canvasId, categorias, stockTotalGeneral, tituloLeye
     }
 
     const centerX = 100, centerY = 130, radius = 95, innerRadius = 45;
-    let startAngle = 0;
+    const trazarPorcion = (inicio, fin) => {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, inicio, fin, false);
+        ctx.arc(centerX, centerY, innerRadius, fin, inicio, true);
+        ctx.closePath();
+    };
 
+    // 1) Porciones con degradado (más claro hacia afuera) y sombra suave
+    let startAngle = 0;
+    ctx.save();
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.30)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 3;
     nombres.forEach(cat => {
         const sliceAngle = (categorias[cat] / stockTotalGeneral) * (2 * Math.PI);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle, false);
-        ctx.arc(centerX, centerY, innerRadius, startAngle + sliceAngle, startAngle, true);
-        ctx.closePath();
-        ctx.fillStyle = paleta[cat] || '#718096';
+        const base = graficosRgb(ctx, paleta[cat] || '#718096');
+        const degradado = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, radius);
+        degradado.addColorStop(0, graficosRgbCss(graficosMezclar(base, [0, 0, 0], 0.14)));
+        degradado.addColorStop(0.55, graficosRgbCss(graficosMezclar(base, [255, 255, 255], 0.06)));
+        degradado.addColorStop(1, graficosRgbCss(graficosMezclar(base, [255, 255, 255], 0.20)));
+        trazarPorcion(startAngle, startAngle + sliceAngle);
+        ctx.fillStyle = degradado;
         ctx.fill();
         startAngle += sliceAngle;
     });
+    ctx.restore();
+
+    // 2) Separadores blancos finos entre porciones
+    startAngle = 0;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    nombres.forEach(cat => {
+        const sliceAngle = (categorias[cat] / stockTotalGeneral) * (2 * Math.PI);
+        trazarPorcion(startAngle, startAngle + sliceAngle);
+        ctx.stroke();
+        startAngle += sliceAngle;
+    });
+
+    // 3) Brillo: reflejo claro arriba a la izquierda y leve sombra abajo a la derecha
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+    ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI, true);
+    ctx.clip();
+    const brillo = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+    brillo.addColorStop(0, 'rgba(255, 255, 255, 0.30)');
+    brillo.addColorStop(0.42, 'rgba(255, 255, 255, 0.06)');
+    brillo.addColorStop(0.58, 'rgba(255, 255, 255, 0)');
+    brillo.addColorStop(1, 'rgba(0, 0, 0, 0.16)');
+    ctx.fillStyle = brillo;
+    ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+    ctx.restore();
+
+    // 4) Disco central con leve relieve
+    const disco = ctx.createRadialGradient(centerX - 10, centerY - 12, 4, centerX, centerY, innerRadius - 2);
+    disco.addColorStop(0, '#ffffff');
+    disco.addColorStop(1, '#eaeff5');
+    ctx.save();
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 1;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, innerRadius - 3, 0, 2 * Math.PI, false);
+    ctx.fillStyle = disco;
+    ctx.fill();
+    ctx.restore();
 
     // Total en el centro de la dona
     ctx.textAlign = "center";
@@ -149,8 +241,13 @@ function dibujarDonaEnCanvas(canvasId, categorias, stockTotalGeneral, tituloLeye
         const kgCat = categorias[cat];
         const pct = ((kgCat / stockTotalGeneral) * 100).toFixed(1);
 
-        ctx.fillStyle = paleta[cat] || '#718096';
-        ctx.fillRect(legendX, legendY - 11, 14, 14);
+        const baseLey = graficosRgb(ctx, paleta[cat] || '#718096');
+        const gLey = ctx.createLinearGradient(legendX, legendY - 11, legendX, legendY + 3);
+        gLey.addColorStop(0, graficosRgbCss(graficosMezclar(baseLey, [255, 255, 255], 0.30)));
+        gLey.addColorStop(1, graficosRgbCss(graficosMezclar(baseLey, [0, 0, 0], 0.08)));
+        graficosRectRedondeado(ctx, legendX, legendY - 11, 14, 14, 4);
+        ctx.fillStyle = gLey;
+        ctx.fill();
         ctx.fillStyle = "#2d3748";
         ctx.font = `bold ${letra}px sans-serif`;
         ctx.fillText(graficosRecortar(ctx, cat, filtrado ? '' : ` (${pct}%)`, 196), legendX + 22, legendY);
