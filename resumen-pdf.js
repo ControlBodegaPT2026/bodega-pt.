@@ -4,6 +4,7 @@
 // Depende de material-critico.js: calcularCategoriasStock, calcularMaterialCritico
 // Depende de mapa.js: MAPA_PRODUCTOS, mapaCategoriaDePP
 // Depende de ocupacion.js: ocupColor
+// Opcional (comprometido.js): resumenComprometido, ordenesActivas, comprometidoParaBloque, ordNombreProducto
 // Usa la librería jsPDF (se descarga sola desde cdnjs la primera vez que se usa)
 // ====================================================================
 
@@ -335,9 +336,18 @@ function pdfResRecopilarDatos() {
     const sem = { verde: 0, amarillo: 0, rojo: 0 };
     bodegas.forEach(b => b.ubicaciones.forEach(u => { if (u.pct > 90) sem.rojo++; else if (u.pct > 70) sem.amarillo++; else sem.verde++; }));
 
+    // Material comprometido (órdenes de embarque), si el módulo está cargado
+    let comp = null, ordenes = [];
+    if (typeof resumenComprometido === 'function') {
+        comp = resumenComprometido();
+        ordenes = ordenesActivas()
+            .sort((a, b) => String(a.oe).localeCompare(String(b.oe), undefined, { numeric: true }))
+            .map(o => ({ oe: o.oe, nombre: ordNombreProducto(o.codigo), ton: Number(o.toneladas) || 0 }));
+    }
+
     const ahora = new Date();
     return {
-        ahora, bodegas, total, categoriasTotal, topPP, topMateriales, sem,
+        ahora, bodegas, total, categoriasTotal, topPP, topMateriales, sem, comp, ordenes,
         nPP: Object.keys(porPP).length, nMateriales: Object.keys(porCodigo).length,
         criticas: calcularMaterialCritico(),
         fecha: {
@@ -362,7 +372,13 @@ function pdfResPagina1(ctx, d, logo) {
     pdfResTarjeta(ctx, xA(0), yA, wA, hA, 'Stock total', 'Toneladas almacenadas');
     pdfResTexto(ctx, pdfResTon(d.total.kg), xA(0) + wA / 2, yA + 92, { peso: '300', tam: 46, color: '#111827', alinea: 'center' });
     pdfResTexto(ctx, 'toneladas', xA(0) + wA / 2, yA + 112, { tam: 11, color: '#6b7280', alinea: 'center' });
-    pdfResTexto(ctx, `${d.nPP} PP distintas · ${d.nMateriales} materiales`, xA(0) + wA / 2, yA + 134, { tam: 10, color: '#9ca3af', alinea: 'center' });
+    if (d.comp && d.comp.nOrdenes > 0) {
+        pdfResTexto(ctx, `${d.nPP} PP distintas · ${d.nMateriales} materiales`, xA(0) + wA / 2, yA + 127, { tam: 10, color: '#9ca3af', alinea: 'center' });
+        pdfResTexto(ctx, `Comprometido ${pdfResNum(d.comp.totalComprometido, 0)} t · Disponible neto ${pdfResNum(d.comp.totalDisponible, 0)} t`, xA(0) + wA / 2, yA + 142,
+            { peso: '600', tam: 9.5, color: d.comp.totalDisponible < 0 ? '#c53030' : '#276749', alinea: 'center', max: wA - 20 });
+    } else {
+        pdfResTexto(ctx, `${d.nPP} PP distintas · ${d.nMateriales} materiales`, xA(0) + wA / 2, yA + 134, { tam: 10, color: '#9ca3af', alinea: 'center' });
+    }
 
     // A2: ocupación general
     pdfResTarjeta(ctx, xA(1), yA, wA, hA, 'Ocupación general', 'Bultos ocupados sobre capacidad');
@@ -530,10 +546,17 @@ function pdfResPagina2(ctx, d, logo) {
     pdfResTarjeta(ctx, M, yTop, wL, hL, 'Material crítico', 'Toneladas por bodega');
     const claves = d.bodegas.map(b => b.clave);
     const bloques = d.criticas;
-    const hBloque = (hL - 52) / Math.max(1, bloques.length);
+    const compBloque = bloques.map(bl => (typeof comprometidoParaBloque === 'function') ? comprometidoParaBloque(bl) : null);
+    const filasDe = i => claves.length + 1 + (compBloque[i] ? 2 : 0);
+    const disponible = hL - 68;
+    const sumaAlturas = hF => bloques.reduce((s, bl, i) => s + 16 + 26 + filasDe(i) * hF, 0);
+    let hFila = 17;
+    while (hFila > 12 && sumaAlturas(hFila) + 8 * (bloques.length - 1) > disponible) hFila -= 0.5;
+    const holgura = Math.min(28, Math.max(8, (disponible - sumaAlturas(hFila)) / Math.max(1, bloques.length - 1)));
+    let yBloque = yTop + 50;
     bloques.forEach((bl, i) => {
-        const y0 = yTop + 48 + i * hBloque;
-        pdfResTablaCritica(ctx, M + 14, y0, wL - 28, bl, claves, d.bodegas);
+        pdfResTablaCritica(ctx, M + 14, yBloque, wL - 28, bl, claves, d.bodegas, hFila, compBloque[i]);
+        yBloque += 16 + 26 + filasDe(i) * hFila + holgura;
     });
 
     // Derecha arriba: top 10 PP
@@ -565,21 +588,24 @@ function pdfResPagina2(ctx, d, logo) {
     });
 }
 
-function pdfResTablaCritica(ctx, x, y, w, bloque, claves, bodegas) {
+function pdfResTablaCritica(ctx, x, y, w, bloque, claves, bodegas, hFila, comp) {
+    hFila = hFila || 17;
     const colsKeys = bloque.tipo === 'porPP' ? bloque.columnas : Object.keys(bloque.datos);
     const colsNombres = bloque.tipo === 'porPP' ? bloque.columnas : colsKeys.map(k => bloque.datos[k].nombre);
     const n = Math.max(1, colsKeys.length);
-    const wPrim = 98, wTot = 58;
+    const wPrim = 108, wTot = 58;
     const wCol = Math.min(150, (w - wPrim - wTot) / n);
-    const hCab = 26, hFila = 17;
+    const hCab = 26;
+    const tam = hFila < 15 ? 8.5 : 9;
+    const base = (fy) => fy + hFila / 2 + 3.5;
+    const anchoTabla = wPrim + wCol * n + wTot;
 
     const tituloTabla = bloque.titulo.trim().toUpperCase() === 'BODEGA' ? colsNombres.join(' · ') : bloque.titulo;
     pdfResTexto(ctx, tituloTabla, x, y + 10, { peso: 'bold', tam: 11, color: '#1e4e8c', max: w });
     const yc = y + 16;
 
-    // encabezado
     ctx.fillStyle = '#e8f0fb';
-    pdfResRR(ctx, x, yc, wPrim + wCol * n + wTot, hCab, 4);
+    pdfResRR(ctx, x, yc, anchoTabla, hCab, 4);
     ctx.fill();
     pdfResTexto(ctx, 'BODEGA', x + 8, yc + 16, { peso: 'bold', tam: 8, color: '#1e4e8c' });
     ctx.font = `bold 8px ${PDFRES.FUENTE}`;
@@ -589,31 +615,130 @@ function pdfResTablaCritica(ctx, x, y, w, bloque, claves, bodegas) {
     });
     pdfResTexto(ctx, 'TOTAL (t)', x + wPrim + wCol * n + wTot - 6, yc + 16, { peso: 'bold', tam: 8, color: '#1e4e8c', alinea: 'right' });
 
-    // filas por bodega
     const sumaCol = colsKeys.map(() => 0);
     claves.forEach((clave, fi) => {
         const fy = yc + hCab + fi * hFila;
-        if (fi % 2 === 1) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(x, fy, wPrim + wCol * n + wTot, hFila); }
-        pdfResTexto(ctx, 'BODEGA ' + bodegas[fi].nombre, x + 8, fy + 12, { tam: 8.5, color: '#2b6cb0', peso: '600' });
+        if (fi % 2 === 1) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(x, fy, anchoTabla, hFila); }
+        pdfResTexto(ctx, 'BODEGA ' + bodegas[fi].nombre, x + 8, base(fy), { tam: 8.5, color: '#2b6cb0', peso: '600' });
         let totalFila = 0;
         colsKeys.forEach((k, ci) => {
             const mt = (bloque.datos[k][clave] || 0) / 1000;
             totalFila += mt; sumaCol[ci] += mt;
-            pdfResTexto(ctx, mt > 0 ? pdfResNum(mt, 1) : '–', x + wPrim + wCol * ci + wCol - 6, fy + 12, { tam: 9, color: mt > 0 ? '#1f2937' : '#cbd5e1', alinea: 'right' });
+            pdfResTexto(ctx, mt > 0 ? pdfResNum(mt, 1) : '–', x + wPrim + wCol * ci + wCol - 6, base(fy), { tam, color: mt > 0 ? '#1f2937' : '#cbd5e1', alinea: 'right' });
         });
-        pdfResTexto(ctx, totalFila > 0 ? pdfResNum(totalFila, 1) : '–', x + wPrim + wCol * n + wTot - 6, fy + 12, { peso: 'bold', tam: 9, color: totalFila > 0 ? '#111827' : '#cbd5e1', alinea: 'right' });
+        pdfResTexto(ctx, totalFila > 0 ? pdfResNum(totalFila, 1) : '–', x + wPrim + wCol * n + wTot - 6, base(fy), { peso: 'bold', tam, color: totalFila > 0 ? '#111827' : '#cbd5e1', alinea: 'right' });
     });
 
-    // fila total
     const fyT = yc + hCab + claves.length * hFila;
     ctx.fillStyle = '#eef2f7';
-    ctx.fillRect(x, fyT, wPrim + wCol * n + wTot, hFila);
+    ctx.fillRect(x, fyT, anchoTabla, hFila);
     ctx.strokeStyle = '#cbd5e0'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x, fyT); ctx.lineTo(x + wPrim + wCol * n + wTot, fyT); ctx.stroke();
-    pdfResTexto(ctx, 'TOTAL (t)', x + 8, fyT + 12, { peso: 'bold', tam: 8.5, color: '#1f2937' });
-    sumaCol.forEach((s, ci) => pdfResTexto(ctx, s > 0 ? pdfResNum(s, 1) : '–', x + wPrim + wCol * ci + wCol - 6, fyT + 12, { peso: 'bold', tam: 9, color: s > 0 ? '#111827' : '#cbd5e1', alinea: 'right' }));
+    ctx.beginPath(); ctx.moveTo(x, fyT); ctx.lineTo(x + anchoTabla, fyT); ctx.stroke();
+    pdfResTexto(ctx, 'TOTAL (t)', x + 8, base(fyT), { peso: 'bold', tam: 8.5, color: '#1f2937' });
+    sumaCol.forEach((sc, ci) => pdfResTexto(ctx, sc > 0 ? pdfResNum(sc, 1) : '–', x + wPrim + wCol * ci + wCol - 6, base(fyT), { peso: 'bold', tam, color: sc > 0 ? '#111827' : '#cbd5e1', alinea: 'right' }));
     const granTotal = sumaCol.reduce((a, b) => a + b, 0);
-    pdfResTexto(ctx, granTotal > 0 ? pdfResNum(granTotal, 1) : '–', x + wPrim + wCol * n + wTot - 6, fyT + 12, { peso: 'bold', tam: 9, color: granTotal > 0 ? '#111827' : '#cbd5e1', alinea: 'right' });
+    pdfResTexto(ctx, granTotal > 0 ? pdfResNum(granTotal, 1) : '–', x + wPrim + wCol * n + wTot - 6, base(fyT), { peso: 'bold', tam, color: granTotal > 0 ? '#111827' : '#cbd5e1', alinea: 'right' });
+
+    // filas de material comprometido (órdenes de embarque)
+    if (comp) {
+        const fyC = fyT + hFila, fyN = fyT + 2 * hFila;
+        ctx.fillStyle = '#fff5f5'; ctx.fillRect(x, fyC, anchoTabla, hFila);
+        pdfResTexto(ctx, 'COMPROMETIDO (OE)', x + 8, base(fyC), { peso: 'bold', tam: 8, color: '#c53030' });
+        comp.porColumna.forEach((v, ci) => {
+            if (v === null) return;
+            pdfResTexto(ctx, v > 0 ? '−' + pdfResNum(v, 1) : '–', x + wPrim + wCol * ci + wCol - 6, base(fyC), { tam, color: v > 0 ? '#c53030' : '#cbd5e1', alinea: 'right' });
+        });
+        pdfResTexto(ctx, '−' + pdfResNum(comp.total, 1), x + wPrim + wCol * n + wTot - 6, base(fyC), { peso: 'bold', tam, color: '#c53030', alinea: 'right' });
+
+        ctx.fillStyle = '#f0fff4'; ctx.fillRect(x, fyN, anchoTabla, hFila);
+        pdfResTexto(ctx, 'DISPONIBLE NETO', x + 8, base(fyN), { peso: 'bold', tam: 8, color: '#276749' });
+        const celdaNeta = (v, cx) => {
+            if (v < 0) { ctx.fillStyle = '#fed7d7'; ctx.fillRect(cx - 52, fyN + 1, 54, hFila - 2); }
+            pdfResTexto(ctx, pdfResNum(v, 1), cx, base(fyN), { peso: 'bold', tam, color: v < 0 ? '#c53030' : '#276749', alinea: 'right' });
+        };
+        comp.netoColumna.forEach((v, ci) => {
+            if (v === null) return;
+            const cx = x + wPrim + wCol * ci + wCol - 6;
+            if (comp.vacioColumna[ci]) pdfResTexto(ctx, '–', cx, base(fyN), { tam, color: '#cbd5e1', alinea: 'right' });
+            else celdaNeta(v, cx);
+        });
+        celdaNeta(comp.neto, x + wPrim + wCol * n + wTot - 6);
+    }
+}
+
+// ---------- Página 3: material comprometido y disponible ----------
+function pdfResPagina3(ctx, d, logo) {
+    const { W, M } = PDFRES;
+    const c = d.comp;
+    pdfResFondo(ctx);
+    pdfResBanner(ctx, 'MATERIAL COMPROMETIDO Y DISPONIBLE', 'Control de Bodega PT. · Órdenes de embarque activas', logo, d.fecha, 56);
+
+    const gap = 12, yK = 94, hK = 112;
+    const wK = (W - 2 * M - 2 * gap) / 3;
+    const kpis = [
+        ['Stock físico', 'Todas las bodegas', c.totalFisico, '#111827', 'toneladas almacenadas'],
+        ['Comprometido en OE', `${c.nOrdenes} ${c.nOrdenes === 1 ? 'orden de embarque activa' : 'órdenes de embarque activas'}`, c.totalComprometido, '#c53030', 'toneladas por embarcar'],
+        ['Disponible neto', 'Stock una vez embarcado todo', c.totalDisponible, c.totalDisponible < 0 ? '#c53030' : '#276749', 'toneladas libres']
+    ];
+    kpis.forEach((k, i) => {
+        const x = M + i * (wK + gap);
+        pdfResTarjeta(ctx, x, yK, wK, hK, k[0], k[1]);
+        pdfResTexto(ctx, pdfResNum(k[2], 1), x + wK / 2, yK + 84, { peso: '300', tam: 42, color: k[3], alinea: 'center' });
+        pdfResTexto(ctx, k[4], x + wK / 2, yK + 102, { tam: 9.5, color: '#9ca3af', alinea: 'center' });
+    });
+
+    const yB = yK + hK + gap, hB = PDFRES.H - M - yB;
+    const wL = 650, wR = W - 2 * M - wL - gap, xR = M + wL + gap;
+
+    pdfResTarjeta(ctx, M, yB, wL, hB, 'Stock físico vs. comprometido por producto', 'Rojo: comprometido · Verde: disponible');
+    const maxFilas = Math.floor((hB - 60) / 40);
+    const filas = c.filas.slice(0, maxFilas);
+    const maxFis = Math.max(1, ...filas.map(f => Math.max(f.fisico, 0)));
+    filas.forEach((f, i) => {
+        const y0 = yB + 54 + i * 40;
+        pdfResTexto(ctx, f.nombre, M + 14, y0 + 12, { peso: '600', tam: 10.5, color: '#1f2937', max: 215 });
+        pdfResTexto(ctx, `Físico ${pdfResNum(f.fisico, 1)} t · Comprometido ${pdfResNum(f.comprometido, 1)} t`, M + 14, y0 + 26, { tam: 8.5, color: '#9ca3af', max: 215 });
+
+        const bx = M + 240, bw = 270, bh = 16, by = y0 + 5;
+        ctx.fillStyle = '#e5e7eb'; pdfResRR(ctx, bx, by, bw, bh, bh / 2); ctx.fill();
+        const anchoFis = Math.max(0, bw * (f.fisico / maxFis));
+        const anchoComp = Math.min(anchoFis, bw * (Math.min(f.comprometido, Math.max(f.fisico, 0)) / maxFis));
+        if (anchoFis > 0) {
+            ctx.save();
+            pdfResRR(ctx, bx, by, anchoFis, bh, bh / 2); ctx.clip();
+            const gV = ctx.createLinearGradient(0, by, 0, by + bh);
+            gV.addColorStop(0, pdfResAclarar('#38a169', 0.28)); gV.addColorStop(0.5, '#38a169'); gV.addColorStop(1, pdfResOscurecer('#38a169', 0.1));
+            ctx.fillStyle = gV; ctx.fillRect(bx, by, anchoFis, bh);
+            const gR = ctx.createLinearGradient(0, by, 0, by + bh);
+            gR.addColorStop(0, pdfResAclarar('#e53e3e', 0.28)); gR.addColorStop(0.5, '#e53e3e'); gR.addColorStop(1, pdfResOscurecer('#e53e3e', 0.1));
+            ctx.fillStyle = gR; ctx.fillRect(bx, by, anchoComp, bh);
+            ctx.restore();
+        }
+        const hayFalta = f.disponible < 0;
+        pdfResTexto(ctx, pdfResNum(f.disponible, 1) + ' t', M + wL - 14, y0 + 14, { peso: 'bold', tam: 13, color: hayFalta ? '#c53030' : '#276749', alinea: 'right' });
+        pdfResTexto(ctx, hayFalta ? 'FALTA MATERIAL' : 'disponible', M + wL - 14, y0 + 27, { peso: hayFalta ? 'bold' : 'normal', tam: 8.5, color: hayFalta ? '#c53030' : '#9ca3af', alinea: 'right' });
+    });
+    if (c.filas.length > filas.length) {
+        pdfResTexto(ctx, `+ ${c.filas.length - filas.length} producto(s) más con órdenes activas`, M + 14, yB + hB - 12, { tam: 9, color: '#9ca3af' });
+    }
+
+    pdfResTarjeta(ctx, xR, yB, wR, hB, 'Órdenes de embarque activas', 'Número de OE, producto y tonelaje');
+    const hFilaOE = 24;
+    const maxOE = Math.floor((hB - 60 - 34) / hFilaOE);
+    const lista = d.ordenes.slice(0, maxOE);
+    lista.forEach((o, i) => {
+        const y0 = yB + 52 + i * hFilaOE;
+        if (i % 2 === 0) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(xR + 10, y0, wR - 20, hFilaOE); }
+        pdfResTexto(ctx, 'OE ' + o.oe, xR + 16, y0 + 16, { peso: 'bold', tam: 10.5, color: '#1e4e8c', max: 70 });
+        pdfResTexto(ctx, o.nombre, xR + 92, y0 + 16, { tam: 9.5, color: '#374151', max: wR - 92 - 80 });
+        pdfResTexto(ctx, pdfResNum(o.ton, 1) + ' t', xR + wR - 16, y0 + 16, { peso: 'bold', tam: 10.5, color: '#111827', alinea: 'right' });
+    });
+    const yPie = yB + hB - 32;
+    ctx.strokeStyle = '#cbd5e0'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xR + 14, yPie - 6); ctx.lineTo(xR + wR - 14, yPie - 6); ctx.stroke();
+    const resto = d.ordenes.length - lista.length;
+    pdfResTexto(ctx, resto > 0 ? `+ ${resto} orden(es) más` : 'Total comprometido', xR + 16, yPie + 12, { peso: '600', tam: 10, color: '#6b7280' });
+    pdfResTexto(ctx, pdfResNum(c.totalComprometido, 1) + ' t', xR + wR - 16, yPie + 12, { peso: 'bold', tam: 12, color: '#c53030', alinea: 'right' });
 }
 
 // ---------- Exportar ----------
@@ -645,7 +770,9 @@ async function exportarResumenPDF() {
         const k = PDFRES.ESCALA;
 
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-        [pdfResPagina1, pdfResPagina2].forEach((dibujar, i) => {
+        const paginas = [pdfResPagina1, pdfResPagina2];
+        if (d.comp && d.comp.nOrdenes > 0) paginas.push(pdfResPagina3);
+        paginas.forEach((dibujar, i) => {
             const c = document.createElement('canvas');
             c.width = Math.round(PDFRES.W * k);
             c.height = Math.round(PDFRES.H * k);
