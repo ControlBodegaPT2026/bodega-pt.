@@ -673,7 +673,8 @@ function pdfResPagina3(ctx, d, logo) {
     pdfResFondo(ctx);
     pdfResBanner(ctx, 'MATERIAL COMPROMETIDO Y DISPONIBLE', 'Control de Bodega PT. · Órdenes de embarque activas', logo, d.fecha, 56);
 
-    const gap = 12, yK = 94, hK = 112;
+    // Indicadores
+    const gap = 12, yK = 94, hK = 124;
     const wK = (W - 2 * M - 2 * gap) / 3;
     const kpis = [
         ['Stock físico', 'Todas las bodegas', c.totalFisico, '#111827', 'toneladas almacenadas'],
@@ -683,26 +684,35 @@ function pdfResPagina3(ctx, d, logo) {
     kpis.forEach((k, i) => {
         const x = M + i * (wK + gap);
         pdfResTarjeta(ctx, x, yK, wK, hK, k[0], k[1]);
-        pdfResTexto(ctx, pdfResNum(k[2], 1), x + wK / 2, yK + 84, { peso: '300', tam: 42, color: k[3], alinea: 'center' });
-        pdfResTexto(ctx, k[4], x + wK / 2, yK + 102, { tam: 9.5, color: '#9ca3af', alinea: 'center' });
+        pdfResTexto(ctx, pdfResNum(k[2], 1), x + wK / 2, yK + 90, { peso: '300', tam: 46, color: k[3], alinea: 'center' });
+        pdfResTexto(ctx, k[4], x + wK / 2, yK + 112, { tam: 12, color: '#6b7280', alinea: 'center' });
     });
 
     const yB = yK + hK + gap, hB = PDFRES.H - M - yB;
     const wL = 650, wR = W - 2 * M - wL - gap, xR = M + wL + gap;
 
+    // ----- Barras por producto (letras grandes, se ajustan si hay muchos productos) -----
     pdfResTarjeta(ctx, M, yB, wL, hB, 'Stock físico vs. comprometido por producto', 'Rojo: comprometido · Verde: disponible');
-    const maxFilas = Math.floor((hB - 60) / 40);
-    const filas = c.filas.slice(0, maxFilas);
-    const maxFis = Math.max(1, ...filas.map(f => Math.max(f.fisico, 0)));
-    filas.forEach((f, i) => {
-        const y0 = yB + 54 + i * 40;
-        pdfResTexto(ctx, f.nombre, M + 14, y0 + 12, { peso: '600', tam: 10.5, color: '#1f2937', max: 215 });
-        pdfResTexto(ctx, `Físico ${pdfResNum(f.fisico, 1)} t · Comprometido ${pdfResNum(f.comprometido, 1)} t`, M + 14, y0 + 26, { tam: 8.5, color: '#9ca3af', max: 215 });
+    let areaFilas = hB - 76;
+    let nFilas = Math.min(c.filas.length, Math.floor(areaFilas / 40));
+    if (c.filas.length > nFilas) {            // se reserva espacio para la nota "+ N productos más"
+        areaFilas -= 26;
+        nFilas = Math.min(c.filas.length, Math.floor(areaFilas / 40));
+    }
+    const filas = c.filas.slice(0, nFilas);
+    const rowH = Math.max(40, Math.min(62, areaFilas / Math.max(1, nFilas)));
+    const f = rowH / 58;                         // factor de tamaño de letra
+    const maxFis = Math.max(1, ...filas.map(x => Math.max(x.fisico, 0)));
+    filas.forEach((x, i) => {
+        const y0 = yB + 56 + i * rowH;
+        if (i % 2 === 0) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(M + 8, y0, wL - 16, rowH); }
+        pdfResTexto(ctx, x.nombre, M + 16, y0 + rowH * 0.40, { peso: '600', tam: 14 * f, color: '#1f2937', max: 240 });
+        pdfResTexto(ctx, `Físico ${pdfResNum(x.fisico, 1)} t · Comprometido ${pdfResNum(x.comprometido, 1)} t`, M + 16, y0 + rowH * 0.72, { tam: 11 * f, color: '#6b7280', max: 240 });
 
-        const bx = M + 240, bw = 270, bh = 16, by = y0 + 5;
+        const bx = M + 268, bw = 250, bh = Math.max(14, 22 * f), by = y0 + (rowH - bh) / 2;
         ctx.fillStyle = '#e5e7eb'; pdfResRR(ctx, bx, by, bw, bh, bh / 2); ctx.fill();
-        const anchoFis = Math.max(0, bw * (f.fisico / maxFis));
-        const anchoComp = Math.min(anchoFis, bw * (Math.min(f.comprometido, Math.max(f.fisico, 0)) / maxFis));
+        const anchoFis = Math.max(0, bw * (x.fisico / maxFis));
+        const anchoComp = Math.min(anchoFis, bw * (Math.min(x.comprometido, Math.max(x.fisico, 0)) / maxFis));
         if (anchoFis > 0) {
             ctx.save();
             pdfResRR(ctx, bx, by, anchoFis, bh, bh / 2); ctx.clip();
@@ -714,31 +724,34 @@ function pdfResPagina3(ctx, d, logo) {
             ctx.fillStyle = gR; ctx.fillRect(bx, by, anchoComp, bh);
             ctx.restore();
         }
-        const hayFalta = f.disponible < 0;
-        pdfResTexto(ctx, pdfResNum(f.disponible, 1) + ' t', M + wL - 14, y0 + 14, { peso: 'bold', tam: 13, color: hayFalta ? '#c53030' : '#276749', alinea: 'right' });
-        pdfResTexto(ctx, hayFalta ? 'FALTA MATERIAL' : 'disponible', M + wL - 14, y0 + 27, { peso: hayFalta ? 'bold' : 'normal', tam: 8.5, color: hayFalta ? '#c53030' : '#9ca3af', alinea: 'right' });
+        const hayFalta = x.disponible < 0;
+        pdfResTexto(ctx, pdfResNum(x.disponible, 1) + ' t', M + wL - 16, y0 + rowH * 0.50, { peso: 'bold', tam: 19 * f, color: hayFalta ? '#c53030' : '#276749', alinea: 'right' });
+        pdfResTexto(ctx, hayFalta ? 'FALTA MATERIAL' : 'disponible', M + wL - 16, y0 + rowH * 0.80, { peso: hayFalta ? 'bold' : 'normal', tam: 10.5 * f, color: hayFalta ? '#c53030' : '#6b7280', alinea: 'right' });
     });
     if (c.filas.length > filas.length) {
-        pdfResTexto(ctx, `+ ${c.filas.length - filas.length} producto(s) más con órdenes activas`, M + 14, yB + hB - 12, { tam: 9, color: '#9ca3af' });
+        pdfResTexto(ctx, `+ ${c.filas.length - filas.length} producto(s) más con órdenes activas`, M + 16, yB + hB - 12, { tam: 11, color: '#6b7280' });
     }
 
+    // ----- Lista de OE -----
     pdfResTarjeta(ctx, xR, yB, wR, hB, 'Órdenes de embarque activas', 'Número de OE, producto y tonelaje');
-    const hFilaOE = 24;
-    const maxOE = Math.floor((hB - 60 - 34) / hFilaOE);
-    const lista = d.ordenes.slice(0, maxOE);
+    const areaOE = hB - 56 - 54;
+    const nOE = Math.min(d.ordenes.length, Math.floor(areaOE / 22));
+    const lista = d.ordenes.slice(0, nOE);
+    const rowOE = Math.max(22, Math.min(38, areaOE / Math.max(1, nOE)));
+    const fo = rowOE / 34;
     lista.forEach((o, i) => {
-        const y0 = yB + 52 + i * hFilaOE;
-        if (i % 2 === 0) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(xR + 10, y0, wR - 20, hFilaOE); }
-        pdfResTexto(ctx, 'OE ' + o.oe, xR + 16, y0 + 16, { peso: 'bold', tam: 10.5, color: '#1e4e8c', max: 70 });
-        pdfResTexto(ctx, o.nombre, xR + 92, y0 + 16, { tam: 9.5, color: '#374151', max: wR - 92 - 80 });
-        pdfResTexto(ctx, pdfResNum(o.ton, 1) + ' t', xR + wR - 16, y0 + 16, { peso: 'bold', tam: 10.5, color: '#111827', alinea: 'right' });
+        const y0 = yB + 54 + i * rowOE;
+        if (i % 2 === 0) { ctx.fillStyle = '#f8fafc'; ctx.fillRect(xR + 10, y0, wR - 20, rowOE); }
+        pdfResTexto(ctx, 'OE ' + o.oe, xR + 16, y0 + rowOE * 0.66, { peso: 'bold', tam: 13.5 * fo, color: '#1e4e8c', max: 74 });
+        pdfResTexto(ctx, o.nombre, xR + 96, y0 + rowOE * 0.66, { tam: 12.5 * fo, color: '#374151', max: wR - 96 - 86 });
+        pdfResTexto(ctx, pdfResNum(o.ton, 1) + ' t', xR + wR - 16, y0 + rowOE * 0.66, { peso: 'bold', tam: 13.5 * fo, color: '#111827', alinea: 'right' });
     });
-    const yPie = yB + hB - 32;
+    const yPie = yB + hB - 40;
     ctx.strokeStyle = '#cbd5e0'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(xR + 14, yPie - 6); ctx.lineTo(xR + wR - 14, yPie - 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xR + 14, yPie - 4); ctx.lineTo(xR + wR - 14, yPie - 4); ctx.stroke();
     const resto = d.ordenes.length - lista.length;
-    pdfResTexto(ctx, resto > 0 ? `+ ${resto} orden(es) más` : 'Total comprometido', xR + 16, yPie + 12, { peso: '600', tam: 10, color: '#6b7280' });
-    pdfResTexto(ctx, pdfResNum(c.totalComprometido, 1) + ' t', xR + wR - 16, yPie + 12, { peso: 'bold', tam: 12, color: '#c53030', alinea: 'right' });
+    pdfResTexto(ctx, resto > 0 ? `+ ${resto} orden(es) más` : 'Total comprometido', xR + 16, yPie + 22, { peso: '600', tam: 14, color: '#4b5563' });
+    pdfResTexto(ctx, pdfResNum(c.totalComprometido, 1) + ' t', xR + wR - 16, yPie + 22, { peso: 'bold', tam: 19, color: '#c53030', alinea: 'right' });
 }
 
 // ---------- Exportar ----------
