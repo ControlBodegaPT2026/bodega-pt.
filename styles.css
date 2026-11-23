@@ -1109,3 +1109,28 @@ button[onclick*="seccion-reporte-fifo"]:active {
         padding: 8px 5px;
     }
 }
+.lista-pp-ubi {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 2px;
+    margin-top: 4px;
+    font-size: 10px;
+    text-align: left;
+
+    /* Altura máxima: si hay más PP, la lista se desplaza por dentro */
+    max-height: 170px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+
+    /* Sombras que aparecen arriba o abajo solo cuando hay más contenido por ver */
+    background-color: #fdfefd;
+    background-image:
+        linear-gradient(#fdfefd 30%, rgba(253, 254, 253, 0)),
+        linear-gradient(rgba(253, 254, 253, 0), #fdfefd 70%),
+        radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0)),
+        radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0));
+    background-position: center top, center bottom, center top, center bottom;
+    background-repeat: no-repeat;
+    background-size: 100% 22px, 100% 22px, 100% 7px, 100% 7px;
+    background-attachment: local, local, scroll, scroll;
+}
